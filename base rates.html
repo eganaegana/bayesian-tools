@@ -1,0 +1,475 @@
+<!-- Bayesian Base Rate Explorer — paste into Squarespace Code Block (HTML mode) -->
+<style>
+  .bayes-explorer {
+    box-sizing: border-box;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #222;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    line-height: 1.4;
+  }
+  .bayes-explorer *, .bayes-explorer *::before, .bayes-explorer *::after {
+    box-sizing: border-box;
+  }
+  .bayes-explorer h2 {
+    font-size: 1.4em;
+    text-align: center;
+    margin: 0 0 4px 0;
+    padding: 0;
+    font-weight: normal;
+    line-height: 1.3;
+  }
+  .bayes-explorer .be-subtitle {
+    text-align: center;
+    font-size: 0.9em;
+    color: #666;
+    margin: 0 0 24px 0;
+  }
+  .bayes-explorer .be-diagram-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+    min-width: 0;
+    overflow: visible;
+  }
+  .bayes-explorer .be-diagram-wrap svg {
+    display: block;
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+  }
+  .bayes-explorer .be-posterior-box {
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 12px 0;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+  }
+  .bayes-explorer .be-posterior-label {
+    font-size: 0.95em;
+    color: #555;
+    margin: 0;
+  }
+  .bayes-explorer .be-posterior-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2a5da8;
+    margin: 2px 0 0 0;
+  }
+  .bayes-explorer .be-posterior-formula {
+    font-size: 0.85em;
+    color: #888;
+    margin: 4px 0 0 0;
+    font-style: italic;
+  }
+  .bayes-explorer .be-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+  .bayes-explorer .be-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .bayes-explorer .be-control-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .bayes-explorer .be-control-label {
+    font-size: 0.95em;
+    font-weight: bold;
+    margin: 0;
+  }
+  .bayes-explorer .be-control-value {
+    font-size: 0.95em;
+    font-family: 'Courier New', monospace;
+    color: #2a5da8;
+    min-width: 50px;
+    text-align: right;
+  }
+  .bayes-explorer input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: #ddd;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    margin: 4px 0;
+    padding: 0;
+  }
+  .bayes-explorer input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #2a5da8;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .bayes-explorer input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: #2a5da8;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+  }
+  .bayes-explorer .be-slider-prior::-webkit-slider-thumb { background: #555; }
+  .bayes-explorer .be-slider-prior::-moz-range-thumb { background: #555; }
+  .bayes-explorer .be-slider-sens::-webkit-slider-thumb { background: #2a7d3f; }
+  .bayes-explorer .be-slider-sens::-moz-range-thumb { background: #2a7d3f; }
+  .bayes-explorer .be-slider-spec::-webkit-slider-thumb { background: #b85c1f; }
+  .bayes-explorer .be-slider-spec::-moz-range-thumb { background: #b85c1f; }
+  .bayes-explorer .be-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 8px;
+  }
+  .bayes-explorer .be-toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    display: inline-block;
+  }
+  .bayes-explorer .be-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+  .bayes-explorer .be-toggle-track {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #ccc;
+    border-radius: 24px;
+    transition: 0.2s;
+  }
+  .bayes-explorer .be-toggle-track::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  .bayes-explorer .be-toggle-switch input:checked + .be-toggle-track {
+    background: #2a5da8;
+  }
+  .bayes-explorer .be-toggle-switch input:checked + .be-toggle-track::before {
+    transform: translateX(20px);
+  }
+  .bayes-explorer .be-info-panel {
+    background: #f0f4f8;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.85em;
+    line-height: 1.5;
+    color: #444;
+  }
+  .bayes-explorer .be-info-panel strong { color: #222; }
+  .bayes-explorer .be-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+  .bayes-explorer .be-preset-btn {
+    font-family: Georgia, serif;
+    font-size: 0.8em;
+    padding: 5px 12px;
+    border: 1px solid #ccc;
+    border-radius: 16px;
+    background: white;
+    cursor: pointer;
+    color: #444;
+    transition: 0.15s;
+    line-height: 1.4;
+  }
+  .bayes-explorer .be-preset-btn:hover {
+    background: #e8eef6;
+    border-color: #2a5da8;
+    color: #2a5da8;
+  }
+  @media (max-width: 480px) {
+    .bayes-explorer { padding: 12px 10px; }
+    .bayes-explorer h2 { font-size: 1.2em; }
+    .bayes-explorer .be-posterior-value { font-size: 1.6em; }
+  }
+</style>
+
+<div class="bayes-explorer">
+
+<h2>The Importance of Base Rates</h2>
+<p class="be-subtitle">An interactive Bayesian eikosogram</p>
+
+<div class="be-presets">
+  <button class="be-preset-btn" onclick="beSetPreset(0.5, 0.9)">Balanced prior</button>
+  <button class="be-preset-btn" onclick="beSetPreset(0.01, 0.9)">Hume's miracle</button>
+  <button class="be-preset-btn" onclick="beSetPreset(0.1, 0.9)">Medical test (10%)</button>
+  <button class="be-preset-btn" onclick="beSetPreset(0.001, 0.9)">Rare disease</button>
+  <button class="be-preset-btn" onclick="beSetPreset(0.3, 0.9)">Common condition</button>
+  <button class="be-preset-btn" onclick="beSetPreset(0.1, 0.99)">99% accurate test</button>
+</div>
+
+<div class="be-diagram-wrap">
+  <svg id="be-eiko" viewBox="0 0 440 410" preserveAspectRatio="xMidYMid meet"></svg>
+</div>
+
+<div class="be-posterior-box">
+  <div class="be-posterior-label">Posterior probability: <em>c</em>(H | says H)</div>
+  <div class="be-posterior-value" id="be-posterior-display">0.90</div>
+  <div class="be-posterior-formula" id="be-posterior-formula"></div>
+</div>
+
+<div class="be-controls">
+  <div class="be-control-group">
+    <div class="be-control-header">
+      <span class="be-control-label">Prior: <em>c</em>(H)</span>
+      <span class="be-control-value" id="be-prior-display">0.50</span>
+    </div>
+    <input type="range" class="be-slider-prior" id="be-prior-slider" min="0.005" max="0.995" step="0.005" value="0.5">
+  </div>
+
+  <div class="be-control-group" id="be-reliability-global">
+    <div class="be-control-header">
+      <span class="be-control-label">Evidence reliability</span>
+      <span class="be-control-value" id="be-reliability-display">0.90</span>
+    </div>
+    <input type="range" id="be-reliability-slider" min="0.51" max="0.99" step="0.01" value="0.9">
+  </div>
+
+  <div class="be-control-group" id="be-sensitivity-group" style="display:none">
+    <div class="be-control-header">
+      <span class="be-control-label" style="color:#2a7d3f">Sensitivity: <em>c</em>(says H | H)</span>
+      <span class="be-control-value" id="be-sensitivity-display" style="color:#2a7d3f">0.90</span>
+    </div>
+    <input type="range" class="be-slider-sens" id="be-sensitivity-slider" min="0.01" max="0.99" step="0.01" value="0.9">
+  </div>
+
+  <div class="be-control-group" id="be-specificity-group" style="display:none">
+    <div class="be-control-header">
+      <span class="be-control-label" style="color:#b85c1f">Specificity: <em>c</em>(says ¬H | ¬H)</span>
+      <span class="be-control-value" id="be-specificity-display" style="color:#b85c1f">0.90</span>
+    </div>
+    <input type="range" class="be-slider-spec" id="be-specificity-slider" min="0.01" max="0.99" step="0.01" value="0.9">
+  </div>
+
+  <div class="be-toggle-row">
+    <label class="be-toggle-switch">
+      <input type="checkbox" id="be-split-toggle" onchange="beToggleMode()">
+      <span class="be-toggle-track"></span>
+    </label>
+    <span>Split into sensitivity &amp; specificity</span>
+  </div>
+</div>
+
+<div class="be-info-panel">
+  <strong>How to read this diagram:</strong> The total square represents all possibilities.
+  The width of the left column is <em>c</em>(H) — the prior probability of the hypothesis.
+  Within each column, the height of the top region is the probability of a positive report
+  (says H) given that column's truth value.
+  The <strong style="color:#2a5da8">highlighted regions</strong> are where the evidence says H.
+  The posterior <em>c</em>(H | says H) is the ratio of the
+  <strong style="color:#2a7d3f">dark blue area</strong> (H true and says H)
+  to the <strong>total highlighted area</strong> (everything that says H).
+</div>
+
+</div>
+
+<script>
+(function() {
+  var beState = {
+    prior: 0.5,
+    sensitivity: 0.9,
+    specificity: 0.9,
+    splitMode: false
+  };
+
+  function posterior(pH, sens, spec) {
+    var num = pH * sens;
+    var denom = pH * sens + (1 - pH) * (1 - spec);
+    if (denom === 0) return 0;
+    return num / denom;
+  }
+
+  function fmt(v) {
+    if (v >= 0.995) return "\u2248 1.00";
+    if (v <= 0.005 && v > 0) return v.toFixed(4);
+    if (v < 0.01) return v.toFixed(3);
+    return v.toFixed(2);
+  }
+
+  function pct(v) {
+    return (v * 100).toFixed(1) + "%";
+  }
+
+  function draw() {
+    var svg = document.getElementById('be-eiko');
+    var pH = beState.prior;
+    var sens = beState.sensitivity;
+    var spec = beState.specificity;
+    var fpr = 1 - spec;
+
+    var M = 50, W = 340, H = 340;
+    var ox = M, oy = 18;
+
+    var wH = W * pH;
+    var wNotH = W * (1 - pH);
+    var hSaysH_givenH = H * sens;
+    var hSaysNotH_givenH = H * (1 - sens);
+    var hSaysH_givenNotH = H * fpr;
+    var hSaysNotH_givenNotH = H * spec;
+
+    var cells = [
+      { x: ox, y: oy, w: wH, h: hSaysH_givenH,
+        fill: "#2a5da8", opacity: 0.85, stroke: "#1a4a8a", highlight: true },
+      { x: ox, y: oy + hSaysH_givenH, w: wH, h: hSaysNotH_givenH,
+        fill: "#b0c4de", opacity: 0.4, stroke: "#8aa8c8", highlight: false },
+      { x: ox + wH, y: oy, w: wNotH, h: hSaysH_givenNotH,
+        fill: "#d4760a", opacity: 0.7, stroke: "#b5640a", highlight: true },
+      { x: ox + wH, y: oy + hSaysH_givenNotH, w: wNotH, h: hSaysNotH_givenNotH,
+        fill: "#b0c4de", opacity: 0.25, stroke: "#8aa8c8", highlight: false }
+    ];
+
+    var html = '';
+
+    for (var i = 0; i < cells.length; i++) {
+      var c = cells[i];
+      if (c.w < 0.5 || c.h < 0.5) continue;
+      html += '<rect x="'+c.x+'" y="'+c.y+'" width="'+c.w+'" height="'+c.h+'" fill="'+c.fill+'" fill-opacity="'+c.opacity+'" stroke="'+c.stroke+'" stroke-width="1.5"/>';
+      var area = (c.w / W) * (c.h / H);
+      if (c.w > 40 && c.h > 30) {
+        var cx = c.x + c.w / 2;
+        var cy = c.y + c.h / 2;
+        var tc = c.highlight ? "#fff" : "#555";
+        var fs = (c.w > 70 && c.h > 50) ? 13 : 11;
+        html += '<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-family="Courier New,monospace" fill="'+tc+'" font-size="'+fs+'" style="pointer-events:none">'+fmt(area)+'</text>';
+      }
+    }
+
+    html += '<rect x="'+ox+'" y="'+oy+'" width="'+W+'" height="'+H+'" fill="none" stroke="#333" stroke-width="2"/>';
+
+    if (wH > 1 && wNotH > 1) {
+      html += '<line x1="'+(ox+wH)+'" y1="'+oy+'" x2="'+(ox+wH)+'" y2="'+(oy+H)+'" stroke="#333" stroke-width="2"/>';
+    }
+    if (hSaysH_givenH > 1 && hSaysNotH_givenH > 1) {
+      html += '<line x1="'+ox+'" y1="'+(oy+hSaysH_givenH)+'" x2="'+(ox+wH)+'" y2="'+(oy+hSaysH_givenH)+'" stroke="#333" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    }
+    if (hSaysH_givenNotH > 1 && hSaysNotH_givenNotH > 1) {
+      html += '<line x1="'+(ox+wH)+'" y1="'+(oy+hSaysH_givenNotH)+'" x2="'+(ox+W)+'" y2="'+(oy+hSaysH_givenNotH)+'" stroke="#333" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    }
+
+    html += '<text x="'+(ox+W)+'" y="'+(oy-2)+'" text-anchor="end" font-family="Georgia,serif" font-size="12" fill="#2a5da8" font-style="italic" style="pointer-events:none">highlighted = says H</text>';
+
+    if (wH > 20) {
+      html += '<text x="'+(ox+wH/2)+'" y="'+(oy+H+18)+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#222" style="pointer-events:none">H</text>';
+      html += '<text x="'+(ox+wH/2)+'" y="'+(oy+H+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#888" style="pointer-events:none">'+fmt(pH)+'</text>';
+    }
+    if (wNotH > 20) {
+      html += '<text x="'+(ox+wH+wNotH/2)+'" y="'+(oy+H+18)+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#222" style="pointer-events:none">\u00acH</text>';
+      html += '<text x="'+(ox+wH+wNotH/2)+'" y="'+(oy+H+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#888" style="pointer-events:none">'+fmt(1-pH)+'</text>';
+    }
+
+    if (wH > 1 && hSaysH_givenH > 20) {
+      html += '<text x="'+(ox-6)+'" y="'+(oy+hSaysH_givenH/2+4)+'" text-anchor="end" font-family="Georgia,serif" font-size="11" fill="#888" style="pointer-events:none">'+pct(sens)+'</text>';
+    }
+    if (wH > 1 && hSaysNotH_givenH > 20) {
+      html += '<text x="'+(ox-6)+'" y="'+(oy+hSaysH_givenH+hSaysNotH_givenH/2+4)+'" text-anchor="end" font-family="Georgia,serif" font-size="11" fill="#888" style="pointer-events:none">'+pct(1-sens)+'</text>';
+    }
+
+    var rlx = ox + W + 6;
+    if (wNotH > 1 && hSaysH_givenNotH > 20) {
+      html += '<text x="'+rlx+'" y="'+(oy+hSaysH_givenNotH/2+4)+'" text-anchor="start" font-family="Georgia,serif" font-size="11" fill="#888" style="pointer-events:none">'+pct(fpr)+'</text>';
+    }
+    if (wNotH > 1 && hSaysNotH_givenNotH > 20) {
+      html += '<text x="'+rlx+'" y="'+(oy+hSaysH_givenNotH+hSaysNotH_givenNotH/2+4)+'" text-anchor="start" font-family="Georgia,serif" font-size="11" fill="#888" style="pointer-events:none">'+pct(spec)+'</text>';
+    }
+
+    svg.innerHTML = html;
+
+    var post = posterior(pH, sens, spec);
+    document.getElementById('be-posterior-display').textContent = fmt(post);
+
+    var num = pH * sens;
+    document.getElementById('be-posterior-formula').textContent =
+      fmt(num) + ' / (' + fmt(num) + ' + ' + fmt((1-pH)*(1-spec)) + ') = ' + fmt(post);
+  }
+
+  function syncFromSliders() {
+    beState.prior = parseFloat(document.getElementById('be-prior-slider').value);
+    if (beState.splitMode) {
+      beState.sensitivity = parseFloat(document.getElementById('be-sensitivity-slider').value);
+      beState.specificity = parseFloat(document.getElementById('be-specificity-slider').value);
+    } else {
+      var r = parseFloat(document.getElementById('be-reliability-slider').value);
+      beState.sensitivity = r;
+      beState.specificity = r;
+    }
+    document.getElementById('be-prior-display').textContent = fmt(beState.prior);
+    if (beState.splitMode) {
+      document.getElementById('be-sensitivity-display').textContent = fmt(beState.sensitivity);
+      document.getElementById('be-specificity-display').textContent = fmt(beState.specificity);
+    } else {
+      document.getElementById('be-reliability-display').textContent = fmt(beState.sensitivity);
+    }
+    draw();
+  }
+
+  window.beToggleMode = function() {
+    beState.splitMode = document.getElementById('be-split-toggle').checked;
+    document.getElementById('be-reliability-global').style.display = beState.splitMode ? 'none' : '';
+    document.getElementById('be-sensitivity-group').style.display = beState.splitMode ? '' : 'none';
+    document.getElementById('be-specificity-group').style.display = beState.splitMode ? '' : 'none';
+    if (beState.splitMode) {
+      document.getElementById('be-sensitivity-slider').value = beState.sensitivity;
+      document.getElementById('be-specificity-slider').value = beState.specificity;
+      document.getElementById('be-sensitivity-display').textContent = fmt(beState.sensitivity);
+      document.getElementById('be-specificity-display').textContent = fmt(beState.specificity);
+    } else {
+      var avg = (beState.sensitivity + beState.specificity) / 2;
+      document.getElementById('be-reliability-slider').value = avg;
+      beState.sensitivity = avg;
+      beState.specificity = avg;
+      document.getElementById('be-reliability-display').textContent = fmt(avg);
+    }
+    draw();
+  };
+
+  window.beSetPreset = function(prior, reliability) {
+    if (beState.splitMode) {
+      document.getElementById('be-split-toggle').checked = false;
+      window.beToggleMode();
+    }
+    beState.prior = prior;
+    beState.sensitivity = reliability;
+    beState.specificity = reliability;
+    document.getElementById('be-prior-slider').value = prior;
+    document.getElementById('be-reliability-slider').value = reliability;
+    document.getElementById('be-prior-display').textContent = fmt(prior);
+    document.getElementById('be-reliability-display').textContent = fmt(reliability);
+    draw();
+  };
+
+  document.getElementById('be-prior-slider').addEventListener('input', syncFromSliders);
+  document.getElementById('be-reliability-slider').addEventListener('input', syncFromSliders);
+  document.getElementById('be-sensitivity-slider').addEventListener('input', syncFromSliders);
+  document.getElementById('be-specificity-slider').addEventListener('input', syncFromSliders);
+
+  draw();
+})();
+</script>

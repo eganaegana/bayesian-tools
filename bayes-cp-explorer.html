@@ -1,0 +1,741 @@
+<!-- Bayesian Conditional Probability Explorer — paste into Squarespace Code Block (HTML mode) -->
+<style>
+  .bayes-cp {
+    box-sizing: border-box;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #222;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    line-height: 1.4;
+  }
+  .bayes-cp *, .bayes-cp *::before, .bayes-cp *::after { box-sizing: border-box; }
+  .bayes-cp h2 {
+    font-size: 1.4em; text-align: center; margin: 0 0 4px 0;
+    padding: 0; font-weight: normal; line-height: 1.3;
+  }
+  .bayes-cp .cp-subtitle {
+    text-align: center; font-size: 0.9em; color: #666; margin: 0 0 20px 0;
+  }
+
+  /* Presets */
+  .bayes-cp .cp-presets {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 20px; justify-content: center;
+  }
+  .bayes-cp .cp-preset-btn {
+    font-family: Georgia, serif; font-size: 0.8em;
+    padding: 5px 12px; border: 1px solid #ccc; border-radius: 16px;
+    background: white; cursor: pointer; color: #444;
+    transition: 0.15s; line-height: 1.4;
+  }
+  .bayes-cp .cp-preset-btn:hover {
+    background: #e8eef6; border-color: #2a5da8; color: #2a5da8;
+  }
+
+  /* Main layout: diagram left, formula right */
+  .bayes-cp .cp-main {
+    display: flex; gap: 24px; align-items: flex-start;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .bayes-cp .cp-diagram-col {
+    flex: 1 1 420px; min-width: 300px; max-width: 520px;
+  }
+  .bayes-cp .cp-formula-col {
+    flex: 0 1 320px; min-width: 280px;
+  }
+
+  /* Diagram */
+  .bayes-cp .cp-diagram-wrap {
+    display: flex; justify-content: center; margin-bottom: 8px;
+  }
+  .bayes-cp .cp-diagram-wrap svg {
+    display: block; width: 100%; max-width: 500px; height: auto;
+  }
+
+  /* Posterior summary bar */
+  .bayes-cp .cp-posterior-bar {
+    display: flex; justify-content: center; gap: 24px;
+    align-items: baseline; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .bayes-cp .cp-post-item {
+    text-align: center;
+  }
+  .bayes-cp .cp-post-label {
+    font-size: 0.85em; color: #555; margin: 0;
+  }
+  .bayes-cp .cp-post-value {
+    font-size: 1.8em; font-weight: bold; margin: 0;
+  }
+  .bayes-cp .cp-post-value.cp-hge { color: #2a5da8; }
+  .bayes-cp .cp-post-value.cp-hgne { color: #7a5da8; }
+  .bayes-cp .cp-pe-display {
+    text-align: center; font-size: 0.95em; color: #555;
+    margin: 0 0 8px 0; padding: 6px 0;
+    border: 1px dashed #ccc; border-radius: 6px;
+  }
+  .bayes-cp .cp-pe-val { font-weight: bold; color: #2a5da8; font-family: 'Courier New', monospace; }
+  .bayes-cp .cp-update-arrow {
+    font-size: 0.85em; color: #888; margin: 0;
+  }
+  .bayes-cp .cp-arrow-up { color: #2a7d3f; }
+  .bayes-cp .cp-arrow-down { color: #c0392b; }
+
+  /* Formula area */
+  .bayes-cp .cp-formula-box {
+    background: #f8f9fb; border: 1px solid #e0e4ea;
+    border-radius: 8px; padding: 16px; margin-bottom: 12px;
+  }
+  .bayes-cp .cp-formula-title {
+    font-size: 0.85em; color: #666; margin: 0 0 10px 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .bayes-cp .cp-form-toggle {
+    font-family: Georgia, serif; font-size: 1em;
+    padding: 2px 10px; border: 1px solid #ccc; border-radius: 12px;
+    background: white; cursor: pointer; color: #666; transition: 0.15s;
+  }
+  .bayes-cp .cp-form-toggle:hover {
+    border-color: #2a5da8; color: #2a5da8;
+  }
+  .bayes-cp .cp-form-toggle.cp-active {
+    background: #2a5da8; color: white; border-color: #2a5da8;
+  }
+
+  .bayes-cp .cp-formula-content {
+    font-size: 1em; line-height: 1.8; min-height: 80px;
+  }
+  .bayes-cp .cp-frac {
+    display: inline-flex; flex-direction: column; align-items: center;
+    vertical-align: middle; margin: 0 4px; position: relative;
+  }
+  .bayes-cp .cp-frac-num, .bayes-cp .cp-frac-den {
+    padding: 2px 6px; text-align: center;
+  }
+  .bayes-cp .cp-frac-bar {
+    width: 100%; height: 1.5px; background: #333;
+  }
+
+  /* Hoverable terms */
+  .bayes-cp .cp-term {
+    padding: 1px 3px; border-radius: 3px; cursor: default;
+    transition: background 0.15s, color 0.15s;
+  }
+  .bayes-cp .cp-term-tp { } /* true positive: P(E|H)P(H) */
+  .bayes-cp .cp-term-fp { } /* false positive: P(E|¬H)P(¬H) */
+  .bayes-cp .cp-term-num { } /* numerator = tp */
+  .bayes-cp .cp-term-den { } /* denominator = tp + fp */
+  .bayes-cp .cp-term-tp.cp-hover { background: rgba(42,93,168,0.2); }
+  .bayes-cp .cp-term-fp.cp-hover { background: rgba(212,118,10,0.2); }
+
+  .bayes-cp .cp-step-nav {
+    display: flex; gap: 8px; align-items: center; margin-top: 10px;
+  }
+  .bayes-cp .cp-step-btn {
+    font-family: Georgia, serif; font-size: 0.85em;
+    padding: 4px 14px; border: 1px solid #ccc; border-radius: 14px;
+    background: white; cursor: pointer; color: #444; transition: 0.15s;
+  }
+  .bayes-cp .cp-step-btn:hover { border-color: #2a5da8; color: #2a5da8; }
+  .bayes-cp .cp-step-btn:disabled { opacity: 0.4; cursor: default; }
+  .bayes-cp .cp-step-indicator {
+    font-size: 0.8em; color: #999;
+  }
+
+  /* Log-odds panel (hidden by default) */
+  .bayes-cp .cp-log-odds {
+    font-size: 0.85em; color: #555; margin-top: 8px;
+    padding: 8px 12px; background: #f0f0f5; border-radius: 6px;
+    display: none;
+  }
+
+  /* Controls */
+  .bayes-cp .cp-controls {
+    display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;
+  }
+  .bayes-cp .cp-control-group {
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .bayes-cp .cp-control-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .bayes-cp .cp-control-label {
+    font-size: 0.9em; font-weight: bold; margin: 0;
+  }
+  .bayes-cp .cp-control-value {
+    font-size: 0.9em; font-family: 'Courier New', monospace;
+    color: #2a5da8; min-width: 50px; text-align: right;
+  }
+  .bayes-cp input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 8px; background: #ddd;
+    border-radius: 4px; outline: none; cursor: pointer;
+    margin: 2px 0; padding: 0;
+  }
+  .bayes-cp input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; background: #2a5da8;
+    border-radius: 50%; cursor: pointer;
+  }
+  .bayes-cp input[type="range"]::-moz-range-thumb {
+    width: 20px; height: 20px; background: #2a5da8;
+    border-radius: 50%; cursor: pointer; border: none;
+  }
+  .bayes-cp .cp-slider-ph::-webkit-slider-thumb { background: #555; }
+  .bayes-cp .cp-slider-ph::-moz-range-thumb { background: #555; }
+  .bayes-cp .cp-slider-sens::-webkit-slider-thumb { background: #2a7d3f; }
+  .bayes-cp .cp-slider-sens::-moz-range-thumb { background: #2a7d3f; }
+  .bayes-cp .cp-slider-fpr::-webkit-slider-thumb { background: #b85c1f; }
+  .bayes-cp .cp-slider-fpr::-moz-range-thumb { background: #b85c1f; }
+
+  /* Number input mode */
+  .bayes-cp .cp-num-input {
+    font-family: 'Courier New', monospace; font-size: 0.95em;
+    width: 90px; padding: 4px 6px; border: 1px solid #ccc;
+    border-radius: 4px; text-align: right; color: #2a5da8;
+  }
+  .bayes-cp .cp-num-input:focus {
+    outline: none; border-color: #2a5da8;
+  }
+  .bayes-cp .cp-input-toggle {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.8em; color: #888; margin-bottom: 8px;
+  }
+  .bayes-cp .cp-input-toggle label { cursor: pointer; }
+
+  /* Info panel */
+  .bayes-cp .cp-info-panel {
+    background: #f0f4f8; border-radius: 8px;
+    padding: 14px 16px; font-size: 0.85em;
+    line-height: 1.5; color: #444;
+  }
+  .bayes-cp .cp-info-panel strong { color: #222; }
+
+  @media (max-width: 700px) {
+    .bayes-cp .cp-main { flex-direction: column; gap: 16px; }
+    .bayes-cp .cp-formula-col { min-width: 0; }
+    .bayes-cp { padding: 12px 10px; }
+    .bayes-cp h2 { font-size: 1.2em; }
+    .bayes-cp .cp-post-value { font-size: 1.5em; }
+  }
+</style>
+
+<div class="bayes-cp">
+
+<h2>Bayesian Conditional Probability Explorer</h2>
+<p class="cp-subtitle">See how priors and likelihoods determine posteriors</p>
+
+<div class="cp-presets">
+  <button class="cp-preset-btn" onclick="cpSetPreset(0.5, 0.8, 0.2, 'Balanced')">Balanced</button>
+  <button class="cp-preset-btn" onclick="cpSetPreset(0.01, 0.95, 0.05, 'Rare disease')">Rare disease</button>
+  <button class="cp-preset-btn" onclick="cpSetPreset(0.01, 0.9, 0.1, 'Hume\'s miracle')">Hume's miracle</button>
+  <button class="cp-preset-btn" onclick="cpSetPreset(0.1, 0.99, 0.01, 'Strong evidence')">Strong evidence</button>
+  <button class="cp-preset-btn" onclick="cpSetPreset(0.3, 0.6, 0.4, 'Weak evidence')">Weak evidence</button>
+  <button class="cp-preset-btn" onclick="cpSetPreset(0.9, 0.7, 0.5, 'Confirmation bias')">Confirmation bias</button>
+</div>
+
+<div class="cp-controls">
+  <div class="cp-input-toggle">
+    <label><input type="checkbox" id="cp-nummode-toggle" onchange="cpToggleNumMode()"> Type exact values</label>
+  </div>
+  <div class="cp-control-group">
+    <div class="cp-control-header">
+      <span class="cp-control-label">Prior: <em>c</em>(H)</span>
+      <span class="cp-control-value" id="cp-ph-display">0.30</span>
+      <input class="cp-num-input" id="cp-ph-num" type="number" min="0.001" max="0.999" step="any" value="0.3" style="display:none" oninput="cpNumSync()">
+    </div>
+    <input type="range" class="cp-slider-ph" id="cp-ph-slider" min="0.005" max="0.995" step="0.005" value="0.3">
+  </div>
+  <div class="cp-control-group">
+    <div class="cp-control-header">
+      <span class="cp-control-label" style="color:#2a7d3f"><em>c</em>(E | H)</span>
+      <span class="cp-control-value" id="cp-egh-display" style="color:#2a7d3f">0.80</span>
+      <input class="cp-num-input" id="cp-egh-num" type="number" min="0.001" max="0.999" step="any" value="0.8" style="display:none;color:#2a7d3f" oninput="cpNumSync()">
+    </div>
+    <input type="range" class="cp-slider-sens" id="cp-egh-slider" min="0.01" max="0.99" step="0.01" value="0.8">
+  </div>
+  <div class="cp-control-group">
+    <div class="cp-control-header">
+      <span class="cp-control-label" style="color:#b85c1f"><em>c</em>(E | ¬H)</span>
+      <span class="cp-control-value" id="cp-egnh-display" style="color:#b85c1f">0.20</span>
+      <input class="cp-num-input" id="cp-egnh-num" type="number" min="0.001" max="0.999" step="any" value="0.2" style="display:none;color:#b85c1f" oninput="cpNumSync()">
+    </div>
+    <input type="range" class="cp-slider-fpr" id="cp-egnh-slider" min="0.01" max="0.99" step="0.01" value="0.2">
+  </div>
+  <div class="cp-pe-display">
+    <em>c</em>(E) = <span class="cp-pe-val" id="cp-pe-display">0.38</span>
+    <span style="font-size:0.85em;color:#888"> &nbsp;(determined by the settings above)</span>
+  </div>
+</div>
+
+<div class="cp-main">
+  <div class="cp-diagram-col">
+    <div class="cp-diagram-wrap">
+      <svg id="cp-eiko" viewBox="0 0 430 400" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="cp-posterior-bar">
+      <div class="cp-post-item">
+        <div class="cp-post-label"><em>c</em>(H | E)</div>
+        <div class="cp-post-value cp-hge" id="cp-hge-display">0.63</div>
+        <div class="cp-update-arrow" id="cp-hge-arrow"></div>
+      </div>
+      <div class="cp-post-item" style="color:#aaa;font-size:1.2em;align-self:center">|</div>
+      <div class="cp-post-item">
+        <div class="cp-post-label"><em>c</em>(H | ¬E)</div>
+        <div class="cp-post-value cp-hgne" id="cp-hgne-display">0.12</div>
+        <div class="cp-update-arrow" id="cp-hgne-arrow"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cp-formula-col">
+    <div class="cp-formula-box">
+      <div class="cp-formula-title">
+        <span id="cp-form-label">Bayes' Theorem (ratio form)</span>
+        <span>
+          <button class="cp-form-toggle cp-active" id="cp-btn-ratio" onclick="cpSetForm('ratio')">Ratio</button>
+          <button class="cp-form-toggle" id="cp-btn-odds" onclick="cpSetForm('odds')">Odds</button>
+        </span>
+      </div>
+      <div class="cp-formula-content" id="cp-formula-area"></div>
+      <div class="cp-step-nav">
+        <button class="cp-step-btn" id="cp-step-prev" onclick="cpStepPrev()">← Back</button>
+        <span class="cp-step-indicator" id="cp-step-ind"></span>
+        <button class="cp-step-btn" id="cp-step-next" onclick="cpStepNext()">Next →</button>
+        <button class="cp-step-btn" id="cp-step-reset" onclick="cpStepReset()">Reset</button>
+      </div>
+      <div class="cp-log-odds" id="cp-log-odds">
+        <strong>Log-odds form:</strong><br>
+        <span id="cp-log-odds-content"></span>
+      </div>
+      <div style="margin-top:8px">
+        <label style="font-size:0.8em;color:#888;cursor:pointer">
+          <input type="checkbox" id="cp-log-toggle" onchange="cpToggleLog()"> Show log-odds form
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cp-info-panel">
+  <strong>How to read this diagram:</strong> The total square represents the full probability space.
+  The width of the left column is <em>c</em>(H) — the prior. Within each column, the top region
+  is the probability of observing E given that column's truth value.
+  <strong>Hover over terms</strong> in the formula to highlight the corresponding regions in the diagram.
+  Use the <strong>Next →</strong> button to step through the Bayes' theorem calculation.
+</div>
+
+</div>
+
+<script>
+(function() {
+  var S = {
+    pH: 0.3, egh: 0.8, egnh: 0.2,
+    form: 'ratio', step: 0, maxStep: 4,
+    highlight: null /* null, 'tp', 'fp', 'num', 'den' */
+  };
+
+  function post(pH, egh, egnh) {
+    var n = pH * egh;
+    var d = n + (1 - pH) * egnh;
+    return d === 0 ? 0 : n / d;
+  }
+  function postNeg(pH, egh, egnh) {
+    var n = pH * (1 - egh);
+    var d = n + (1 - pH) * (1 - egnh);
+    return d === 0 ? 0 : n / d;
+  }
+  function pE(pH, egh, egnh) {
+    return pH * egh + (1 - pH) * egnh;
+  }
+  function fmt(v) {
+    if (v >= 0.9995) return "≈ 1.00";
+    if (v <= 0.0005) return "≈ 0";
+    if (v < 0.01) return v.toFixed(4);
+    if (v < 0.1) return v.toFixed(3);
+    return v.toFixed(2);
+  }
+  function fmt2(v) { return v.toFixed(2); }
+  function fmtDiff(v) {
+    /* Adaptive formatting for arrow displays — avoids misleading rounding */
+    var a = Math.abs(v);
+    if (a < 0.0005) return '< 0.001';
+    if (a < 0.005) return a.toFixed(4);
+    if (a < 0.05) return a.toFixed(3);
+    return a.toFixed(2);
+  }
+  function fmtPct(v) { return (v*100).toFixed(1) + '%'; }
+
+  /* ---- DIAGRAM ---- */
+  function drawDiagram() {
+    var svg = document.getElementById('cp-eiko');
+    var pH = S.pH, sens = S.egh, fpr = S.egnh, spec = 1 - fpr;
+    var M = 46, W = 330, H = 330;
+    var ox = M, oy = 16;
+    var wH = W * pH, wNH = W * (1 - pH);
+    var hEgH = H * sens, hNEgH = H * (1 - sens);
+    var hEgNH = H * fpr, hNEgNH = H * spec;
+
+    var hl = S.highlight;
+    /* Determine cell opacities based on highlight state */
+    var tpOp, fpOp, tnOp, fnOp;
+    var tpFill, fpFill, tnFill, fnFill;
+    /* Neutral palette: shades of blue-gray */
+    var neuTP = '#4a7ab5', neuFP = '#7a9ec4', neuFN = '#b8cce0', neuTN = '#d4dfe9';
+    /* Highlighted fills */
+    var hiTP = '#2a5da8', hiFP = '#d4760a';
+
+    if (!hl) {
+      tpFill = neuTP; fpFill = neuFP; fnFill = neuFN; tnFill = neuTN;
+      tpOp = 0.7; fpOp = 0.5; fnOp = 0.35; tnOp = 0.25;
+    } else if (hl === 'tp' || hl === 'num') {
+      tpFill = hiTP; fpFill = neuFP; fnFill = neuFN; tnFill = neuTN;
+      tpOp = 0.9; fpOp = 0.2; fnOp = 0.15; tnOp = 0.1;
+    } else if (hl === 'fp') {
+      tpFill = neuTP; fpFill = hiFP; fnFill = neuFN; tnFill = neuTN;
+      tpOp = 0.2; fpOp = 0.85; fnOp = 0.15; tnOp = 0.1;
+    } else if (hl === 'den') {
+      tpFill = hiTP; fpFill = hiFP; fnFill = neuFN; tnFill = neuTN;
+      tpOp = 0.9; fpOp = 0.85; fnOp = 0.15; tnOp = 0.1;
+    }
+
+    var cells = [
+      { x: ox, y: oy, w: wH, h: hEgH, fill: tpFill, op: tpOp, stroke: '#1a4a8a', id: 'tp' },
+      { x: ox, y: oy + hEgH, w: wH, h: hNEgH, fill: fnFill, op: fnOp, stroke: '#8aa8c8', id: 'fn' },
+      { x: ox + wH, y: oy, w: wNH, h: hEgNH, fill: fpFill, op: fpOp, stroke: '#b5640a', id: 'fp' },
+      { x: ox + wH, y: oy + hEgNH, w: wNH, h: hNEgNH, fill: tnFill, op: tnOp, stroke: '#8aa8c8', id: 'tn' }
+    ];
+
+    var html = '';
+    for (var i = 0; i < cells.length; i++) {
+      var c = cells[i];
+      if (c.w < 0.5 || c.h < 0.5) continue;
+      html += '<rect x="'+c.x+'" y="'+c.y+'" width="'+c.w+'" height="'+c.h+'" fill="'+c.fill+'" fill-opacity="'+c.op+'" stroke="'+c.stroke+'" stroke-width="1.5"/>';
+      var area = (c.w / W) * (c.h / H);
+      if (c.w > 36 && c.h > 28) {
+        var cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+        var tc = (c.op > 0.6) ? '#fff' : '#555';
+        var fs = (c.w > 60 && c.h > 45) ? 13 : 11;
+        html += '<text x="'+cx+'" y="'+(cy - 2)+'" text-anchor="middle" font-family="Courier New,monospace" fill="'+tc+'" font-size="'+fs+'" style="pointer-events:none">'+fmt(area)+'</text>';
+        /* Cell labels */
+        var labels = { tp: 'H ∧ E', fn: 'H ∧ ¬E', fp: '¬H ∧ E', tn: '¬H ∧ ¬E' };
+        if (c.w > 50 && c.h > 50) {
+          html += '<text x="'+cx+'" y="'+(cy + 14)+'" text-anchor="middle" font-family="Georgia,serif" fill="'+tc+'" font-size="10" font-style="italic" style="pointer-events:none;opacity:0.8">'+labels[c.id]+'</text>';
+        }
+      }
+    }
+
+    /* Outer border */
+    html += '<rect x="'+ox+'" y="'+oy+'" width="'+W+'" height="'+H+'" fill="none" stroke="#333" stroke-width="2"/>';
+    /* Vertical divider */
+    if (wH > 1 && wNH > 1)
+      html += '<line x1="'+(ox+wH)+'" y1="'+oy+'" x2="'+(ox+wH)+'" y2="'+(oy+H)+'" stroke="#333" stroke-width="2"/>';
+    /* Horizontal dividers */
+    if (hEgH > 1 && hNEgH > 1)
+      html += '<line x1="'+ox+'" y1="'+(oy+hEgH)+'" x2="'+(ox+wH)+'" y2="'+(oy+hEgH)+'" stroke="#333" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    if (hEgNH > 1 && hNEgNH > 1)
+      html += '<line x1="'+(ox+wH)+'" y1="'+(oy+hEgNH)+'" x2="'+(ox+W)+'" y2="'+(oy+hEgNH)+'" stroke="#333" stroke-width="1.5" stroke-dasharray="4,3"/>';
+
+    /* Axis labels */
+    if (wH > 16) {
+      html += '<text x="'+(ox+wH/2)+'" y="'+(oy+H+18)+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#222">H</text>';
+      html += '<text x="'+(ox+wH/2)+'" y="'+(oy+H+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#888">'+fmt(pH)+'</text>';
+    }
+    if (wNH > 16) {
+      html += '<text x="'+(ox+wH+wNH/2)+'" y="'+(oy+H+18)+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#222">¬H</text>';
+      html += '<text x="'+(ox+wH+wNH/2)+'" y="'+(oy+H+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#888">'+fmt(1-pH)+'</text>';
+    }
+    /* Side labels: sensitivity / FPR */
+    if (wH > 1 && hEgH > 18)
+      html += '<text x="'+(ox-5)+'" y="'+(oy+hEgH/2+4)+'" text-anchor="end" font-family="Georgia,serif" font-size="10" fill="#2a7d3f">'+fmtPct(sens)+'</text>';
+    if (wH > 1 && hNEgH > 18)
+      html += '<text x="'+(ox-5)+'" y="'+(oy+hEgH+hNEgH/2+4)+'" text-anchor="end" font-family="Georgia,serif" font-size="10" fill="#888">'+fmtPct(1-sens)+'</text>';
+    var rlx = ox + W + 5;
+    if (wNH > 1 && hEgNH > 18)
+      html += '<text x="'+rlx+'" y="'+(oy+hEgNH/2+4)+'" text-anchor="start" font-family="Georgia,serif" font-size="10" fill="#b85c1f">'+fmtPct(fpr)+'</text>';
+    if (wNH > 1 && hNEgNH > 18)
+      html += '<text x="'+rlx+'" y="'+(oy+hEgNH+hNEgNH/2+4)+'" text-anchor="start" font-family="Georgia,serif" font-size="10" fill="#888">'+fmtPct(1-fpr)+'</text>';
+
+    /* "E region" indicator */
+    var eRegY = Math.max(hEgH, hEgNH);
+    html += '<text x="'+(ox+W)+'" y="'+(oy-3)+'" text-anchor="end" font-family="Georgia,serif" font-size="11" fill="#555" font-style="italic">top regions = E</text>';
+
+    svg.innerHTML = html;
+  }
+
+  /* ---- POSTERIORS & P(E) ---- */
+  function updateValues() {
+    var pH = S.pH, egh = S.egh, egnh = S.egnh;
+    var pe = pE(pH, egh, egnh);
+    var hge = post(pH, egh, egnh);
+    var hgne = postNeg(pH, egh, egnh);
+
+    document.getElementById('cp-pe-display').textContent = fmt(pe);
+    document.getElementById('cp-hge-display').textContent = fmt(hge);
+    document.getElementById('cp-hgne-display').textContent = fmt(hgne);
+
+    /* Update arrows */
+    var diffE = hge - pH, diffNE = hgne - pH;
+    var arrowE = document.getElementById('cp-hge-arrow');
+    var arrowNE = document.getElementById('cp-hgne-arrow');
+    if (diffE > 0.0005) {
+      arrowE.innerHTML = '<span class="cp-arrow-up">↑ ' + fmtDiff(diffE) + ' from prior</span>';
+    } else if (diffE < -0.0005) {
+      arrowE.innerHTML = '<span class="cp-arrow-down">↓ ' + fmtDiff(diffE) + ' from prior</span>';
+    } else {
+      arrowE.innerHTML = '<span style="color:#888">≈ no change</span>';
+    }
+    if (diffNE > 0.0005) {
+      arrowNE.innerHTML = '<span class="cp-arrow-up">↑ ' + fmtDiff(diffNE) + ' from prior</span>';
+    } else if (diffNE < -0.0005) {
+      arrowNE.innerHTML = '<span class="cp-arrow-down">↓ ' + fmtDiff(diffNE) + ' from prior</span>';
+    } else {
+      arrowNE.innerHTML = '<span style="color:#888">≈ no change</span>';
+    }
+
+    /* Log-odds */
+    var priorOdds = pH / (1 - pH);
+    var lr = egh / egnh;
+    var postOdds = priorOdds * lr;
+    var logPrior = Math.log(priorOdds) / Math.LN10;
+    var logLR = Math.log(lr) / Math.LN10;
+    var logPost = logPrior + logLR;
+    document.getElementById('cp-log-odds-content').innerHTML =
+      'log<sub>10</sub> posterior odds = log<sub>10</sub> LR + log<sub>10</sub> prior odds<br>' +
+      fmt2(logPost) + ' = ' + fmt2(logLR) + ' + ' + fmt2(logPrior);
+  }
+
+  /* ---- FORMULA DISPLAY ---- */
+  function termSpan(cls, content) {
+    return '<span class="cp-term cp-term-' + cls + '" data-hl="' + cls + '">' + content + '</span>';
+  }
+
+  function renderFormula() {
+    var area = document.getElementById('cp-formula-area');
+    var pH = S.pH, egh = S.egh, egnh = S.egnh;
+    var pnh = 1 - pH;
+    var num = pH * egh;
+    var fpVal = pnh * egnh;
+    var den = num + fpVal;
+    var result = den === 0 ? 0 : num / den;
+    var step = S.step;
+
+    if (S.form === 'ratio') {
+      S.maxStep = 4;
+      var html = '';
+
+      /* Left side: always symbolic */
+      html += '<em>c</em>(H | E) = ';
+
+      if (step === 0) {
+        /* All symbolic */
+        html += '<span class="cp-frac">';
+        html += '<span class="cp-frac-num">' + termSpan('tp', '<em>c</em>(E|H) · <em>c</em>(H)') + '</span>';
+        html += '<span class="cp-frac-bar"></span>';
+        html += '<span class="cp-frac-den">' + termSpan('den', termSpan('tp', '<em>c</em>(E|H) · <em>c</em>(H)') + ' + ' + termSpan('fp', '<em>c</em>(E|¬H) · <em>c</em>(¬H)')) + '</span>';
+        html += '</span>';
+      } else if (step === 1) {
+        /* Values substituted */
+        html += '<span class="cp-frac">';
+        html += '<span class="cp-frac-num">' + termSpan('tp', fmt2(egh) + ' × ' + fmt2(pH)) + '</span>';
+        html += '<span class="cp-frac-bar"></span>';
+        html += '<span class="cp-frac-den">' + termSpan('den', termSpan('tp', fmt2(egh) + ' × ' + fmt2(pH)) + ' + ' + termSpan('fp', fmt2(egnh) + ' × ' + fmt2(pnh))) + '</span>';
+        html += '</span>';
+      } else if (step === 2) {
+        /* Multiply numerator and denominator components */
+        html += '<span class="cp-frac">';
+        html += '<span class="cp-frac-num">' + termSpan('tp', fmt(num)) + '</span>';
+        html += '<span class="cp-frac-bar"></span>';
+        html += '<span class="cp-frac-den">' + termSpan('den', termSpan('tp', fmt(num)) + ' + ' + termSpan('fp', fmt(fpVal))) + '</span>';
+        html += '</span>';
+      } else if (step === 3) {
+        /* Add denominator */
+        html += '<span class="cp-frac">';
+        html += '<span class="cp-frac-num">' + termSpan('tp', fmt(num)) + '</span>';
+        html += '<span class="cp-frac-bar"></span>';
+        html += '<span class="cp-frac-den">' + termSpan('den', fmt(den)) + '</span>';
+        html += '</span>';
+      } else {
+        /* Final value */
+        html += '<strong style="font-size:1.3em;color:#2a5da8">' + fmt(result) + '</strong>';
+      }
+
+      area.innerHTML = html;
+    } else {
+      /* Odds form */
+      S.maxStep = 3;
+      var priorOdds = pH / pnh;
+      var lr = egh / egnh;
+      var postOdds = priorOdds * lr;
+      var postProb = postOdds / (1 + postOdds);
+      var html = '';
+
+      html += 'Posterior odds = ';
+
+      if (step === 0) {
+        html += termSpan('den', 'likelihood ratio') + ' × prior odds';
+        html += '<br><br>';
+        html += 'where likelihood ratio = ' + termSpan('den',
+          '<span class="cp-frac"><span class="cp-frac-num">' + termSpan('tp', '<em>c</em>(E|H)') +
+          '</span><span class="cp-frac-bar"></span><span class="cp-frac-den">' +
+          termSpan('fp', '<em>c</em>(E|¬H)') + '</span></span>');
+        html += ' &nbsp;and prior odds = ';
+        html += '<span class="cp-frac"><span class="cp-frac-num"><em>c</em>(H)</span><span class="cp-frac-bar"></span><span class="cp-frac-den"><em>c</em>(¬H)</span></span>';
+      } else if (step === 1) {
+        html += '<span class="cp-frac"><span class="cp-frac-num">' + termSpan('tp', fmt2(egh)) +
+          '</span><span class="cp-frac-bar"></span><span class="cp-frac-den">' +
+          termSpan('fp', fmt2(egnh)) + '</span></span>';
+        html += ' × ';
+        html += '<span class="cp-frac"><span class="cp-frac-num">' + fmt2(pH) +
+          '</span><span class="cp-frac-bar"></span><span class="cp-frac-den">' + fmt2(pnh) + '</span></span>';
+      } else if (step === 2) {
+        html += fmt2(lr) + ' × ' + fmt2(priorOdds) + ' = <strong>' + fmt2(postOdds) + '</strong>';
+      } else {
+        html += fmt2(postOdds);
+        html += '<br><br><em>c</em>(H|E) = <span class="cp-frac"><span class="cp-frac-num">' +
+          fmt2(postOdds) + '</span><span class="cp-frac-bar"></span><span class="cp-frac-den">' +
+          '1 + ' + fmt2(postOdds) + '</span></span> = <strong style="font-size:1.3em;color:#2a5da8">' + fmt(postProb) + '</strong>';
+      }
+
+      area.innerHTML = html;
+    }
+
+    /* Update step indicator */
+    document.getElementById('cp-step-ind').textContent = 'Step ' + step + ' / ' + S.maxStep;
+    document.getElementById('cp-step-prev').disabled = (step === 0);
+    document.getElementById('cp-step-next').disabled = (step >= S.maxStep);
+
+    /* Attach hover listeners to terms */
+    attachTermHovers();
+  }
+
+  function attachTermHovers() {
+    var terms = document.querySelectorAll('.bayes-cp .cp-term');
+    for (var i = 0; i < terms.length; i++) {
+      terms[i].addEventListener('mouseenter', onTermEnter);
+      terms[i].addEventListener('mouseleave', onTermLeave);
+    }
+  }
+  function onTermEnter(e) {
+    var el = e.currentTarget;
+    var hl = el.getAttribute('data-hl');
+    S.highlight = hl;
+    /* Add hover class to all matching terms */
+    var all = document.querySelectorAll('.bayes-cp .cp-term-' + hl);
+    for (var i = 0; i < all.length; i++) all[i].classList.add('cp-hover');
+    drawDiagram();
+  }
+  function onTermLeave(e) {
+    S.highlight = null;
+    var all = document.querySelectorAll('.bayes-cp .cp-term.cp-hover');
+    for (var i = 0; i < all.length; i++) all[i].classList.remove('cp-hover');
+    drawDiagram();
+  }
+
+  /* ---- STEP NAVIGATION ---- */
+  window.cpStepNext = function() {
+    if (S.step < S.maxStep) { S.step++; renderFormula(); }
+  };
+  window.cpStepPrev = function() {
+    if (S.step > 0) { S.step--; renderFormula(); }
+  };
+  window.cpStepReset = function() {
+    S.step = 0; renderFormula();
+  };
+
+  /* ---- FORM TOGGLE ---- */
+  window.cpSetForm = function(f) {
+    S.form = f;
+    S.step = 0;
+    document.getElementById('cp-btn-ratio').classList.toggle('cp-active', f === 'ratio');
+    document.getElementById('cp-btn-odds').classList.toggle('cp-active', f === 'odds');
+    document.getElementById('cp-form-label').textContent =
+      f === 'ratio' ? "Bayes' Theorem (ratio form)" : "Bayes' Theorem (odds form)";
+    renderFormula();
+  };
+
+  /* ---- LOG-ODDS TOGGLE ---- */
+  window.cpToggleLog = function() {
+    var show = document.getElementById('cp-log-toggle').checked;
+    document.getElementById('cp-log-odds').style.display = show ? '' : 'none';
+  };
+
+  /* ---- SLIDER SYNC ---- */
+  function syncSliders() {
+    S.pH = parseFloat(document.getElementById('cp-ph-slider').value);
+    S.egh = parseFloat(document.getElementById('cp-egh-slider').value);
+    S.egnh = parseFloat(document.getElementById('cp-egnh-slider').value);
+    document.getElementById('cp-ph-display').textContent = fmt(S.pH);
+    document.getElementById('cp-egh-display').textContent = fmt(S.egh);
+    document.getElementById('cp-egnh-display').textContent = fmt(S.egnh);
+    if (numMode) {
+      document.getElementById('cp-ph-num').value = S.pH;
+      document.getElementById('cp-egh-num').value = S.egh;
+      document.getElementById('cp-egnh-num').value = S.egnh;
+    }
+    update();
+  }
+
+  function update() {
+    drawDiagram();
+    updateValues();
+    renderFormula();
+  }
+
+  /* ---- NUMBER INPUT MODE ---- */
+  var numMode = false;
+  window.cpToggleNumMode = function() {
+    numMode = document.getElementById('cp-nummode-toggle').checked;
+    var nums = ['cp-ph-num', 'cp-egh-num', 'cp-egnh-num'];
+    var disps = ['cp-ph-display', 'cp-egh-display', 'cp-egnh-display'];
+    for (var i = 0; i < nums.length; i++) {
+      document.getElementById(nums[i]).style.display = numMode ? '' : 'none';
+      document.getElementById(disps[i]).style.display = numMode ? 'none' : '';
+    }
+    if (numMode) {
+      document.getElementById('cp-ph-num').value = S.pH;
+      document.getElementById('cp-egh-num').value = S.egh;
+      document.getElementById('cp-egnh-num').value = S.egnh;
+    }
+  };
+
+  window.cpNumSync = function() {
+    var pH = parseFloat(document.getElementById('cp-ph-num').value);
+    var egh = parseFloat(document.getElementById('cp-egh-num').value);
+    var egnh = parseFloat(document.getElementById('cp-egnh-num').value);
+    if (isNaN(pH) || isNaN(egh) || isNaN(egnh)) return;
+    pH = Math.max(0.001, Math.min(0.999, pH));
+    egh = Math.max(0.001, Math.min(0.999, egh));
+    egnh = Math.max(0.001, Math.min(0.999, egnh));
+    S.pH = pH; S.egh = egh; S.egnh = egnh;
+    document.getElementById('cp-ph-slider').value = pH;
+    document.getElementById('cp-egh-slider').value = egh;
+    document.getElementById('cp-egnh-slider').value = egnh;
+    update();
+  };
+
+  /* ---- PRESETS ---- */
+  window.cpSetPreset = function(pH, egh, egnh, name) {
+    S.pH = pH; S.egh = egh; S.egnh = egnh; S.step = 0;
+    document.getElementById('cp-ph-slider').value = pH;
+    document.getElementById('cp-egh-slider').value = egh;
+    document.getElementById('cp-egnh-slider').value = egnh;
+    document.getElementById('cp-ph-display').textContent = fmt(pH);
+    document.getElementById('cp-egh-display').textContent = fmt(egh);
+    document.getElementById('cp-egnh-display').textContent = fmt(egnh);
+    if (numMode) {
+      document.getElementById('cp-ph-num').value = pH;
+      document.getElementById('cp-egh-num').value = egh;
+      document.getElementById('cp-egnh-num').value = egnh;
+    }
+    update();
+  };
+
+  /* ---- INIT ---- */
+  document.getElementById('cp-ph-slider').addEventListener('input', syncSliders);
+  document.getElementById('cp-egh-slider').addEventListener('input', syncSliders);
+  document.getElementById('cp-egnh-slider').addEventListener('input', syncSliders);
+
+  update();
+})();
+</script>
