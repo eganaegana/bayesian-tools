@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testimony &amp; Speaker Reliability Explorer</title>
+<style>
+  body { margin: 0; padding: 0; background: #fff; }
+  .bayes-tt {
+    box-sizing: border-box;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #222; max-width: 1000px;
+    margin: 0 auto; padding: 24px 20px; line-height: 1.4;
+  }
+  .bayes-tt *, .bayes-tt *::before, .bayes-tt *::after { box-sizing: border-box; }
+  .bayes-tt h2 {
+    font-size: 1.4em; text-align: center; margin: 0 0 4px 0;
+    font-weight: normal; line-height: 1.3;
+  }
+  .bayes-tt .tt-subtitle {
+    text-align: center; font-size: 0.9em; color: #666; margin: 0 0 20px 0;
+  }
+
+  /* Presets */
+  .bayes-tt .tt-presets {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    margin-bottom: 20px; justify-content: center;
+  }
+  .bayes-tt .tt-preset-btn {
+    font-family: Georgia, serif; font-size: 0.78em;
+    padding: 4px 11px; border: 1px solid #ccc; border-radius: 16px;
+    background: white; cursor: pointer; color: #444;
+    transition: 0.15s; line-height: 1.4;
+  }
+  .bayes-tt .tt-preset-btn:hover {
+    background: #e8eef6; border-color: #2a5da8; color: #2a5da8;
+  }
+
+  /* Controls */
+  .bayes-tt .tt-controls {
+    display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;
+  }
+  .bayes-tt .tt-input-toggle {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.8em; color: #888; margin-bottom: 2px;
+  }
+  .bayes-tt .tt-input-toggle label { cursor: pointer; }
+  .bayes-tt .tt-control-group { display: flex; flex-direction: column; gap: 3px; }
+  .bayes-tt .tt-control-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .bayes-tt .tt-control-label { font-size: 0.9em; font-weight: bold; margin: 0; }
+  .bayes-tt .tt-control-value {
+    font-size: 0.9em; font-family: 'Courier New', monospace;
+    color: #2a5da8; min-width: 50px; text-align: right;
+  }
+  .bayes-tt .tt-num-input {
+    font-family: 'Courier New', monospace; font-size: 0.9em;
+    width: 85px; padding: 3px 5px; border: 1px solid #ccc;
+    border-radius: 4px; text-align: right; color: #2a5da8;
+  }
+  .bayes-tt .tt-num-input:focus { outline: none; border-color: #2a5da8; }
+  .bayes-tt input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 8px; background: #ddd;
+    border-radius: 4px; outline: none; cursor: pointer;
+    margin: 2px 0; padding: 0;
+  }
+  .bayes-tt input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; background: #2a5da8;
+    border-radius: 50%; cursor: pointer;
+  }
+  .bayes-tt input[type="range"]::-moz-range-thumb {
+    width: 20px; height: 20px; background: #2a5da8;
+    border-radius: 50%; cursor: pointer; border: none;
+  }
+  .bayes-tt .tt-slider-ph::-webkit-slider-thumb { background: #555; }
+  .bayes-tt .tt-slider-ph::-moz-range-thumb { background: #555; }
+  .bayes-tt .tt-slider-sinc::-webkit-slider-thumb { background: #2a7d3f; }
+  .bayes-tt .tt-slider-sinc::-moz-range-thumb { background: #2a7d3f; }
+  .bayes-tt .tt-slider-corr::-webkit-slider-thumb { background: #8a5da8; }
+  .bayes-tt .tt-slider-corr::-moz-range-thumb { background: #8a5da8; }
+
+  /* Bridge: derived values */
+  .bayes-tt .tt-bridge {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 32px;
+    margin-bottom: 20px; padding: 10px 12px;
+    background: #f8f9fb; border: 1px solid #e0e4ea; border-radius: 8px;
+  }
+  .bayes-tt .tt-bridge-item { text-align: center; }
+  .bayes-tt .tt-bridge-label { font-size: 0.82em; color: #666; margin: 0; }
+  .bayes-tt .tt-bridge-val {
+    font-size: 1.3em; font-weight: bold; font-family: 'Courier New', monospace;
+    margin: 0;
+  }
+  .bayes-tt .tt-bridge-truth { color: #2a5da8; }
+  .bayes-tt .tt-bridge-shh { color: #2a7d3f; }
+  .bayes-tt .tt-bridge-shnh { color: #b85c1f; }
+
+  /* Main layout */
+  .bayes-tt .tt-main {
+    display: flex; gap: 28px; align-items: flex-start;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .bayes-tt .tt-diagram-col {
+    flex: 1 1 400px; min-width: 280px; max-width: 520px;
+  }
+  .bayes-tt .tt-formula-col {
+    flex: 1 1 360px; min-width: 300px;
+  }
+
+  /* View toggle */
+  .bayes-tt .tt-view-toggle {
+    display: flex; gap: 6px; justify-content: center;
+    margin-bottom: 10px; align-items: center;
+  }
+  .bayes-tt .tt-view-btn {
+    font-family: Georgia, serif; font-size: 0.82em;
+    padding: 4px 14px; border: 1px solid #ccc; border-radius: 14px;
+    background: white; cursor: pointer; color: #666; transition: 0.15s;
+  }
+  .bayes-tt .tt-view-btn:hover { border-color: #2a5da8; color: #2a5da8; }
+  .bayes-tt .tt-view-btn.tt-active {
+    background: #2a5da8; color: white; border-color: #2a5da8;
+  }
+
+  /* Diagram */
+  .bayes-tt .tt-diagram-wrap {
+    display: flex; justify-content: center; margin-bottom: 8px;
+  }
+  .bayes-tt .tt-diagram-wrap svg {
+    display: block; width: 100%; max-width: 480px; height: auto;
+  }
+
+  /* Display toggles (combined mode) */
+  .bayes-tt .tt-disp-toggles {
+    display: flex; gap: 16px; justify-content: center;
+    margin-bottom: 8px; font-size: 0.8em; color: #666;
+  }
+  .bayes-tt .tt-disp-toggles label { cursor: pointer; }
+
+  /* Highlight panel (combined mode) */
+  .bayes-tt .tt-hl-panel {
+    margin-bottom: 10px; padding: 8px 12px;
+    background: #f8f9fb; border: 1px solid #e0e4ea; border-radius: 8px;
+  }
+  .bayes-tt .tt-hl-title {
+    font-size: 0.78em; color: #999; margin: 0 0 6px 0;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .bayes-tt .tt-hl-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+  }
+  .bayes-tt .tt-hl-item {
+    display: flex; align-items: baseline; gap: 5px;
+    padding: 3px 6px; border-radius: 4px; cursor: pointer;
+    font-size: 0.82em; transition: background 0.15s;
+  }
+  .bayes-tt .tt-hl-item:hover { background: rgba(42,138,74,0.1); }
+  .bayes-tt .tt-hl-item input[type="checkbox"] {
+    accent-color: #2a8a4a; margin: 0; flex-shrink: 0;
+  }
+  .bayes-tt .tt-hl-name { color: #555; flex: 1; }
+  .bayes-tt .tt-hl-prob {
+    font-family: 'Courier New', monospace; color: #2a5da8;
+    font-size: 0.95em; margin-left: auto;
+  }
+  .bayes-tt .tt-hl-conj {
+    margin-top: 6px; padding-top: 6px; border-top: 1px dashed #ddd;
+    font-size: 0.82em; color: #2a8a4a;
+  }
+  .bayes-tt .tt-hl-conj strong {
+    font-family: 'Courier New', monospace; color: #2a8a4a;
+  }
+
+  /* Posterior bar */
+  .bayes-tt .tt-posterior-bar {
+    display: flex; justify-content: center; gap: 24px;
+    align-items: baseline; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .bayes-tt .tt-post-item { text-align: center; }
+  .bayes-tt .tt-post-label { font-size: 0.85em; color: #555; margin: 0; }
+  .bayes-tt .tt-post-value { font-size: 1.7em; font-weight: bold; margin: 0; }
+  .bayes-tt .tt-post-hge { color: #2a5da8; }
+  .bayes-tt .tt-post-hgne { color: #7a5da8; }
+  .bayes-tt .tt-update-arrow { font-size: 0.85em; color: #888; margin: 0; }
+  .bayes-tt .tt-arrow-up { color: #2a7d3f; }
+  .bayes-tt .tt-arrow-down { color: #c0392b; }
+
+  /* Gloss table (combined mode) */
+  .bayes-tt .tt-gloss {
+    margin-top: 10px; font-size: 0.82em;
+  }
+  .bayes-tt .tt-gloss-title {
+    font-size: 0.78em; color: #999; margin: 0 0 6px 0;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .bayes-tt .tt-gloss table {
+    width: 100%; border-collapse: collapse;
+  }
+  .bayes-tt .tt-gloss th {
+    text-align: left; font-size: 0.9em; color: #888;
+    padding: 3px 6px; border-bottom: 1px solid #ddd; font-weight: normal;
+  }
+  .bayes-tt .tt-gloss td {
+    padding: 3px 6px; border-bottom: 1px solid #eee;
+  }
+  .bayes-tt .tt-gloss-row { cursor: default; transition: background 0.15s; }
+  .bayes-tt .tt-gloss-row:hover { background: rgba(42,93,168,0.1); }
+  .bayes-tt .tt-gloss-letter {
+    font-weight: bold; font-family: Georgia, serif; width: 20px;
+  }
+  .bayes-tt .tt-gloss-assign { color: #666; font-size: 0.95em; }
+  .bayes-tt .tt-gloss-desc { color: #444; font-style: italic; }
+  .bayes-tt .tt-gloss-prob-val {
+    font-family: 'Courier New', monospace; color: #2a5da8;
+    text-align: right; width: 50px;
+  }
+
+  /* Formula box */
+  .bayes-tt .tt-formula-box {
+    background: #f8f9fb; border: 1px solid #e0e4ea;
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 12px;
+  }
+  .bayes-tt .tt-formula-section {
+    margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px dashed #ddd;
+  }
+  .bayes-tt .tt-formula-section:last-of-type {
+    margin-bottom: 8px; padding-bottom: 0; border-bottom: none;
+  }
+  .bayes-tt .tt-section-label {
+    font-size: 0.8em; color: #999; margin: 0 0 6px 0;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .bayes-tt .tt-section-done .tt-section-label { color: #bbb; }
+  .bayes-tt .tt-section-done .tt-formula-content { opacity: 0.55; }
+  .bayes-tt .tt-formula-title {
+    font-size: 0.85em; color: #666; margin: 0 0 8px 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .bayes-tt .tt-form-toggle {
+    font-family: Georgia, serif; font-size: 0.9em;
+    padding: 2px 9px; border: 1px solid #ccc; border-radius: 12px;
+    background: white; cursor: pointer; color: #666; transition: 0.15s;
+  }
+  .bayes-tt .tt-form-toggle:hover { border-color: #2a5da8; color: #2a5da8; }
+  .bayes-tt .tt-form-toggle.tt-active {
+    background: #2a5da8; color: white; border-color: #2a5da8;
+  }
+  .bayes-tt .tt-formula-content {
+    font-size: 0.92em; line-height: 1.9; transition: opacity 0.2s;
+  }
+  .bayes-tt .tt-frac {
+    display: inline-flex; flex-direction: column; align-items: center;
+    vertical-align: middle; margin: 0 3px;
+  }
+  .bayes-tt .tt-frac-num, .bayes-tt .tt-frac-den {
+    padding: 1px 5px; text-align: center;
+  }
+  .bayes-tt .tt-frac-bar { width: 100%; height: 1.5px; background: #333; }
+
+  /* Mini S/C grid */
+  .bayes-tt .tt-sc-grid-wrap {
+    display: flex; justify-content: center; margin-bottom: 8px;
+  }
+  .bayes-tt .tt-sc-grid-wrap svg {
+    display: block; width: 100%; max-width: 200px; height: auto;
+  }
+
+  /* Hoverable terms */
+  .bayes-tt .tt-term {
+    padding: 1px 3px; border-radius: 3px; cursor: default;
+    transition: background 0.15s;
+  }
+  .bayes-tt .tt-term.tt-hover-active { background: rgba(42,93,168,0.18); }
+  .bayes-tt .tt-term-fp.tt-hover-active { background: rgba(212,118,10,0.18); }
+  .bayes-tt .tt-term-sc.tt-hover-active { background: rgba(42,125,63,0.18); }
+  .bayes-tt .tt-term-ii.tt-hover-active { background: rgba(138,93,168,0.18); }
+  .bayes-tt .tt-term-si.tt-hover-active { background: rgba(212,118,10,0.18); }
+  .bayes-tt .tt-term-ic.tt-hover-active { background: rgba(180,80,20,0.18); }
+
+  /* Step nav */
+  .bayes-tt .tt-step-nav {
+    display: flex; gap: 8px; align-items: center; margin-top: 8px;
+  }
+  .bayes-tt .tt-step-btn {
+    font-family: Georgia, serif; font-size: 0.82em;
+    padding: 3px 12px; border: 1px solid #ccc; border-radius: 14px;
+    background: white; cursor: pointer; color: #444; transition: 0.15s;
+  }
+  .bayes-tt .tt-step-btn:hover { border-color: #2a5da8; color: #2a5da8; }
+  .bayes-tt .tt-step-btn:disabled { opacity: 0.4; cursor: default; }
+  .bayes-tt .tt-step-ind { font-size: 0.78em; color: #999; }
+
+  /* Log-odds */
+  .bayes-tt .tt-log-odds {
+    font-size: 0.82em; color: #555; margin-top: 8px;
+    padding: 7px 10px; background: #f0f0f5; border-radius: 6px;
+    display: none;
+  }
+
+  /* Info panel */
+  .bayes-tt .tt-info-panel {
+    background: #f0f4f8; border-radius: 8px;
+    padding: 14px 16px; font-size: 0.85em;
+    line-height: 1.5; color: #444;
+  }
+  .bayes-tt .tt-info-panel strong { color: #222; }
+
+  @media (max-width: 700px) {
+    .bayes-tt .tt-main { flex-direction: column; gap: 16px; }
+    .bayes-tt .tt-formula-col { min-width: 0; }
+    .bayes-tt { padding: 14px 12px; }
+    .bayes-tt h2 { font-size: 1.2em; }
+    .bayes-tt .tt-post-value { font-size: 1.4em; }
+    .bayes-tt .tt-hl-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bayes-tt">
+
+<h2>Testimony &amp; Speaker Reliability</h2>
+<p class="tt-subtitle">How sincerity and correctness determine the evidential force of testimony</p>
+
+<div class="tt-presets">
+  <button class="tt-preset-btn" onclick="ttPreset(0.3,0.95,0.95)">Trusted friend</button>
+  <button class="tt-preset-btn" onclick="ttPreset(0.3,0.05,0.95)">Known liar</button>
+  <button class="tt-preset-btn" onclick="ttPreset(0.3,0.95,0.55)">Clueless but honest</button>
+  <button class="tt-preset-btn" onclick="ttPreset(0.3,0.7,0.7)">Stranger</button>
+  <button class="tt-preset-btn" onclick="ttPreset(0.1,0.98,0.98)">Expert witness</button>
+  <button class="tt-preset-btn" onclick="ttPreset(0.1,0.9,0.9)">EJ: accurate</button>
+  <button class="tt-preset-btn" onclick="ttPreset(0.1,0.9,0.6)">EJ: credibility deficit</button>
+  <button class="tt-preset-btn" onclick="ttPreset(0.3,0.05,0.1)">Liar who's wrong</button>
+</div>
+
+<div class="tt-controls">
+  <div class="tt-input-toggle">
+    <label><input type="checkbox" id="tt-nummode" onchange="ttToggleNum()"> Type exact values</label>
+  </div>
+  <div class="tt-control-group">
+    <div class="tt-control-header">
+      <span class="tt-control-label">Prior: <em>c</em>(H)</span>
+      <span class="tt-control-value" id="tt-ph-disp">0.30</span>
+      <input class="tt-num-input" id="tt-ph-num" type="number" min="0.001" max="0.999" step="any" value="0.3" style="display:none" oninput="ttNumSync()">
+    </div>
+    <input type="range" class="tt-slider-ph" id="tt-ph-sl" min="0.005" max="0.995" step="0.005" value="0.3">
+  </div>
+  <div class="tt-control-group">
+    <div class="tt-control-header">
+      <span class="tt-control-label" style="color:#2a7d3f"><em>c</em>(Sincere)</span>
+      <span class="tt-control-value" id="tt-sinc-disp" style="color:#2a7d3f">0.95</span>
+      <input class="tt-num-input" id="tt-sinc-num" type="number" min="0.001" max="0.999" step="any" value="0.95" style="display:none;color:#2a7d3f" oninput="ttNumSync()">
+    </div>
+    <input type="range" class="tt-slider-sinc" id="tt-sinc-sl" min="0.01" max="0.99" step="0.01" value="0.95">
+  </div>
+  <div class="tt-control-group">
+    <div class="tt-control-header">
+      <span class="tt-control-label" style="color:#8a5da8"><em>c</em>(Correct)</span>
+      <span class="tt-control-value" id="tt-corr-disp" style="color:#8a5da8">0.95</span>
+      <input class="tt-num-input" id="tt-corr-num" type="number" min="0.001" max="0.999" step="any" value="0.95" style="display:none;color:#8a5da8" oninput="ttNumSync()">
+    </div>
+    <input type="range" class="tt-slider-corr" id="tt-corr-sl" min="0.01" max="0.99" step="0.01" value="0.95">
+  </div>
+</div>
+
+<div class="tt-bridge">
+  <div class="tt-bridge-item">
+    <div class="tt-bridge-label"><em>c</em>(speaks truly)</div>
+    <div class="tt-bridge-val tt-bridge-truth" id="tt-truth-disp">0.905</div>
+  </div>
+  <div class="tt-bridge-item">
+    <div class="tt-bridge-label"><em>c</em>(says H | H)</div>
+    <div class="tt-bridge-val tt-bridge-shh" id="tt-shh-disp">0.905</div>
+  </div>
+  <div class="tt-bridge-item">
+    <div class="tt-bridge-label"><em>c</em>(says H | &not;H)</div>
+    <div class="tt-bridge-val tt-bridge-shnh" id="tt-shnh-disp">0.095</div>
+  </div>
+</div>
+
+<div class="tt-main">
+  <div class="tt-diagram-col">
+
+    <!-- View toggle -->
+    <div class="tt-view-toggle">
+      <button class="tt-view-btn tt-active" id="tt-btn-sep" onclick="ttSetView('separated')"
+        title="Two separate eikosograms: one for H/&not;H and Says H/Says &not;H, and another for Sincerity and Correctness.">Separated</button>
+      <button class="tt-view-btn" id="tt-btn-comb" onclick="ttSetView('combined')"
+        title="A single eikosogram partitioned by H, Sincerity, and Correctness. Other propositions (Says H, Believes H, Speaks Truly) are entailed by these three and appear as checkerboard patterns.">Combined</button>
+    </div>
+
+    <!-- Separated view: existing eikosogram -->
+    <div class="tt-diagram-wrap" id="tt-sep-view">
+      <svg id="tt-eiko" viewBox="0 0 430 400" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+
+    <!-- Combined view: 8-cell diagram -->
+    <div class="tt-diagram-wrap" id="tt-comb-view" style="display:none">
+      <svg id="tt-eight-cell" viewBox="0 0 430 400" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+
+    <!-- Display toggles (combined mode only) -->
+    <div class="tt-disp-toggles" id="tt-disp-toggles" style="display:none">
+      <label><input type="checkbox" id="tt-show-labels" checked onchange="ttDispToggle()"> Region labels</label>
+      <label><input type="checkbox" id="tt-show-probs" onchange="ttDispToggle()"> Probabilities</label>
+    </div>
+
+    <!-- Highlight panel (combined mode only) -->
+    <div class="tt-hl-panel" id="tt-hl-panel" style="display:none">
+      <div class="tt-hl-title">Highlight entailed propositions</div>
+      <div class="tt-hl-grid">
+        <label class="tt-hl-item">
+          <input type="checkbox" value="saysH" onchange="ttHlCheck()">
+          <span class="tt-hl-name">Speaker says H</span>
+          <span class="tt-hl-prob" id="tt-hlp-saysH"></span>
+        </label>
+        <label class="tt-hl-item">
+          <input type="checkbox" value="saysNH" onchange="ttHlCheck()">
+          <span class="tt-hl-name">Speaker says &not;H</span>
+          <span class="tt-hl-prob" id="tt-hlp-saysNH"></span>
+        </label>
+        <label class="tt-hl-item">
+          <input type="checkbox" value="believesH" onchange="ttHlCheck()">
+          <span class="tt-hl-name">Speaker believes H</span>
+          <span class="tt-hl-prob" id="tt-hlp-believesH"></span>
+        </label>
+        <label class="tt-hl-item">
+          <input type="checkbox" value="believesNH" onchange="ttHlCheck()">
+          <span class="tt-hl-name">Speaker believes &not;H</span>
+          <span class="tt-hl-prob" id="tt-hlp-believesNH"></span>
+        </label>
+        <label class="tt-hl-item">
+          <input type="checkbox" value="speaksTrue" onchange="ttHlCheck()">
+          <span class="tt-hl-name">Speaker speaks truly</span>
+          <span class="tt-hl-prob" id="tt-hlp-speaksTrue"></span>
+        </label>
+        <label class="tt-hl-item">
+          <input type="checkbox" value="speaksFalse" onchange="ttHlCheck()">
+          <span class="tt-hl-name">Speaker speaks falsely</span>
+          <span class="tt-hl-prob" id="tt-hlp-speaksFalse"></span>
+        </label>
+      </div>
+      <div class="tt-hl-conj" id="tt-hl-conj" style="display:none">
+        <em>c</em>(highlighted region) = <strong id="tt-hl-conj-val"></strong>
+      </div>
+    </div>
+
+    <div class="tt-posterior-bar">
+      <div class="tt-post-item">
+        <div class="tt-post-label"><em>c</em>(H | says H)</div>
+        <div class="tt-post-value tt-post-hge" id="tt-hge-disp">0.80</div>
+        <div class="tt-update-arrow" id="tt-hge-arrow"></div>
+      </div>
+      <div class="tt-post-item" style="color:#aaa;font-size:1.2em;align-self:center">|</div>
+      <div class="tt-post-item">
+        <div class="tt-post-label"><em>c</em>(H | says &not;H)</div>
+        <div class="tt-post-value tt-post-hgne" id="tt-hgne-disp">0.06</div>
+        <div class="tt-update-arrow" id="tt-hgne-arrow"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tt-formula-col">
+    <div class="tt-formula-box">
+
+      <!-- Part 1: Speaker reliability decomposition -->
+      <div class="tt-formula-section" id="tt-decomp-section">
+        <div class="tt-section-label">Part 1: Speaker Reliability</div>
+        <div class="tt-sc-grid-wrap" id="tt-sc-grid-wrap">
+          <svg id="tt-sc-grid" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="tt-formula-content" id="tt-decomp-area"></div>
+      </div>
+
+      <!-- Part 2: Bayesian update -->
+      <div class="tt-formula-section" id="tt-bayes-section">
+        <div class="tt-section-label">Part 2: Bayesian Update</div>
+        <div class="tt-formula-title">
+          <span id="tt-form-label">Ratio form</span>
+          <span>
+            <button class="tt-form-toggle tt-active" id="tt-btn-ratio" onclick="ttSetForm('ratio')">Ratio</button>
+            <button class="tt-form-toggle" id="tt-btn-odds" onclick="ttSetForm('odds')">Odds</button>
+          </span>
+        </div>
+        <div class="tt-formula-content" id="tt-bayes-area"></div>
+      </div>
+
+      <div class="tt-step-nav">
+        <button class="tt-step-btn" id="tt-step-prev" onclick="ttStepPrev()">&larr; Back</button>
+        <span class="tt-step-ind" id="tt-step-ind">Step 0 / 6</span>
+        <button class="tt-step-btn" id="tt-step-next" onclick="ttStepNext()">Next &rarr;</button>
+        <button class="tt-step-btn" onclick="ttStepReset()">Reset</button>
+      </div>
+
+      <div class="tt-log-odds" id="tt-log-odds">
+        <strong>Log-odds form:</strong><br>
+        <span id="tt-log-content"></span>
+      </div>
+      <div style="margin-top:6px">
+        <label style="font-size:0.78em;color:#888;cursor:pointer">
+          <input type="checkbox" id="tt-log-toggle" onchange="ttToggleLog()"> Show log-odds form
+        </label>
+      </div>
+    </div>
+
+    <!-- Gloss table (combined mode only) -->
+    <div class="tt-gloss" id="tt-gloss" style="display:none">
+      <div class="tt-gloss-title">Cell interpretations</div>
+      <table>
+        <thead>
+          <tr><th></th><th>Assignment</th><th>Says</th><th>True?</th><th>Interpretation</th><th style="text-align:right"><em>c</em>()</th></tr>
+        </thead>
+        <tbody>
+          <tr class="tt-gloss-row" data-ectarget="b">
+            <td class="tt-gloss-letter">b</td>
+            <td class="tt-gloss-assign">S, C, H</td>
+            <td>H</td><td>&#10003;</td>
+            <td class="tt-gloss-desc">Paradigmatic good testimony for H</td>
+            <td class="tt-gloss-prob-val" id="tt-gp-b"></td>
+          </tr>
+          <tr class="tt-gloss-row" data-ectarget="e">
+            <td class="tt-gloss-letter">e</td>
+            <td class="tt-gloss-assign">&not;S, &not;C, H</td>
+            <td>H</td><td>&#10003;</td>
+            <td class="tt-gloss-desc">Incompetent liar says H</td>
+            <td class="tt-gloss-prob-val" id="tt-gp-e"></td>
+          </tr>
+          <tr class="tt-gloss-row" data-ectarget="d">
+            <td class="tt-gloss-letter">d</td>
+            <td class="tt-gloss-assign">S, &not;C, &not;H</td>
+            <td>H</td><td>&#10007;</td>
+            <td class="tt-gloss-desc">Sincere misbeliever says H</td>
+            <td class="tt-gloss-prob-val" id="tt-gp-d"></td>
+          </tr>
+          <tr class="tt-gloss-row" data-ectarget="g">
+            <td class="tt-gloss-letter">g</td>
+            <td class="tt-gloss-assign">&not;S, C, &not;H</td>
+            <td>H</td><td>&#10007;</td>
+            <td class="tt-gloss-desc">Competent liar says H</td>
+            <td class="tt-gloss-prob-val" id="tt-gp-g"></td>
+          </tr>
+          <tr style="border-top:1px solid #ccc">
+            <td colspan="6" style="height:4px;padding:0"></td>
+          </tr>
+          <tr class="tt-gloss-row" data-ectarget="a">
+            <td class="tt-gloss-letter">a</td>
+            <td class="tt-gloss-assign">S, &not;C, H</td>
+            <td>&not;H</td><td>&#10007;</td>
+            <td class="tt-gloss-desc">Sincere misbeliever says &not;H</td>
+            <td class="tt-gloss-prob-val" id="tt-gp-a"></td>
+          </tr>
+          <tr class="tt-gloss-row" data-ectarget="c">
+            <td class="tt-gloss-letter">c</td>
+            <td class="tt-gloss-assign">S, C, &not;H</td>
+            <td>&not;H</td><td>&#10003;</td>
+            <td class="tt-gloss-desc">Paradigmatic good testimony for &not;H</td>
+            <td class="tt-gloss-prob-val" id="tt-gp-c"></td>
+          </tr>
+          <tr class="tt-gloss-row" data-ectarget="f">
+            <td class="tt-gloss-letter">f</td>
+            <td class="tt-gloss-assign">&not;S, C, H</td>
+            <td>&not;H</td><td>&#10007;</td>
+            <td class="tt-gloss-desc">Competent liar says &not;H</td>
+            <td class="tt-gloss-prob-val" id="tt-gp-f"></td>
+          </tr>
+          <tr class="tt-gloss-row" data-ectarget="h">
+            <td class="tt-gloss-letter">h</td>
+            <td class="tt-gloss-assign">&not;S, &not;C, &not;H</td>
+            <td>&not;H</td><td>&#10003;</td>
+            <td class="tt-gloss-desc">Incompetent liar says &not;H</td>
+            <td class="tt-gloss-prob-val" id="tt-gp-h"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div class="tt-info-panel">
+  <strong>How to read this:</strong> The speaker says H. Your assessment of their
+  <em>sincerity</em> (are they reporting what they believe?) and <em>correctness</em>
+  (is their belief right?) together determine <em>c</em>(speaks truly), which in turn
+  determines the evidential force of their testimony.
+  The eikosogram shows the Bayesian update: the width of the H column is your prior,
+  and the heights show how likely "says H" is in each column.
+  <strong>Hover over terms</strong> in the formulas to highlight corresponding regions.
+  Use <strong>Next &rarr;</strong> to step through the calculation.
+  Toggle <strong>Combined</strong> to see all three factors (H, sincerity, correctness)
+  in a single 8-cell diagram.
+</div>
+
+</div>
+
+<script>
+(function() {
+  /* ---- STATE ---- */
+  var S = {
+    pH: 0.3, sinc: 0.95, corr: 0.95,
+    form: 'ratio', step: 0, maxStep: 6,
+    scHl: null, /* 'sc','si','ic','ii','truth','false' */
+    bkHl: null, /* 'tp','fp','den' */
+    viewMode: 'separated',
+    showLabels: true,
+    showProbs: false,
+    ecHl: null,  /* mouseover highlight: group or cell letter for 8-cell */
+    ecChecks: [] /* checkbox highlight: array of checked group names */
+  };
+  var numMode = false;
+
+  /* ---- MATH ---- */
+  function speaksTruly(s, c) { return s * c + (1-s) * (1-c); }
+  function saysHgH(s, c) { return speaksTruly(s, c); }
+  function saysHgNH(s, c) { return 1 - speaksTruly(s, c); }
+  function posterior(pH, s, c) {
+    var shh = saysHgH(s, c), shnh = saysHgNH(s, c);
+    var n = shh * pH, d = n + shnh * (1 - pH);
+    return d === 0 ? 0 : n / d;
+  }
+  function posteriorNeg(pH, s, c) {
+    var snhh = 1 - saysHgH(s, c), snhnh = 1 - saysHgNH(s, c);
+    var n = snhh * pH, d = n + snhnh * (1 - pH);
+    return d === 0 ? 0 : n / d;
+  }
+
+  /* Cell probabilities for 8-cell diagram */
+  function cellProbs() {
+    var s = S.sinc, c = S.corr, p = S.pH, np = 1 - p;
+    return {
+      a: s * (1-c) * p,
+      b: s * c * p,
+      c: s * c * np,
+      d: s * (1-c) * np,
+      e: (1-s) * (1-c) * p,
+      f: (1-s) * c * p,
+      g: (1-s) * c * np,
+      h: (1-s) * (1-c) * np
+    };
+  }
+
+  /* ---- FORMATTING ---- */
+  function fmt(v) {
+    if (v >= 0.9995) return "\u2248 1.00";
+    if (v <= 0.0005 && v >= 0) return "\u2248 0";
+    if (v < 0.01) return v.toFixed(4);
+    if (v < 0.1) return v.toFixed(3);
+    return v.toFixed(2);
+  }
+  function fmt2(v) { return v.toFixed(2); }
+  function fmt3(v) {
+    if (v < 0.01) return v.toFixed(4);
+    if (v < 0.1) return v.toFixed(3);
+    return v.toFixed(2);
+  }
+  function fmtDiff(v) {
+    var a = Math.abs(v);
+    if (a < 0.0005) return '< 0.001';
+    if (a < 0.005) return a.toFixed(4);
+    if (a < 0.05) return a.toFixed(3);
+    return a.toFixed(2);
+  }
+  function fmtPct(v) { return (v*100).toFixed(1) + '%'; }
+
+  /* ---- 8-CELL HIGHLIGHT MAPPING ---- */
+  var EC_GROUPS = {
+    saysH:      ['b','d','e','g'],
+    saysNH:     ['a','c','f','h'],
+    believesH:  ['b','d','f','h'],
+    believesNH: ['a','c','e','g'],
+    speaksTrue:  ['b','c','e','h'],
+    speaksFalse: ['a','d','f','g']
+  };
+  var SC_TO_EC = {
+    sc: ['b','c'], si: ['a','d'], ic: ['f','g'], ii: ['e','h'],
+    truth: ['b','c','e','h'], 'false': ['a','d','f','g']
+  };
+  var BK_TO_EC = {
+    tp: ['b','e'], fp: ['d','g'], den: ['b','d','e','g']
+  };
+
+  /* Mouseover highlight: from formula terms, gloss rows */
+  function getMouseoverHighlight() {
+    if (S.ecHl) {
+      if (EC_GROUPS[S.ecHl]) return EC_GROUPS[S.ecHl];
+      if ('abcdefgh'.indexOf(S.ecHl) >= 0) return [S.ecHl];
+    }
+    if (S.scHl && SC_TO_EC[S.scHl]) return SC_TO_EC[S.scHl];
+    if (S.bkHl && BK_TO_EC[S.bkHl]) return BK_TO_EC[S.bkHl];
+    return null;
+  }
+
+  /* Checkbox highlight: intersection of all checked groups */
+  function getCheckboxHighlight() {
+    if (S.ecChecks.length === 0) return null;
+    var result = EC_GROUPS[S.ecChecks[0]].slice();
+    for (var i = 1; i < S.ecChecks.length; i++) {
+      var group = EC_GROUPS[S.ecChecks[i]];
+      result = result.filter(function(c) { return group.indexOf(c) >= 0; });
+    }
+    return result; /* may be empty array = contradiction */
+  }
+
+  /* ---- S/C MINI GRID ---- */
+  function drawSCGrid() {
+    var svg = document.getElementById('tt-sc-grid');
+    var s = S.sinc, c = S.corr;
+    var M = 10, W = 150, H = 150;
+    var ox = 25, oy = 10;
+    var wC = W * c, wNC = W * (1 - c);
+    var hS = H * s, hNS = H * (1 - s);
+
+    var hl = S.scHl;
+    var cells = [
+      { x:ox, y:oy, w:wC, h:hS, id:'sc', truth:true,
+        label:'S+C', sub:'\u2192 truth', defFill:'#4a8a6a', defOp:0.7 },
+      { x:ox+wC, y:oy, w:wNC, h:hS, id:'si', truth:false,
+        label:'S+\u00acC', sub:'\u2192 false', defFill:'#d4863a', defOp:0.6 },
+      { x:ox, y:oy+hS, w:wC, h:hNS, id:'ic', truth:false,
+        label:'\u00acS+C', sub:'\u2192 false', defFill:'#c46a2a', defOp:0.6 },
+      { x:ox+wC, y:oy+hS, w:wNC, h:hNS, id:'ii', truth:true,
+        label:'\u00acS+\u00acC', sub:'\u2192 truth', defFill:'#6aaa8a', defOp:0.55 }
+    ];
+
+    var html = '';
+    for (var i = 0; i < cells.length; i++) {
+      var cl = cells[i];
+      if (cl.w < 0.5 || cl.h < 0.5) continue;
+      var op = cl.defOp;
+      if (hl) {
+        if (hl === cl.id) op = 0.9;
+        else if (hl === 'truth' && cl.truth) op = 0.85;
+        else if (hl === 'false' && !cl.truth) op = 0.85;
+        else op = 0.15;
+      }
+      html += '<rect x="'+cl.x+'" y="'+cl.y+'" width="'+cl.w+'" height="'+cl.h+
+        '" fill="'+cl.defFill+'" fill-opacity="'+op+'" stroke="#555" stroke-width="1"/>';
+      var cx = cl.x + cl.w/2, cy = cl.y + cl.h/2;
+      if (cl.w > 28 && cl.h > 28) {
+        var tc = op > 0.4 ? '#fff' : '#999';
+        var area = (cl.w/W)*(cl.h/H);
+        html += '<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="'+tc+'" style="pointer-events:none">'+cl.label+'</text>';
+        html += '<text x="'+cx+'" y="'+(cy+8)+'" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="'+tc+'" font-style="italic" style="pointer-events:none">'+cl.sub+'</text>';
+        html += '<text x="'+cx+'" y="'+(cy+19)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="'+tc+'" style="pointer-events:none">'+fmt2(area)+'</text>';
+      }
+    }
+    html += '<rect x="'+ox+'" y="'+oy+'" width="'+W+'" height="'+H+'" fill="none" stroke="#333" stroke-width="1.5"/>';
+    if (wC > 1 && wNC > 1)
+      html += '<line x1="'+(ox+wC)+'" y1="'+oy+'" x2="'+(ox+wC)+'" y2="'+(oy+H)+'" stroke="#333" stroke-width="1.5"/>';
+    if (hS > 1 && hNS > 1)
+      html += '<line x1="'+ox+'" y1="'+(oy+hS)+'" x2="'+(ox+W)+'" y2="'+(oy+hS)+'" stroke="#333" stroke-width="1.5"/>';
+
+    html += '<text x="'+(ox+wC/2)+'" y="'+(oy+H+14)+'" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#555">C</text>';
+    if (wNC > 12)
+      html += '<text x="'+(ox+wC+wNC/2)+'" y="'+(oy+H+14)+'" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#555">\u00acC</text>';
+    html += '<text x="'+(ox-4)+'" y="'+(oy+hS/2+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="9" fill="#555">S</text>';
+    if (hNS > 12)
+      html += '<text x="'+(ox-4)+'" y="'+(oy+hS+hNS/2+3)+'" text-anchor="end" font-family="Georgia,serif" font-size="9" fill="#555">\u00acS</text>';
+
+    svg.innerHTML = html;
+  }
+
+  /* ---- MAIN EIKOSOGRAM ---- */
+  function drawEiko() {
+    var svg = document.getElementById('tt-eiko');
+    var pH = S.pH, shh = saysHgH(S.sinc, S.corr), shnh = saysHgNH(S.sinc, S.corr);
+    var M = 46, W = 330, Ht = 330;
+    var ox = M, oy = 16;
+    var wH = W * pH, wNH = W * (1-pH);
+    var hSH_H = Ht * shh, hNSH_H = Ht * (1-shh);
+    var hSH_NH = Ht * shnh, hNSH_NH = Ht * (1-shnh);
+
+    var hl = S.bkHl;
+    var neuTP='#4a7ab5', neuFP='#7a9ec4', neuFN='#b8cce0', neuTN='#d4dfe9';
+    var hiTP='#2a5da8', hiFP='#d4760a';
+    var tpF,fpF,fnF,tnF,tpO,fpO,fnO,tnO;
+    if (!hl) {
+      tpF=neuTP;fpF=neuFP;fnF=neuFN;tnF=neuTN;
+      tpO=0.7;fpO=0.5;fnO=0.35;tnO=0.25;
+    } else if (hl==='tp') {
+      tpF=hiTP;fpF=neuFP;fnF=neuFN;tnF=neuTN;
+      tpO=0.9;fpO=0.2;fnO=0.15;tnO=0.1;
+    } else if (hl==='fp') {
+      tpF=neuTP;fpF=hiFP;fnF=neuFN;tnF=neuTN;
+      tpO=0.2;fpO=0.85;fnO=0.15;tnO=0.1;
+    } else if (hl==='den') {
+      tpF=hiTP;fpF=hiFP;fnF=neuFN;tnF=neuTN;
+      tpO=0.9;fpO=0.85;fnO=0.15;tnO=0.1;
+    }
+
+    var cells = [
+      {x:ox,y:oy,w:wH,h:hSH_H,fill:tpF,op:tpO,stroke:'#1a4a8a',id:'tp'},
+      {x:ox,y:oy+hSH_H,w:wH,h:hNSH_H,fill:fnF,op:fnO,stroke:'#8aa8c8',id:'fn'},
+      {x:ox+wH,y:oy,w:wNH,h:hSH_NH,fill:fpF,op:fpO,stroke:'#b5640a',id:'fp'},
+      {x:ox+wH,y:oy+hSH_NH,w:wNH,h:hNSH_NH,fill:tnF,op:tnO,stroke:'#8aa8c8',id:'tn'}
+    ];
+    var labels = {tp:'H \u2227 says H', fn:'H \u2227 says \u00acH',
+                  fp:'\u00acH \u2227 says H', tn:'\u00acH \u2227 says \u00acH'};
+    var html = '';
+    for (var i=0;i<cells.length;i++) {
+      var cl=cells[i];
+      if(cl.w<0.5||cl.h<0.5) continue;
+      html+='<rect x="'+cl.x+'" y="'+cl.y+'" width="'+cl.w+'" height="'+cl.h+
+        '" fill="'+cl.fill+'" fill-opacity="'+cl.op+'" stroke="'+cl.stroke+'" stroke-width="1.5"/>';
+      var area=(cl.w/W)*(cl.h/Ht);
+      if(cl.w>36&&cl.h>28) {
+        var cx=cl.x+cl.w/2, cy=cl.y+cl.h/2;
+        var tc=(cl.op>0.6)?'#fff':'#555';
+        var fs=(cl.w>60&&cl.h>45)?13:11;
+        html+='<text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" font-family="Courier New,monospace" fill="'+tc+'" font-size="'+fs+'" style="pointer-events:none">'+fmt(area)+'</text>';
+        if(cl.w>50&&cl.h>50)
+          html+='<text x="'+cx+'" y="'+(cy+14)+'" text-anchor="middle" font-family="Georgia,serif" fill="'+tc+'" font-size="10" font-style="italic" style="pointer-events:none;opacity:0.8">'+labels[cl.id]+'</text>';
+      }
+    }
+    html+='<rect x="'+ox+'" y="'+oy+'" width="'+W+'" height="'+Ht+'" fill="none" stroke="#333" stroke-width="2"/>';
+    if(wH>1&&wNH>1) html+='<line x1="'+(ox+wH)+'" y1="'+oy+'" x2="'+(ox+wH)+'" y2="'+(oy+Ht)+'" stroke="#333" stroke-width="2"/>';
+    if(hSH_H>1&&hNSH_H>1) html+='<line x1="'+ox+'" y1="'+(oy+hSH_H)+'" x2="'+(ox+wH)+'" y2="'+(oy+hSH_H)+'" stroke="#333" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    if(hSH_NH>1&&hNSH_NH>1) html+='<line x1="'+(ox+wH)+'" y1="'+(oy+hSH_NH)+'" x2="'+(ox+W)+'" y2="'+(oy+hSH_NH)+'" stroke="#333" stroke-width="1.5" stroke-dasharray="4,3"/>';
+
+    if(wH>16) {
+      html+='<text x="'+(ox+wH/2)+'" y="'+(oy+Ht+18)+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#222">H</text>';
+      html+='<text x="'+(ox+wH/2)+'" y="'+(oy+Ht+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#888">'+fmt(pH)+'</text>';
+    }
+    if(wNH>16) {
+      html+='<text x="'+(ox+wH+wNH/2)+'" y="'+(oy+Ht+18)+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#222">\u00acH</text>';
+      html+='<text x="'+(ox+wH+wNH/2)+'" y="'+(oy+Ht+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#888">'+fmt(1-pH)+'</text>';
+    }
+    if(wH>1&&hSH_H>18)
+      html+='<text x="'+(ox-5)+'" y="'+(oy+hSH_H/2+4)+'" text-anchor="end" font-family="Georgia,serif" font-size="10" fill="#2a7d3f">'+fmtPct(shh)+'</text>';
+    if(wH>1&&hNSH_H>18)
+      html+='<text x="'+(ox-5)+'" y="'+(oy+hSH_H+hNSH_H/2+4)+'" text-anchor="end" font-family="Georgia,serif" font-size="10" fill="#888">'+fmtPct(1-shh)+'</text>';
+    var rlx=ox+W+5;
+    if(wNH>1&&hSH_NH>18)
+      html+='<text x="'+rlx+'" y="'+(oy+hSH_NH/2+4)+'" text-anchor="start" font-family="Georgia,serif" font-size="10" fill="#b85c1f">'+fmtPct(shnh)+'</text>';
+    if(wNH>1&&hNSH_NH>18)
+      html+='<text x="'+rlx+'" y="'+(oy+hSH_NH+hNSH_NH/2+4)+'" text-anchor="start" font-family="Georgia,serif" font-size="10" fill="#888">'+fmtPct(1-shnh)+'</text>';
+
+    html+='<text x="'+(ox+W)+'" y="'+(oy-3)+'" text-anchor="end" font-family="Georgia,serif" font-size="11" fill="#555" font-style="italic">top = says H</text>';
+    svg.innerHTML = html;
+  }
+
+  /* ---- 8-CELL DIAGRAM ---- */
+  function drawEightCell() {
+    var svg = document.getElementById('tt-eight-cell');
+    var pH = S.pH, s = S.sinc, c = S.corr;
+    var ox = 46, oy = 20, W = 330, Ht = 300;
+
+    /* Column widths: ¬C∧H, C∧H, C∧¬H, ¬C∧¬H */
+    var w1 = W * (1-c) * pH;
+    var w2 = W * c * pH;
+    var w3 = W * c * (1-pH);
+    var w4 = W * (1-c) * (1-pH);
+
+    /* Row heights: S, ¬S */
+    var h1 = Ht * s;
+    var h2 = Ht * (1-s);
+
+    var probs = cellProbs();
+
+    /* Cell definitions: id, x, y, w, h, saysH, isH */
+    var cells = [
+      { id:'a', x:ox,              y:oy,     w:w1, h:h1, saysH:false, isH:true  },
+      { id:'b', x:ox+w1,           y:oy,     w:w2, h:h1, saysH:true,  isH:true  },
+      { id:'c', x:ox+w1+w2,        y:oy,     w:w3, h:h1, saysH:false, isH:false },
+      { id:'d', x:ox+w1+w2+w3,     y:oy,     w:w4, h:h1, saysH:true,  isH:false },
+      { id:'e', x:ox,              y:oy+h1,  w:w1, h:h2, saysH:true,  isH:true  },
+      { id:'f', x:ox+w1,           y:oy+h1,  w:w2, h:h2, saysH:false, isH:true  },
+      { id:'g', x:ox+w1+w2,        y:oy+h1,  w:w3, h:h2, saysH:true,  isH:false },
+      { id:'h', x:ox+w1+w2+w3,     y:oy+h1,  w:w4, h:h2, saysH:false, isH:false }
+    ];
+
+    var moCells = getMouseoverHighlight();
+    var cbCells = getCheckboxHighlight();
+    var anyHl = (moCells !== null) || (cbCells !== null);
+    var html = '';
+
+    for (var i = 0; i < cells.length; i++) {
+      var cl = cells[i];
+      if (cl.w < 0.3 || cl.h < 0.3) continue;
+
+      /* Base colors: all blue; saturated for saysH, light for says¬H */
+      var fill, op;
+      fill = cl.saysH ? '#3a6ea8' : '#a0b8d4';
+      op   = cl.saysH ? 0.65      : 0.3;
+
+      var inMo = moCells && moCells.indexOf(cl.id) >= 0;
+      var inCb = cbCells && cbCells.indexOf(cl.id) >= 0;
+
+      if (inMo) {
+        /* Mouseover trumps: orange */
+        fill = '#d4860a'; op = 0.85;
+      } else if (inCb) {
+        /* Checkbox only: green */
+        fill = '#2a8a4a'; op = 0.75;
+      } else if (anyHl) {
+        /* Something highlighted but not this cell: fade */
+        op = 0.08;
+      }
+
+      html += '<rect x="'+cl.x+'" y="'+cl.y+'" width="'+cl.w+'" height="'+cl.h+
+        '" fill="'+fill+'" fill-opacity="'+op+'" stroke="#666" stroke-width="0.8"/>';
+
+      /* Labels inside cell */
+      var cx = cl.x + cl.w/2, cy = cl.y + cl.h/2;
+      var tc = (op > 0.5) ? 'rgba(255,255,255,0.95)' : '#555';
+
+      if (S.showLabels && S.showProbs) {
+        /* Both: letter above, prob below */
+        if (cl.w > 22 && cl.h > 26) {
+          html += '<text x="'+cx+'" y="'+(cy-3)+'" text-anchor="middle" font-family="Georgia,serif" font-size="14" font-weight="bold" fill="'+tc+'" style="pointer-events:none">'+cl.id+'</text>';
+        }
+        if (cl.w > 30 && cl.h > 32) {
+          html += '<text x="'+cx+'" y="'+(cy+12)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="'+tc+'" style="pointer-events:none">'+fmt3(probs[cl.id])+'</text>';
+        }
+      } else if (S.showLabels) {
+        if (cl.w > 18 && cl.h > 16) {
+          html += '<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" font-family="Georgia,serif" font-size="15" font-weight="bold" fill="'+tc+'" style="pointer-events:none">'+cl.id+'</text>';
+        }
+      } else if (S.showProbs) {
+        if (cl.w > 30 && cl.h > 20) {
+          html += '<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-family="Courier New,monospace" font-size="10" fill="'+tc+'" style="pointer-events:none">'+fmt3(probs[cl.id])+'</text>';
+        }
+      }
+    }
+
+    /* Grid lines */
+    /* Outer border */
+    html += '<rect x="'+ox+'" y="'+oy+'" width="'+W+'" height="'+Ht+'" fill="none" stroke="#333" stroke-width="2"/>';
+
+    /* H / ¬H thick divider */
+    var hDiv = ox + w1 + w2;
+    if (w1+w2 > 1 && w3+w4 > 1)
+      html += '<line x1="'+hDiv+'" y1="'+oy+'" x2="'+hDiv+'" y2="'+(oy+Ht)+'" stroke="#333" stroke-width="2"/>';
+
+    /* S / ¬S thick divider */
+    if (h1 > 1 && h2 > 1)
+      html += '<line x1="'+ox+'" y1="'+(oy+h1)+'" x2="'+(ox+W)+'" y2="'+(oy+h1)+'" stroke="#333" stroke-width="2"/>';
+
+    /* C / ¬C inner dividers (dashed) */
+    if (w1 > 1 && w2 > 1)
+      html += '<line x1="'+(ox+w1)+'" y1="'+oy+'" x2="'+(ox+w1)+'" y2="'+(oy+Ht)+'" stroke="#888" stroke-width="0.8" stroke-dasharray="4,3"/>';
+    if (w3 > 1 && w4 > 1)
+      html += '<line x1="'+(ox+w1+w2+w3)+'" y1="'+oy+'" x2="'+(ox+w1+w2+w3)+'" y2="'+(oy+Ht)+'" stroke="#888" stroke-width="0.8" stroke-dasharray="4,3"/>';
+
+    /* Axis labels */
+    /* H / ¬H below */
+    if (w1+w2 > 16)
+      html += '<text x="'+(ox+(w1+w2)/2)+'" y="'+(oy+Ht+18)+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#222">H</text>';
+    if (w3+w4 > 16)
+      html += '<text x="'+(ox+w1+w2+(w3+w4)/2)+'" y="'+(oy+Ht+18)+'" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#222">\u00acH</text>';
+
+    /* Column sub-labels */
+    if (w1 > 14)
+      html += '<text x="'+(ox+w1/2)+'" y="'+(oy+Ht+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#999">\u00acC</text>';
+    if (w2 > 14)
+      html += '<text x="'+(ox+w1+w2/2)+'" y="'+(oy+Ht+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#999">C</text>';
+    if (w3 > 14)
+      html += '<text x="'+(ox+w1+w2+w3/2)+'" y="'+(oy+Ht+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#999">C</text>';
+    if (w4 > 14)
+      html += '<text x="'+(ox+w1+w2+w3+w4/2)+'" y="'+(oy+Ht+32)+'" text-anchor="middle" font-family="Georgia,serif" font-size="9" fill="#999">\u00acC</text>';
+
+    /* S / ¬S on left */
+    if (h1 > 14)
+      html += '<text x="'+(ox-5)+'" y="'+(oy+h1/2+4)+'" text-anchor="end" font-family="Georgia,serif" font-size="12" fill="#222">S</text>';
+    if (h2 > 14)
+      html += '<text x="'+(ox-5)+'" y="'+(oy+h1+h2/2+4)+'" text-anchor="end" font-family="Georgia,serif" font-size="12" fill="#222">\u00acS</text>';
+
+    /* "says H" annotation */
+    html += '<text x="'+(ox+W)+'" y="'+(oy-3)+'" text-anchor="end" font-family="Georgia,serif" font-size="10" fill="#888" font-style="italic">checkerboard = says H</text>';
+
+    svg.innerHTML = html;
+  }
+
+  /* ---- UPDATE VALUES ---- */
+  function updateValues() {
+    var s=S.sinc, c=S.corr, pH=S.pH;
+    var st=speaksTruly(s,c), shh=saysHgH(s,c), shnh=saysHgNH(s,c);
+    var hge=posterior(pH,s,c), hgne=posteriorNeg(pH,s,c);
+
+    document.getElementById('tt-truth-disp').textContent = fmt3(st);
+    document.getElementById('tt-shh-disp').textContent = fmt3(shh);
+    document.getElementById('tt-shnh-disp').textContent = fmt3(shnh);
+    document.getElementById('tt-hge-disp').textContent = fmt(hge);
+    document.getElementById('tt-hgne-disp').textContent = fmt(hgne);
+
+    var diffE=hge-pH, diffNE=hgne-pH;
+    var ae=document.getElementById('tt-hge-arrow'), ane=document.getElementById('tt-hgne-arrow');
+    if(diffE>0.0005) ae.innerHTML='<span class="tt-arrow-up">\u2191 '+fmtDiff(diffE)+' from prior</span>';
+    else if(diffE<-0.0005) ae.innerHTML='<span class="tt-arrow-down">\u2193 '+fmtDiff(diffE)+' from prior</span>';
+    else ae.innerHTML='<span style="color:#888">\u2248 no change</span>';
+    if(diffNE>0.0005) ane.innerHTML='<span class="tt-arrow-up">\u2191 '+fmtDiff(diffNE)+' from prior</span>';
+    else if(diffNE<-0.0005) ane.innerHTML='<span class="tt-arrow-down">\u2193 '+fmtDiff(diffNE)+' from prior</span>';
+    else ane.innerHTML='<span style="color:#888">\u2248 no change</span>';
+
+    /* Log-odds */
+    var shh2=shh, shnh2=shnh;
+    if(shnh2>0&&shh2>0) {
+      var priorOdds=pH/(1-pH), lr=shh2/shnh2;
+      var postOdds=priorOdds*lr;
+      var lp=Math.log(priorOdds)/Math.LN10, llr=Math.log(lr)/Math.LN10;
+      document.getElementById('tt-log-content').innerHTML =
+        'log<sub>10</sub> posterior odds = log<sub>10</sub> LR + log<sub>10</sub> prior odds<br>'+
+        fmt2(lp+llr)+' = '+fmt2(llr)+' + '+fmt2(lp);
+    }
+
+    /* Highlight panel probabilities */
+    if (S.viewMode === 'combined') {
+      var cSaysH = pH*shh + (1-pH)*shnh;
+      document.getElementById('tt-hlp-saysH').textContent = fmt3(cSaysH);
+      document.getElementById('tt-hlp-saysNH').textContent = fmt3(1 - cSaysH);
+      var cBelH = c*pH + (1-c)*(1-pH);
+      document.getElementById('tt-hlp-believesH').textContent = fmt3(cBelH);
+      document.getElementById('tt-hlp-believesNH').textContent = fmt3(1 - cBelH);
+      document.getElementById('tt-hlp-speaksTrue').textContent = fmt3(st);
+      document.getElementById('tt-hlp-speaksFalse').textContent = fmt3(1 - st);
+
+      /* Gloss table probabilities */
+      var pr = cellProbs();
+      var ids = ['a','b','c','d','e','f','g','h'];
+      for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById('tt-gp-'+ids[i]);
+        if (el) el.textContent = fmt3(pr[ids[i]]);
+      }
+      updateConjunction();
+    }
+  }
+
+  /* ---- HOVER HELPERS ---- */
+  function scTerm(cls, content) {
+    return '<span class="tt-term tt-term-'+cls+'" data-sctarget="'+cls+'">'+content+'</span>';
+  }
+  function bkTerm(cls, content) {
+    return '<span class="tt-term tt-term-'+cls+'" data-bktarget="'+cls+'">'+content+'</span>';
+  }
+  function frac(num, den) {
+    return '<span class="tt-frac"><span class="tt-frac-num">'+num+'</span><span class="tt-frac-bar"></span><span class="tt-frac-den">'+den+'</span></span>';
+  }
+
+  /* ---- FORMULA RENDERING ---- */
+  function renderFormula() {
+    var step = S.step;
+    var s=S.sinc, c=S.corr, pH=S.pH;
+    var st=speaksTruly(s,c), shh=saysHgH(s,c), shnh=saysHgNH(s,c);
+    var pnh=1-pH;
+    var num=shh*pH, fpVal=shnh*pnh, den=num+fpVal;
+    var result = den===0 ? 0 : num/den;
+    var isCombined = (S.viewMode === 'combined');
+    var hasLetterStep = isCombined && S.form === 'ratio';
+    var decompDone = step >= 2;
+
+    /* --- DECOMPOSITION SECTION --- */
+    var dSec = document.getElementById('tt-decomp-section');
+    dSec.className = 'tt-formula-section' + (decompDone && step > 2 ? ' tt-section-done' : '');
+    var dArea = document.getElementById('tt-decomp-area');
+    var dh = '';
+
+    if (step === 0) {
+      dh += '<em>c</em>(speaks truly) = '+scTerm('sc','<em>c</em>(S)\u00b7<em>c</em>(C)')+
+        ' + '+scTerm('ii','<em>c</em>(\u00acS)\u00b7<em>c</em>(\u00acC)');
+      dh += '<br><em>c</em>(says H|H) = <em>c</em>(speaks truly)';
+      dh += '<br><em>c</em>(says H|\u00acH) = 1 \u2212 <em>c</em>(speaks truly)';
+    } else if (step === 1) {
+      dh += '<em>c</em>(speaks truly) = '+scTerm('sc',fmt2(s)+' \u00d7 '+fmt2(c))+
+        ' + '+scTerm('ii',fmt2(1-s)+' \u00d7 '+fmt2(1-c));
+      dh += '<br><em>c</em>(says H|H) = <em>c</em>(speaks truly)';
+      dh += '<br><em>c</em>(says H|\u00acH) = 1 \u2212 <em>c</em>(speaks truly)';
+    } else {
+      dh += '<em>c</em>(speaks truly) = '+scTerm('sc',fmt3(s*c))+
+        ' + '+scTerm('ii',fmt3((1-s)*(1-c)))+' = <strong>'+fmt3(st)+'</strong>';
+      dh += '<br><em>c</em>(says H|H) = <strong style="color:#2a7d3f">'+fmt3(shh)+'</strong>';
+      dh += ' &nbsp; <em>c</em>(says H|\u00acH) = <strong style="color:#b85c1f">'+fmt3(shnh)+'</strong>';
+    }
+    dArea.innerHTML = dh;
+
+    /* --- BAYES SECTION --- */
+    var bArea = document.getElementById('tt-bayes-area');
+    var bSec = document.getElementById('tt-bayes-section');
+    bSec.className = 'tt-formula-section' + (step < 3 ? '' : '');
+    var bh = '';
+
+    if (S.form === 'ratio') {
+      S.maxStep = hasLetterStep ? 7 : 6;
+      bh += '<em>c</em>(H | says H) = ';
+
+      if (step < 3) {
+        /* Symbolic */
+        bh += frac(
+          bkTerm('tp','<em>c</em>(says H|H) \u00b7 <em>c</em>(H)'),
+          bkTerm('den',
+            bkTerm('tp','<em>c</em>(says H|H) \u00b7 <em>c</em>(H)') + ' + ' +
+            bkTerm('fp','<em>c</em>(says H|\u00acH) \u00b7 <em>c</em>(\u00acH)'))
+        );
+      } else if (hasLetterStep && step === 3) {
+        /* Letter-label step (combined mode only) */
+        bh += frac(
+          bkTerm('tp','<em>c</em>(<strong>b</strong>) + <em>c</em>(<strong>e</strong>)'),
+          bkTerm('den',
+            bkTerm('tp','<em>c</em>(<strong>b</strong>) + <em>c</em>(<strong>e</strong>)') + ' + ' +
+            bkTerm('fp','<em>c</em>(<strong>d</strong>) + <em>c</em>(<strong>g</strong>)'))
+        );
+      } else {
+        /* Effective step maps: with letter step, steps 4-7 = old 3-6 */
+        var es = hasLetterStep ? step - 1 : step;
+        if (es === 3) {
+          bh += frac(
+            bkTerm('tp',fmt3(shh)+' \u00d7 '+fmt2(pH)),
+            bkTerm('den',
+              bkTerm('tp',fmt3(shh)+' \u00d7 '+fmt2(pH))+' + '+
+              bkTerm('fp',fmt3(shnh)+' \u00d7 '+fmt2(pnh)))
+          );
+        } else if (es === 4) {
+          bh += frac(
+            bkTerm('tp',fmt3(num)),
+            bkTerm('den',bkTerm('tp',fmt3(num))+' + '+bkTerm('fp',fmt3(fpVal)))
+          );
+        } else if (es === 5) {
+          bh += frac(
+            bkTerm('tp',fmt3(num)),
+            bkTerm('den',fmt3(den))
+          );
+        } else {
+          bh += '<strong style="font-size:1.3em;color:#2a5da8">'+fmt(result)+'</strong>';
+        }
+      }
+    } else {
+      /* Odds form — no letter step even in combined mode */
+      S.maxStep = 5;
+      var priorOdds=pH/pnh, lr=shh/shnh;
+      var postOdds=priorOdds*lr;
+      var postProb=postOdds/(1+postOdds);
+
+      bh += 'Posterior odds = ';
+      if (step < 3) {
+        bh += bkTerm('den','likelihood ratio')+' \u00d7 prior odds';
+        bh += '<br><br>where likelihood ratio = '+
+          frac(bkTerm('tp','<em>c</em>(says H|H)'), bkTerm('fp','<em>c</em>(says H|\u00acH)'));
+        bh += ' &nbsp;and prior odds = '+frac('<em>c</em>(H)','<em>c</em>(\u00acH)');
+      } else if (step === 3) {
+        bh += frac(bkTerm('tp',fmt3(shh)), bkTerm('fp',fmt3(shnh)));
+        bh += ' \u00d7 '+frac(fmt2(pH),fmt2(pnh));
+      } else if (step === 4) {
+        bh += fmt2(lr)+' \u00d7 '+fmt2(priorOdds)+' = <strong>'+fmt2(postOdds)+'</strong>';
+      } else {
+        bh += fmt2(postOdds);
+        bh += '<br><br><em>c</em>(H|says H) = '+frac(fmt2(postOdds),'1 + '+fmt2(postOdds))+
+          ' = <strong style="font-size:1.3em;color:#2a5da8">'+fmt(postProb)+'</strong>';
+      }
+    }
+    bArea.innerHTML = bh;
+
+    /* Step indicator */
+    document.getElementById('tt-step-ind').textContent = 'Step '+step+' / '+S.maxStep;
+    document.getElementById('tt-step-prev').disabled = (step===0);
+    document.getElementById('tt-step-next').disabled = (step>=S.maxStep);
+
+    attachHovers();
+  }
+
+  /* ---- HOVER SYSTEM ---- */
+  function attachHovers() {
+    var sel = '.bayes-tt [data-sctarget], .bayes-tt [data-bktarget], .bayes-tt [data-ectarget]';
+    var els = document.querySelectorAll(sel);
+    for (var i=0;i<els.length;i++) {
+      els[i].removeEventListener('mouseenter', onEnter);
+      els[i].removeEventListener('mouseleave', onLeave);
+      els[i].addEventListener('mouseenter', onEnter);
+      els[i].addEventListener('mouseleave', onLeave);
+    }
+  }
+  function onEnter(e) {
+    var el = e.currentTarget;
+    var scT = el.getAttribute('data-sctarget');
+    var bkT = el.getAttribute('data-bktarget');
+    var ecT = el.getAttribute('data-ectarget');
+    if (ecT) {
+      S.ecHl = ecT;
+      drawEightCell();
+    }
+    if (scT) {
+      S.scHl = scT;
+      highlightTerms('data-sctarget', scT);
+      if (S.viewMode === 'separated') drawSCGrid();
+      else drawEightCell();
+    }
+    if (bkT) {
+      S.bkHl = bkT;
+      highlightTerms('data-bktarget', bkT);
+      if (S.viewMode === 'separated') drawEiko();
+      else drawEightCell();
+    }
+  }
+  function onLeave(e) {
+    S.scHl = null; S.bkHl = null; S.ecHl = null;
+    clearHighlights();
+    if (S.viewMode === 'separated') { drawSCGrid(); drawEiko(); }
+    else drawEightCell();
+  }
+  function highlightTerms(attr, val) {
+    var all = document.querySelectorAll('.bayes-tt .tt-term['+attr+'="'+val+'"]');
+    for (var i=0;i<all.length;i++) all[i].classList.add('tt-hover-active');
+  }
+  function clearHighlights() {
+    var all = document.querySelectorAll('.bayes-tt .tt-term.tt-hover-active');
+    for (var i=0;i<all.length;i++) all[i].classList.remove('tt-hover-active');
+  }
+
+  /* ---- STEP NAV ---- */
+  window.ttStepNext = function() { if(S.step<S.maxStep){S.step++;renderFormula();} };
+  window.ttStepPrev = function() { if(S.step>0){S.step--;renderFormula();} };
+  window.ttStepReset = function() { S.step=0; renderFormula(); };
+
+  /* ---- FORM TOGGLE ---- */
+  window.ttSetForm = function(f) {
+    S.form=f;
+    var hasLetter = (S.viewMode === 'combined' && f === 'ratio');
+    var max = f==='ratio' ? (hasLetter ? 7 : 6) : 5;
+    S.maxStep = max;
+    S.step=Math.min(S.step, max);
+    document.getElementById('tt-btn-ratio').classList.toggle('tt-active',f==='ratio');
+    document.getElementById('tt-btn-odds').classList.toggle('tt-active',f==='odds');
+    document.getElementById('tt-form-label').textContent = f==='ratio'?'Ratio form':'Odds form';
+    renderFormula();
+  };
+  window.ttToggleLog = function() {
+    document.getElementById('tt-log-odds').style.display =
+      document.getElementById('tt-log-toggle').checked ? '' : 'none';
+  };
+
+  /* ---- VIEW TOGGLE ---- */
+  window.ttSetView = function(mode) {
+    S.viewMode = mode;
+    S.ecChecks = [];
+    var isComb = (mode === 'combined');
+    /* Reset checkboxes */
+    var cbs = document.querySelectorAll('.bayes-tt .tt-hl-panel input[type="checkbox"]');
+    for (var i = 0; i < cbs.length; i++) cbs[i].checked = false;
+    document.getElementById('tt-hl-conj').style.display = 'none';
+    document.getElementById('tt-btn-sep').classList.toggle('tt-active', !isComb);
+    document.getElementById('tt-btn-comb').classList.toggle('tt-active', isComb);
+    document.getElementById('tt-sep-view').style.display = isComb ? 'none' : '';
+    document.getElementById('tt-comb-view').style.display = isComb ? '' : 'none';
+    document.getElementById('tt-disp-toggles').style.display = isComb ? '' : 'none';
+    document.getElementById('tt-hl-panel').style.display = isComb ? '' : 'none';
+    document.getElementById('tt-gloss').style.display = isComb ? '' : 'none';
+    document.getElementById('tt-sc-grid-wrap').style.display = isComb ? 'none' : '';
+
+    /* Recalculate maxStep */
+    if (S.form === 'ratio') {
+      S.maxStep = isComb ? 7 : 6;
+    }
+    S.step = Math.min(S.step, S.maxStep);
+    update();
+  };
+
+  /* ---- DISPLAY TOGGLES ---- */
+  window.ttDispToggle = function() {
+    S.showLabels = document.getElementById('tt-show-labels').checked;
+    S.showProbs = document.getElementById('tt-show-probs').checked;
+    drawEightCell();
+  };
+
+  /* ---- HIGHLIGHT CHECKBOXES ---- */
+  window.ttHlCheck = function() {
+    var checks = document.querySelectorAll('.bayes-tt .tt-hl-panel input[type="checkbox"]:checked');
+    S.ecChecks = [];
+    for (var i = 0; i < checks.length; i++) S.ecChecks.push(checks[i].value);
+    updateConjunction();
+    drawEightCell();
+  };
+  function updateConjunction() {
+    var conjEl = document.getElementById('tt-hl-conj');
+    var valEl = document.getElementById('tt-hl-conj-val');
+    var cells = getCheckboxHighlight();
+    if (cells === null) { conjEl.style.display = 'none'; return; }
+    conjEl.style.display = '';
+    if (cells.length === 0) {
+      valEl.textContent = '0 (empty — no cell satisfies all checked conditions)';
+      return;
+    }
+    var pr = cellProbs();
+    var total = 0;
+    for (var i = 0; i < cells.length; i++) total += pr[cells[i]];
+    valEl.textContent = fmt3(total);
+  }
+
+  /* ---- SLIDER SYNC ---- */
+  function syncSliders() {
+    S.pH = parseFloat(document.getElementById('tt-ph-sl').value);
+    S.sinc = parseFloat(document.getElementById('tt-sinc-sl').value);
+    S.corr = parseFloat(document.getElementById('tt-corr-sl').value);
+    document.getElementById('tt-ph-disp').textContent = fmt(S.pH);
+    document.getElementById('tt-sinc-disp').textContent = fmt(S.sinc);
+    document.getElementById('tt-corr-disp').textContent = fmt(S.corr);
+    if(numMode) {
+      document.getElementById('tt-ph-num').value=S.pH;
+      document.getElementById('tt-sinc-num').value=S.sinc;
+      document.getElementById('tt-corr-num').value=S.corr;
+    }
+    update();
+  }
+
+  /* ---- NUMBER MODE ---- */
+  window.ttToggleNum = function() {
+    numMode = document.getElementById('tt-nummode').checked;
+    var ns=['tt-ph-num','tt-sinc-num','tt-corr-num'];
+    var ds=['tt-ph-disp','tt-sinc-disp','tt-corr-disp'];
+    for(var i=0;i<ns.length;i++) {
+      document.getElementById(ns[i]).style.display = numMode?'':'none';
+      document.getElementById(ds[i]).style.display = numMode?'none':'';
+    }
+    if(numMode) {
+      document.getElementById('tt-ph-num').value=S.pH;
+      document.getElementById('tt-sinc-num').value=S.sinc;
+      document.getElementById('tt-corr-num').value=S.corr;
+    }
+  };
+  window.ttNumSync = function() {
+    var pH=parseFloat(document.getElementById('tt-ph-num').value);
+    var sinc=parseFloat(document.getElementById('tt-sinc-num').value);
+    var corr=parseFloat(document.getElementById('tt-corr-num').value);
+    if(isNaN(pH)||isNaN(sinc)||isNaN(corr)) return;
+    pH=Math.max(0.001,Math.min(0.999,pH));
+    sinc=Math.max(0.001,Math.min(0.999,sinc));
+    corr=Math.max(0.001,Math.min(0.999,corr));
+    S.pH=pH;S.sinc=sinc;S.corr=corr;
+    document.getElementById('tt-ph-sl').value=pH;
+    document.getElementById('tt-sinc-sl').value=sinc;
+    document.getElementById('tt-corr-sl').value=corr;
+    update();
+  };
+
+  /* ---- PRESETS ---- */
+  window.ttPreset = function(pH, sinc, corr) {
+    S.pH=pH;S.sinc=sinc;S.corr=corr;S.step=0;
+    document.getElementById('tt-ph-sl').value=pH;
+    document.getElementById('tt-sinc-sl').value=sinc;
+    document.getElementById('tt-corr-sl').value=corr;
+    document.getElementById('tt-ph-disp').textContent=fmt(pH);
+    document.getElementById('tt-sinc-disp').textContent=fmt(sinc);
+    document.getElementById('tt-corr-disp').textContent=fmt(corr);
+    if(numMode) {
+      document.getElementById('tt-ph-num').value=pH;
+      document.getElementById('tt-sinc-num').value=sinc;
+      document.getElementById('tt-corr-num').value=corr;
+    }
+    update();
+  };
+
+  function update() {
+    if (S.viewMode === 'separated') {
+      drawSCGrid(); drawEiko();
+    } else {
+      drawEightCell();
+    }
+    updateValues(); renderFormula();
+  }
+
+  /* ---- INIT ---- */
+  document.getElementById('tt-ph-sl').addEventListener('input', syncSliders);
+  document.getElementById('tt-sinc-sl').addEventListener('input', syncSliders);
+  document.getElementById('tt-corr-sl').addEventListener('input', syncSliders);
+  update();
+})();
+</script>
+</body>
+</html>
