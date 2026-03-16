@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Division of Cognitive Labor Explorer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #f9f9f9; color: #222; padding: 20px; }
+.container { max-width: 1120px; margin: 0 auto; background: white; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 36px 40px; }
+h1 { font-size: 26px; margin-bottom: 6px; }
+.subtitle { font-size: 14px; color: #666; margin-bottom: 28px; font-style: italic; }
+
+/* Buttons */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { padding: 7px 15px; border: 1px solid #ccc; background: white; cursor: pointer; font-family: Georgia, serif; font-size: 13px; border-radius: 20px; transition: all 0.15s; color: #444; line-height: 1.4; text-align: center; }
+.pill:hover:not(.active) { border-color: #2a5da8; color: #2a5da8; }
+.pill.active { background: #2a5da8; color: white; border-color: #2a5da8; }
+.pill .pill-sub { display: block; font-size: 11px; opacity: 0.75; margin-top: 1px; }
+.pill.active .pill-sub { opacity: 0.85; }
+.act-btn { padding: 9px 20px; border: 1px solid #2a5da8; background: #2a5da8; color: white; font-family: Georgia, serif; font-size: 14px; border-radius: 4px; cursor: pointer; transition: background 0.15s; }
+.act-btn:hover:not(:disabled) { background: #1e4a8a; }
+.act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.act-btn.secondary { background: white; color: #444; border-color: #ccc; }
+.act-btn.secondary:hover { background: #f5f5f5; }
+.sm-btn { padding: 5px 12px; border: 1px solid #ccc; background: white; cursor: pointer; font-family: Georgia, serif; font-size: 13px; border-radius: 3px; transition: all 0.15s; color: #444; }
+.sm-btn:hover:not(:disabled) { border-color: #2a5da8; color: #2a5da8; }
+.sm-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Sections */
+.section { margin-bottom: 24px; }
+.section-label { font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #555; }
+
+/* Parameters */
+.params-box { padding: 18px; background: #f5f5f5; border-radius: 4px; }
+.params-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.param { display: flex; flex-direction: column; gap: 4px; }
+.param label { font-size: 12px; font-weight: bold; cursor: help; }
+.param .val { font-size: 12px; color: #2a5da8; font-family: 'Courier New', monospace; }
+.param input[type="range"] { width: 100%; accent-color: #2a5da8; }
+.param-note { font-size: 11px; color: #999; font-style: italic; grid-column: 1 / -1; }
+.param.hidden { display: none; }
+.link-toggle { font-size: 12px; color: #555; margin-top: 10px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.link-toggle input { accent-color: #2a5da8; cursor: pointer; }
+
+/* Equation section */
+.eq-section { padding: 18px; background: #f5f5f5; border-radius: 4px; }
+.eq-bar { padding: 12px 16px; background: white; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 15px; line-height: 2.0; margin-bottom: 12px; }
+.eq-label { font-size: 13px; color: #888; display: block; margin-bottom: 4px; line-height: 1.4; }
+.eq-hover { cursor: help; padding: 1px 3px; border-radius: 3px; transition: background 0.2s, color 0.2s; }
+.eq-hover.hl-rhoA { background: rgba(59,130,246,0.18); color: #1d4ed8; }
+.eq-hover.hl-rhoB { background: rgba(245,158,11,0.18); color: #b45309; }
+.eq-hover.hl-p { background: rgba(147,51,234,0.18); color: #7c3aed; }
+.eq-hover.hl-k { background: rgba(42,93,168,0.18); color: #1e3a5f; }
+.eq-hover.hl-n { background: rgba(100,100,100,0.15); color: #333; }
+.eq-hover.hl-termA { background: rgba(59,130,246,0.12); color: #1d4ed8; }
+.eq-hover.hl-termB { background: rgba(245,158,11,0.12); color: #b45309; }
+.eq-hover.hl-e { background: rgba(120,120,120,0.12); color: #333; }
+
+/* Collapsible toggles */
+.collapse-toggle { margin-top: 12px; font-size: 12px; color: #2a5da8; cursor: pointer; user-select: none; }
+.collapse-toggle:hover { text-decoration: underline; }
+.collapse-toggle:first-child { margin-top: 0; }
+
+/* Step-through */
+.step-box { display: none; margin-top: 12px; padding: 14px 16px; background: white; border: 1px solid #ddd; border-radius: 4px; }
+.step-box.visible { display: block; }
+.step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.step-header .section-label { margin-bottom: 0; }
+.step-nav { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.step-counter { font-size: 12px; color: #888; min-width: 70px; text-align: center; }
+.step-lines { font-family: 'Courier New', monospace; font-size: 13px; line-height: 2.2; }
+.step-line { display: flex; gap: 12px; align-items: baseline; padding: 2px 0; }
+.step-line .step-eq { flex: 1; }
+.step-line .step-note { font-family: Georgia, serif; font-size: 11px; color: #888; white-space: nowrap; cursor: help; }
+.step-line .step-note:hover { color: #2a5da8; }
+.step-hl { transition: background 0.2s; border-radius: 2px; padding: 0 2px; }
+.step-hl.lit { background: rgba(42,93,168,0.18); }
+
+/* Marginal math (in equation section) */
+.marg-detail { display: none; margin-top: 12px; padding: 16px; background: white; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; line-height: 1.8; }
+.marg-detail.visible { display: block; }
+.marg-eq-row { font-family: 'Courier New', monospace; font-size: 12px; padding: 4px 8px; margin: 4px 0; border-radius: 3px; }
+.marg-eq-row.current { background: #f0f0f0; }
+.marg-eq-row.plus-a { background: rgba(59,130,246,0.06); border-left: 3px solid #3b82f6; }
+.marg-eq-row.plus-b { background: rgba(245,158,11,0.06); border-left: 3px solid #f59e0b; }
+.marg-narrative { margin-top: 14px; font-family: Georgia, serif; font-size: 13px; line-height: 1.8; color: #444; }
+.marg-narrative p { margin-bottom: 8px; }
+.mx { font-family: 'Courier New', monospace; font-weight: bold; padding: 1px 3px; border-radius: 2px; cursor: help; transition: background 0.2s; }
+.mx:hover, .mx.lit { background: rgba(42,93,168,0.15); }
+.mx-a { color: #2563eb; }
+.mx-b { color: #d97706; }
+.mx-comm { color: #16a34a; }
+
+/* JS tooltip */
+#eqTip { display: none; position: fixed; background: #333; color: white; padding: 9px 13px; border-radius: 5px; font-size: 12px; font-family: Georgia, serif; width: 280px; text-align: left; z-index: 200; line-height: 1.5; box-shadow: 0 3px 12px rgba(0,0,0,0.25); pointer-events: none; }
+#eqTip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #333; }
+
+/* Controls */
+.controls-row { display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+.control-group { display: flex; flex-direction: column; gap: 6px; }
+.action-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+.action-bar .status { font-size: 13px; color: #666; margin-left: 8px; }
+.manual-bulk { display: none; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.manual-bulk.visible { display: flex; }
+.manual-bulk label { font-size: 13px; }
+.manual-bulk input[type="range"] { width: 200px; accent-color: #2a5da8; }
+.manual-bulk .dist-display { font-family: 'Courier New', monospace; font-size: 13px; color: #2a5da8; }
+
+/* Main layout */
+.main { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 28px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+
+/* Queue & Labs */
+.queue-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+.queue { display: flex; gap: 5px; flex-wrap: wrap; padding: 12px; background: #fafafa; border: 1px dashed #ddd; border-radius: 4px; min-height: 48px; align-items: center; }
+.sci { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; background: #ccc; color: #555; transition: opacity 0.3s, transform 0.3s; flex-shrink: 0; }
+.sci.gone { opacity: 0; transform: scale(0.3); pointer-events: none; }
+.labs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.lab { padding: 14px; border: 2px solid #ddd; border-radius: 6px; min-height: 180px; display: flex; flex-direction: column; transition: border-color 0.15s, box-shadow 0.15s; }
+.lab.clickable { cursor: pointer; }
+.lab.clickable:hover { box-shadow: 0 0 0 3px rgba(42,93,168,0.15); }
+.lab.a { border-color: #93b8f0; background: rgba(59,130,246,0.03); }
+.lab.b { border-color: #f5d48b; background: rgba(245,158,11,0.03); }
+.lab-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.lab-title { font-weight: bold; font-size: 14px; }
+.lab.a .lab-title { color: #2563eb; }
+.lab.b .lab-title { color: #d97706; }
+.lab-count { font-size: 12px; color: #888; }
+.lab-scientists { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; align-content: flex-start; }
+.lab-sci { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: white; animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+.lab.a .lab-sci { background: #3b82f6; }
+.lab.b .lab-sci { background: #f59e0b; }
+@keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+/* Probability diagram */
+.prob-panel { display: flex; flex-direction: column; gap: 12px; }
+.prob-title { font-size: 13px; font-weight: bold; color: #555; }
+.prob-box { border: 1px solid #ccc; border-radius: 4px; background: white; overflow: hidden; }
+.prob-svg { display: block; width: 100%; }
+.prob-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.ps { padding: 8px 10px; background: #fafafa; border-radius: 4px; border-left: 3px solid #ddd; }
+.ps.a { border-left-color: #3b82f6; }
+.ps.b { border-left-color: #f59e0b; }
+.ps.comm { border-left-color: #16a34a; grid-column: 1 / -1; }
+.ps-label { font-size: 11px; color: #888; margin-bottom: 2px; }
+.ps-val { font-size: 17px; font-weight: bold; }
+.ps.comm .ps-val { color: #16a34a; font-size: 19px; }
+.marginal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.mg { padding: 6px 10px; border-radius: 4px; border: 1px dashed #ccc; background: white; }
+.mg.a { border-color: rgba(59,130,246,0.4); }
+.mg.b { border-color: rgba(245,158,11,0.4); }
+.mg-label { font-size: 10px; color: #888; }
+.mg-val { font-size: 14px; font-weight: bold; font-family: 'Courier New', monospace; }
+.mg.a .mg-val { color: #3b82f6; }
+.mg.b .mg-val { color: #d97706; }
+.mg.winner { background: rgba(42,93,168,0.05); border-style: solid; }
+
+/* Stats table */
+.stats-wrap { padding: 18px; background: #f5f5f5; border-radius: 4px; margin-bottom: 24px; overflow-x: auto; }
+.stats-wrap .section-label { margin-bottom: 12px; }
+table.stats { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.stats th { background: #e8e8e8; padding: 8px 10px; text-align: left; border: 1px solid #ddd; font-weight: bold; font-size: 12px; }
+table.stats td { padding: 8px 10px; border: 1px solid #ddd; text-align: right; }
+table.stats td:first-child { text-align: left; font-weight: bold; color: #555; }
+table.stats tr.highlight-a td:not(:first-child) { background: rgba(59,130,246,0.07); }
+table.stats tr.highlight-b td:not(:first-child) { background: rgba(245,158,11,0.07); }
+
+/* Explanation & Compare */
+.explanation { padding: 18px 20px; background: #f0f6ff; border-left: 4px solid #2a5da8; border-radius: 4px; font-size: 14px; line-height: 1.65; }
+.explanation strong { color: #2a5da8; }
+.compare-bar { display: none; margin-bottom: 24px; padding: 16px 20px; background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 4px; font-size: 14px; line-height: 1.6; }
+.compare-bar.visible { display: block; }
+
+/* Framework comparison */
+.fw-compare { margin-top: 32px; padding: 24px; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 14px; line-height: 1.7; }
+.fw-compare h2 { font-size: 17px; margin-bottom: 14px; color: #333; }
+.fw-compare h3 { font-size: 14px; margin: 16px 0 6px; color: #555; }
+.fw-compare p { margin-bottom: 10px; }
+.fw-compare .fw-eq { font-family: 'Courier New', monospace; font-size: 13px; background: white; padding: 10px 16px; border: 1px solid #ddd; border-radius: 4px; margin: 10px 0; text-align: center; line-height: 1.8; }
+.fw-compare .fw-factor { display: inline-block; padding: 1px 4px; border-radius: 3px; }
+.fw-compare .fw-factor.q { background: rgba(59,130,246,0.12); color: #1d4ed8; }
+.fw-compare .fw-factor.p { background: rgba(147,51,234,0.12); color: #7c3aed; }
+.fw-compare .fw-factor.f { background: rgba(100,100,100,0.1); color: #333; }
+.fw-compare .fw-factor.rho { background: rgba(42,93,168,0.12); color: #1e3a5f; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Division of Cognitive Labor Explorer</h1>
+  <p class="subtitle">Visualizing Philip Kitcher's argument about the optimal distribution of scientific research effort</p>
+
+  <!-- Mode -->
+  <div class="section">
+    <div class="section-label">Framework</div>
+    <div class="btn-row">
+      <button class="pill active" data-mode="methods">Problem-Solving Methods</button>
+      <button class="pill" data-mode="theory">Theory Choice</button>
+    </div>
+  </div>
+
+  <!-- Parameters -->
+  <div class="section">
+    <div class="section-label">Parameters</div>
+    <div class="params-box">
+      <div class="params-grid">
+        <div class="param" id="paramN">
+          <label title="The total number of scientists to distribute across the two methods.">N (Scientists)</label>
+          <input type="range" id="sN" min="2" max="30" value="10"><span class="val" id="vN">10</span>
+        </div>
+        <div class="param" id="paramRA">
+          <label id="lRA" title="The probability that Method A's approach CAN deliver the answer, even with unlimited scientists.">&#961;<sub>A</sub> &#8212; Intrinsic prospects of A</label>
+          <input type="range" id="sRA" min="1" max="99" value="60"><span class="val" id="vRA">0.60</span>
+        </div>
+        <div class="param" id="paramRB">
+          <label id="lRB" title="The probability that Method B's approach CAN deliver the answer, even with unlimited scientists.">&#961;<sub>B</sub> &#8212; Intrinsic prospects of B</label>
+          <input type="range" id="sRB" min="1" max="99" value="40"><span class="val" id="vRB">0.40</span>
+        </div>
+        <div class="param hidden" id="paramP">
+          <label id="lP" title="The probability that the true theory's remaining problems CAN be overcome, even with unlimited scientists. Shared by both theories.">p &#8212; Tractability</label>
+          <input type="range" id="sP" min="10" max="100" value="80"><span class="val" id="vP">0.80</span>
+        </div>
+        <div class="param" id="paramK">
+          <label title="How quickly adding scientists increases success probability. High k = steep early gains that taper off fast. Low k = slow, steady gains.">k &#8212; Responsiveness to added scientists</label>
+          <input type="range" id="sK" min="5" max="100" value="30"><span class="val" id="vK">0.30</span>
+        </div>
+        <div class="param-note" id="rhoNote"></div>
+      </div>
+      <label class="link-toggle" id="linkToggleWrap">
+        <input type="checkbox" id="linkToggle" checked>
+        <span id="linkLabel">Prospects sum to 1</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Equation section -->
+  <div class="section">
+    <div class="section-label">The Math</div>
+    <div class="eq-section">
+      <div class="eq-bar" id="eqBar"></div>
+
+      <!-- Step-through (collapsible) -->
+      <div class="collapse-toggle" id="stepToggle">&#9656; Show calculation with current values</div>
+      <div class="step-box" id="stepBox">
+        <div class="step-header">
+          <span class="section-label" style="margin:0">Calculation with current values</span>
+          <div class="step-nav">
+            <button class="sm-btn" id="stepBack">&#9664;</button>
+            <span class="step-counter" id="stepCounter">1 / 7</span>
+            <button class="sm-btn" id="stepFwd">&#9654;</button>
+            <button class="sm-btn" id="stepAll" style="margin-left:4px">Show all</button>
+          </div>
+        </div>
+        <div class="step-lines" id="stepLines"></div>
+      </div>
+
+      <!-- Marginal math (collapsible) -->
+      <div class="collapse-toggle" id="margToggle">&#9656; Show marginal contribution math</div>
+      <div class="marg-detail" id="margDetail"></div>
+    </div>
+  </div>
+
+  <div id="eqTip"></div>
+
+  <!-- Allocation controls -->
+  <div class="controls-row">
+    <div class="control-group">
+      <div class="section-label">Allocation Strategy</div>
+      <div class="btn-row">
+        <button class="pill" data-alloc="ir" title="Each scientist independently follows the evidence, joining whichever method has higher intrinsic prospects. This is individually rational but can be collectively suboptimal.">
+          IR &#8212; Individually Rational<span class="pill-sub">Follow the evidence</span>
+        </button>
+        <button class="pill active" data-alloc="co" title="Each scientist is assigned to whichever method gives the largest marginal increase in the community's total probability of success.">
+          CO &#8212; Community Optimal<span class="pill-sub">Maximize contribution</span>
+        </button>
+        <button class="pill" data-alloc="manual" title="You decide where each scientist goes!">Manual</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="section-label">Speed</div>
+      <div class="btn-row">
+        <button class="pill active" data-speed="one">One at a Time</button>
+        <button class="pill" data-speed="all">All at Once</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="act-btn" id="btnNext">Next Scientist &#8594;</button>
+    <button class="act-btn secondary" id="btnReset">Reset</button>
+    <span class="status" id="statusMsg"></span>
+  </div>
+  <div class="manual-bulk" id="manualBulk">
+    <label>Assign to Method A:</label>
+    <input type="range" id="sBulk" min="0" max="10" value="5">
+    <span class="dist-display" id="vBulk">5 in A, 5 in B</span>
+    <button class="act-btn" id="btnBulkAssign">Assign All</button>
+  </div>
+
+  <div class="compare-bar" id="compareBar"></div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div>
+      <div class="queue-label">Scientist Queue</div>
+      <div class="queue" id="queue"></div>
+      <div class="labs">
+        <div class="lab a" id="labA"><div class="lab-head"><span class="lab-title" id="labTitleA">Method A</span><span class="lab-count" id="cntA">0 scientists</span></div><div class="lab-scientists" id="sciA"></div></div>
+        <div class="lab b" id="labB"><div class="lab-head"><span class="lab-title" id="labTitleB">Method B</span><span class="lab-count" id="cntB">0 scientists</span></div><div class="lab-scientists" id="sciB"></div></div>
+      </div>
+    </div>
+    <div class="prob-panel">
+      <div class="prob-title">Probability Space</div>
+      <div class="prob-box"><svg id="probSvg" class="prob-svg" viewBox="0 0 400 280"></svg></div>
+      <div class="prob-stats">
+        <div class="ps a"><div class="ps-label" id="psLabelA">P(A succeeds)</div><div class="ps-val" id="psA">0.000</div></div>
+        <div class="ps b"><div class="ps-label" id="psLabelB">P(B succeeds)</div><div class="ps-val" id="psB">0.000</div></div>
+        <div class="ps comm"><div class="ps-label" id="psLabelC">P(community finds the truth)</div><div class="ps-val" id="psC">0.000</div></div>
+      </div>
+      <div class="marginal-row" id="marginalRow">
+        <div class="mg a" id="mgA"><div class="mg-label">If next scientist &#8594; A</div><div class="mg-val" id="mgValA">+0.0000</div></div>
+        <div class="mg b" id="mgB"><div class="mg-label">If next scientist &#8594; B</div><div class="mg-val" id="mgValB">+0.0000</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats table -->
+  <div class="stats-wrap">
+    <div class="section-label">Decision Statistics</div>
+    <table class="stats" id="statsTable">
+      <thead><tr><th></th><th id="thA">Method A</th><th id="thB">Method B</th></tr></thead>
+      <tbody id="statsBody"></tbody>
+    </table>
+  </div>
+
+  <div class="explanation" id="explBox"></div>
+
+  <!-- Framework comparison -->
+  <div class="fw-compare" id="fwCompare">
+    <h2>Problem-Solving Methods vs. Theory Choice</h2>
+
+    <h3>The Methods Framework</h3>
+    <p>A scientific community faces a problem that might be solvable by either of two methods. Each method has an <em>intrinsic prospect</em> &#961; &#8212; the probability it can deliver the answer, even with unlimited scientists. The community's probability of success is:</p>
+    <div class="fw-eq">P(success) = <span class="fw-factor rho">&#961;<sub>A</sub></span> &#183; <span class="fw-factor f">f(n<sub>A</sub>)</span> + <span class="fw-factor rho">&#961;<sub>B</sub></span> &#183; <span class="fw-factor f">f(n<sub>B</sub>)</span></div>
+    <p>Two factors per term: how promising is the method (<span class="fw-factor rho">&#961;</span>), and what fraction of that promise is realized by current effort (<span class="fw-factor f">f(n)</span>).</p>
+
+    <h3>The Theory-Choice Framework</h3>
+    <p>Now the community faces two competing theories, exactly one of which is true. This introduces an extra layer of uncertainty: even if a theory is true, its remaining anomalies might resist resolution. Each theory has a probability <em>q</em> of being the true theory (q<sub>A</sub> + q<sub>B</sub> = 1), and both theories share a <em>tractability</em> parameter <em>p</em> &#8212; the probability that the true theory's problems <em>can</em> be overcome with enough effort. Expected community success becomes:</p>
+    <div class="fw-eq">E[success] = <span class="fw-factor q">q<sub>A</sub></span> &#183; <span class="fw-factor p">p</span> &#183; <span class="fw-factor f">f(n<sub>A</sub>)</span> + <span class="fw-factor q">q<sub>B</sub></span> &#183; <span class="fw-factor p">p</span> &#183; <span class="fw-factor f">f(n<sub>B</sub>)</span></div>
+    <p>Three factors per term: is the theory true (<span class="fw-factor q">q</span>), are its problems solvable (<span class="fw-factor p">p</span>), and have the scientists solved them (<span class="fw-factor f">f(n)</span>)?</p>
+
+    <h3>What Changes?</h3>
+    <p>The core tension is the same: individually rational scientists all pile onto the more promising option (higher &#961; in methods, higher <em>q</em> in theory choice), but the community does better by maintaining diversity. But the theory-choice framing sharpens the bite. A scientist who works on the less probable theory isn't just choosing a less promising method &#8212; they're knowingly betting against the evidence about which theory is <em>true</em>. That's a harder bullet to bite individually, even though the community benefits from their doing so.</p>
+    <p>The tractability parameter <em>p</em> adds a uniform ceiling: even with infinite scientists, each theory's problems can only be overcome with probability <em>p</em>. When <em>p</em> is low, the absolute stakes are lower (the community is less likely to succeed regardless), but the <em>relative</em> advantage of diversification stays the same. Because <em>p</em> is shared between theories, it doesn't affect <em>where</em> the optimal distribution falls &#8212; only how much total probability is at stake.</p>
+    <p>In the probability space diagram above, theory-choice mode shows this as a <em>tractability ceiling</em>: a horizontal line at height <em>p</em>, above which lies the "intractable" zone that no amount of effort can reach. The filled region represents the probability the community has actually captured, and the gap between the filled region and the ceiling represents unrealized potential that more scientists <em>could</em> capture.</p>
+  </div>
+</div>
+
+<script>
+// =========================================================================
+// STATE
+// =========================================================================
+const S = {
+  mode:'methods', N:10, rhoA:0.60, rhoB:0.40, k:0.30, p:0.80,
+  alloc:'co', speed:'one', assigned:[], nA:0, nB:0,
+  stepIdx: 6, stepOpen: false, margOpen: false,
+  linked: true,
+};
+
+// =========================================================================
+// MATH
+// =========================================================================
+const Ff = (n,k) => n===0 ? 0 : 1 - Math.exp(-k*n);
+const P  = (r,n,k) => r * Ff(n,k);
+const MG = (r,n,k) => P(r,n+1,k) - P(r,n,k);
+// Effective rho: in theory mode, q*p; in methods mode, just rho
+const eA = () => S.mode==='theory' ? S.rhoA*S.p : S.rhoA;
+const eB = () => S.mode==='theory' ? S.rhoB*S.p : S.rhoB;
+const CP = () => P(eA(),S.nA,S.k) + P(eB(),S.nB,S.k);
+function optDist() {
+  let best=-1, bNA=0;
+  for (let na=0;na<=S.N;na++) { const c=P(eA(),na,S.k)+P(eB(),S.N-na,S.k); if(c>best){best=c;bNA=na;} }
+  return {nA:bNA, nB:S.N-bNA, pC:best};
+}
+const isDone = () => S.assigned.length >= S.N;
+const fmt = (v,d=4) => v.toFixed(d);
+const totalSteps = () => S.mode==='theory' ? 8 : 7;
+
+// =========================================================================
+// DYNAMIC EQUATION
+// =========================================================================
+function renderEquation() {
+  const bar = document.getElementById('eqBar');
+  if (S.mode === 'methods') {
+    bar.innerHTML = `<span class="eq-label">Kitcher\u2019s community success equation:</span>`
+      + `<span class="eq-hover" data-tip="The total probability the scientific community finds the answer \u2014 via either method." data-hl="">P(success)</span> = `
+      + `<span class="eq-hover" id="eqRA" data-tip="Intrinsic prospects of Method A \u2014 the ceiling on its success probability, representing how promising the method\u2019s approach is." data-hl="hl-rhoA">\u03C1<sub>A</sub></span>`
+      + `\u00B7<span class="eq-hover" id="eqTermA" data-tip="f(n): the fraction of Method A\u2019s potential realized by n scientists working on A. Starts at 0, approaches 1 with more scientists \u2014 but with diminishing returns." data-hl="hl-termA">(1 \u2212 </span>`
+      + `<span class="eq-hover" id="eqEA" data-tip="Euler\u2019s number e \u2248 2.718 \u2014 the base of natural exponential decay. As kn grows, e^(\u2212kn) shrinks toward zero." data-hl="hl-e"><i>e</i></span>`
+      + `<sup><span class="eq-hover" data-hl="hl-termA" data-tip="f(n): the fraction of A\u2019s potential realized by n scientists working on A.">\u2212</span>`
+      + `<span class="eq-hover" id="eqKA" data-tip="Responsiveness: how quickly adding scientists increases probability of success." data-hl="hl-k">k</span>`
+      + `<span class="eq-hover" data-hl="hl-termA" data-tip="f(n): the fraction of A\u2019s potential realized by n scientists working on A.">\u00B7</span>`
+      + `<span class="eq-hover" id="eqNA" data-tip="The number of scientists assigned to Method A." data-hl="hl-n">n<sub>A</sub></span></sup>`
+      + `<span class="eq-hover" id="eqTermA2" data-hl="hl-termA" data-tip="f(n): the fraction of A\u2019s potential realized by n scientists working on A.">)</span>`
+      + ` + `
+      + `<span class="eq-hover" id="eqRB" data-tip="Intrinsic prospects of Method B \u2014 the ceiling on its success probability." data-hl="hl-rhoB">\u03C1<sub>B</sub></span>`
+      + `\u00B7<span class="eq-hover" id="eqTermB" data-tip="f(n): the fraction of Method B\u2019s potential realized by n scientists working on B." data-hl="hl-termB">(1 \u2212 </span>`
+      + `<span class="eq-hover" id="eqEB" data-tip="Euler\u2019s number e \u2248 2.718. Same decay function as in A\u2019s term." data-hl="hl-e"><i>e</i></span>`
+      + `<sup><span class="eq-hover" data-hl="hl-termB" data-tip="f(n): the fraction of B\u2019s potential realized by n scientists working on B.">\u2212</span>`
+      + `<span class="eq-hover" id="eqKB" data-tip="Same responsiveness parameter \u2014 in this model both methods respond to effort at the same rate." data-hl="hl-k">k</span>`
+      + `<span class="eq-hover" data-hl="hl-termB" data-tip="f(n): the fraction of B\u2019s potential realized by n scientists working on B.">\u00B7</span>`
+      + `<span class="eq-hover" id="eqNB" data-tip="The number of scientists assigned to Method B." data-hl="hl-n">n<sub>B</sub></span></sup>`
+      + `<span class="eq-hover" id="eqTermB2" data-hl="hl-termB" data-tip="f(n): the fraction of B\u2019s potential realized by n scientists working on B.">)</span>`;
+  } else {
+    bar.innerHTML = `<span class="eq-label">Expected community success (theory choice):</span>`
+      + `<span class="eq-hover" data-tip="The expected probability that the scientific community discovers the truth \u2014 accounting for uncertainty about which theory is correct and whether its problems can be overcome." data-hl="">E[success]</span> = `
+      + `<span class="eq-hover" id="eqRA" data-tip="The probability that Theory A is the true theory, given the available evidence." data-hl="hl-rhoA">q<sub>A</sub></span>`
+      + `\u00B7<span class="eq-hover" id="eqPA" data-tip="Tractability \u2014 the probability that the true theory\u2019s remaining problems CAN be overcome, even with unlimited scientists. Shared by both theories." data-hl="hl-p">p</span>`
+      + `\u00B7<span class="eq-hover" id="eqTermA" data-tip="f(n): the fraction of the theory\u2019s tractable potential realized by n scientists working on it." data-hl="hl-termA">(1 \u2212 </span>`
+      + `<span class="eq-hover" id="eqEA" data-tip="Euler\u2019s number e \u2248 2.718 \u2014 the base of natural exponential decay." data-hl="hl-e"><i>e</i></span>`
+      + `<sup><span class="eq-hover" data-hl="hl-termA" data-tip="f(n): the fraction of tractable potential realized by n scientists.">\u2212</span>`
+      + `<span class="eq-hover" id="eqKA" data-tip="Responsiveness: how quickly adding scientists increases the chance of overcoming problems." data-hl="hl-k">k</span>`
+      + `<span class="eq-hover" data-hl="hl-termA" data-tip="f(n): the fraction of tractable potential realized by n scientists.">\u00B7</span>`
+      + `<span class="eq-hover" id="eqNA" data-tip="The number of scientists assigned to Theory A." data-hl="hl-n">n<sub>A</sub></span></sup>`
+      + `<span class="eq-hover" id="eqTermA2" data-hl="hl-termA" data-tip="f(n): the fraction of tractable potential realized by n scientists.">)</span>`
+      + ` + `
+      + `<span class="eq-hover" id="eqRB" data-tip="The probability that Theory B is the true theory." data-hl="hl-rhoB">q<sub>B</sub></span>`
+      + `\u00B7<span class="eq-hover" id="eqPB" data-tip="Tractability \u2014 same shared parameter p for both theories." data-hl="hl-p">p</span>`
+      + `\u00B7<span class="eq-hover" id="eqTermB" data-tip="f(n): the fraction of Theory B\u2019s tractable potential realized by n scientists working on it." data-hl="hl-termB">(1 \u2212 </span>`
+      + `<span class="eq-hover" id="eqEB" data-tip="Euler\u2019s number e \u2248 2.718." data-hl="hl-e"><i>e</i></span>`
+      + `<sup><span class="eq-hover" data-hl="hl-termB" data-tip="f(n): the fraction of tractable potential realized by n scientists.">\u2212</span>`
+      + `<span class="eq-hover" id="eqKB" data-tip="Same responsiveness parameter for both theories." data-hl="hl-k">k</span>`
+      + `<span class="eq-hover" data-hl="hl-termB" data-tip="f(n): the fraction of tractable potential realized by n scientists.">\u00B7</span>`
+      + `<span class="eq-hover" id="eqNB" data-tip="The number of scientists assigned to Theory B." data-hl="hl-n">n<sub>B</sub></span></sup>`
+      + `<span class="eq-hover" id="eqTermB2" data-hl="hl-termB" data-tip="f(n): the fraction of tractable potential realized by n scientists.">)</span>`;
+  }
+  setupEqTooltips();
+  setupParamEqLinks();
+}
+
+// =========================================================================
+// STEP-THROUGH
+// =========================================================================
+function buildSteps() {
+  const rA=S.rhoA, rB=S.rhoB, k=S.k, nA=S.nA, nB=S.nB, p=S.p;
+  const knA=k*nA, knB=k*nB;
+  const eknA=Math.exp(-knA), eknB=Math.exp(-knB);
+  const fA=Ff(nA,k), fB=Ff(nB,k);
+
+  if (S.mode === 'methods') {
+    const pA=P(rA,nA,k), pB=P(rB,nB,k), tot=pA+pB;
+    return [
+      { eq: `P(success) = \u03C1<sub>A</sub>\u00B7(1 \u2212 <i>e</i><sup>\u2212k\u00B7n<sub>A</sub></sup>) + \u03C1<sub>B</sub>\u00B7(1 \u2212 <i>e</i><sup>\u2212k\u00B7n<sub>B</sub></sup>)`, note: 'symbolic equation' },
+      { eq: `<span class="step-hl" data-step="1">= ${fmt(rA,2)}\u00B7(1 \u2212 <i>e</i><sup>\u2212${fmt(k,2)}\u00B7${nA}</sup>) + ${fmt(rB,2)}\u00B7(1 \u2212 <i>e</i><sup>\u2212${fmt(k,2)}\u00B7${nB}</sup>)</span>`, note: 'substitute current values' },
+      { eq: `= ${fmt(rA,2)}\u00B7(1 \u2212 <i>e</i><sup><span class="step-hl" data-step="2">\u2212${fmt(knA,2)}</span></sup>) + ${fmt(rB,2)}\u00B7(1 \u2212 <i>e</i><sup><span class="step-hl" data-step="2">\u2212${fmt(knB,2)}</span></sup>)`, note: 'multiply k \u00D7 n' },
+      { eq: `= ${fmt(rA,2)}\u00B7(1 \u2212 <span class="step-hl" data-step="3">${fmt(eknA)}</span>) + ${fmt(rB,2)}\u00B7(1 \u2212 <span class="step-hl" data-step="3">${fmt(eknB)}</span>)`, note: 'evaluate e<sup>\u2212kn</sup>' },
+      { eq: `= ${fmt(rA,2)}\u00B7<span class="step-hl" data-step="4">${fmt(fA)}</span> + ${fmt(rB,2)}\u00B7<span class="step-hl" data-step="4">${fmt(fB)}</span>`, note: 'compute f(n) = 1 \u2212 e<sup>\u2212kn</sup>' },
+      { eq: `= <span class="step-hl" data-step="5">${fmt(pA)}</span> + <span class="step-hl" data-step="5">${fmt(pB)}</span>`, note: 'multiply \u03C1 \u00D7 f(n) to get p(n)' },
+      { eq: `= <span class="step-hl" data-step="6" style="font-weight:bold">${fmt(tot)}</span>`, note: 'sum = community success probability' },
+    ];
+  } else {
+    // Theory mode: 8 steps with q*p decomposition
+    const erA=rA*p, erB=rB*p; // effective ceilings q*p
+    const pA=erA*fA, pB=erB*fB, tot=pA+pB;
+    return [
+      { eq: `E[success] = q<sub>A</sub>\u00B7p\u00B7(1 \u2212 <i>e</i><sup>\u2212k\u00B7n<sub>A</sub></sup>) + q<sub>B</sub>\u00B7p\u00B7(1 \u2212 <i>e</i><sup>\u2212k\u00B7n<sub>B</sub></sup>)`, note: 'symbolic equation' },
+      { eq: `<span class="step-hl" data-step="1">= ${fmt(rA,2)}\u00B7${fmt(p,2)}\u00B7(1 \u2212 <i>e</i><sup>\u2212${fmt(k,2)}\u00B7${nA}</sup>) + ${fmt(rB,2)}\u00B7${fmt(p,2)}\u00B7(1 \u2212 <i>e</i><sup>\u2212${fmt(k,2)}\u00B7${nB}</sup>)</span>`, note: 'substitute current values' },
+      { eq: `= ${fmt(rA,2)}\u00B7${fmt(p,2)}\u00B7(1 \u2212 <i>e</i><sup><span class="step-hl" data-step="2">\u2212${fmt(knA,2)}</span></sup>) + ${fmt(rB,2)}\u00B7${fmt(p,2)}\u00B7(1 \u2212 <i>e</i><sup><span class="step-hl" data-step="2">\u2212${fmt(knB,2)}</span></sup>)`, note: 'multiply k \u00D7 n' },
+      { eq: `= ${fmt(rA,2)}\u00B7${fmt(p,2)}\u00B7(1 \u2212 <span class="step-hl" data-step="3">${fmt(eknA)}</span>) + ${fmt(rB,2)}\u00B7${fmt(p,2)}\u00B7(1 \u2212 <span class="step-hl" data-step="3">${fmt(eknB)}</span>)`, note: 'evaluate e<sup>\u2212kn</sup>' },
+      { eq: `= ${fmt(rA,2)}\u00B7${fmt(p,2)}\u00B7<span class="step-hl" data-step="4">${fmt(fA)}</span> + ${fmt(rB,2)}\u00B7${fmt(p,2)}\u00B7<span class="step-hl" data-step="4">${fmt(fB)}</span>`, note: 'compute f(n) = 1 \u2212 e<sup>\u2212kn</sup>' },
+      { eq: `= <span class="step-hl" data-step="5">${fmt(erA,2)}</span>\u00B7${fmt(fA)} + <span class="step-hl" data-step="5">${fmt(erB,2)}</span>\u00B7${fmt(fB)}`, note: 'multiply q \u00D7 p to get effective ceiling' },
+      { eq: `= <span class="step-hl" data-step="6">${fmt(pA)}</span> + <span class="step-hl" data-step="6">${fmt(pB)}</span>`, note: 'multiply ceiling \u00D7 f(n)' },
+      { eq: `= <span class="step-hl" data-step="7" style="font-weight:bold">${fmt(tot)}</span>`, note: 'sum = expected community success' },
+    ];
+  }
+}
+
+function renderSteps() {
+  const toggle = document.getElementById('stepToggle');
+  const box = document.getElementById('stepBox');
+  toggle.innerHTML = S.stepOpen ? '\u25BE Hide calculation with current values' : '\u25B8 Show calculation with current values';
+  if (!S.stepOpen) { box.classList.remove('visible'); return; }
+  box.classList.add('visible');
+
+  const steps = buildSteps();
+  const ts = totalSteps();
+  // Clamp stepIdx
+  if (S.stepIdx >= ts) S.stepIdx = ts - 1;
+  const el = document.getElementById('stepLines');
+  const maxStep = Math.min(S.stepIdx+1, steps.length);
+  let html = '';
+  for (let i=0; i<maxStep; i++) {
+    const s = steps[i];
+    html += `<div class="step-line"><span class="step-eq">${s.eq}</span>`;
+    if (i > 0) html += `<span class="step-note" data-stephl="${i}">(${s.note})</span>`;
+    html += `</div>`;
+  }
+  el.innerHTML = html;
+  document.getElementById('stepCounter').textContent = `${maxStep} / ${steps.length}`;
+  document.getElementById('stepBack').disabled = S.stepIdx <= 0;
+  document.getElementById('stepFwd').disabled = S.stepIdx >= ts - 1;
+
+  el.querySelectorAll('.step-note').forEach(note => {
+    const idx = note.dataset.stephl;
+    note.addEventListener('mouseenter', () => { el.querySelectorAll(`.step-hl[data-step="${idx}"]`).forEach(h => h.classList.add('lit')); });
+    note.addEventListener('mouseleave', () => { el.querySelectorAll('.step-hl.lit').forEach(h => h.classList.remove('lit')); });
+  });
+}
+
+// =========================================================================
+// MARGINAL MATH
+// =========================================================================
+function renderMargMath() {
+  const toggle = document.getElementById('margToggle');
+  const el = document.getElementById('margDetail');
+  if (isDone()) { toggle.style.display='none'; el.classList.remove('visible'); return; }
+  toggle.style.display='';
+  toggle.innerHTML = S.margOpen ? '\u25BE Hide marginal contribution math' : '\u25B8 Show marginal contribution math';
+  if (!S.margOpen) { el.classList.remove('visible'); return; }
+  el.classList.add('visible');
+
+  const rA=S.rhoA, rB=S.rhoB, k=S.k, nA=S.nA, nB=S.nB, p=S.p;
+  const erA=eA(), erB=eB();
+  const pA=P(erA,nA,k), pB=P(erB,nB,k), pC=pA+pB;
+  const pAplus=P(erA,nA+1,k), pBplus=P(erB,nB+1,k);
+  const mA=pAplus-pA, mB=pBplus-pB;
+
+  const isT = S.mode==='theory';
+  const rhoWord = isT ? 'probability that the theory is true' : 'intrinsic prospects';
+
+  // Tooltip texts for marginal math
+  const rhoTipA = isT
+    ? `q_A = ${fmt(rA,2)}: the probability that Theory A is true. This weights A\u2019s contribution to expected community success.`
+    : `\u03C1_A = ${fmt(rA,2)}: the intrinsic prospects of Method A \u2014 the ceiling on its success probability.`;
+  const rhoTipB = isT
+    ? `q_B = ${fmt(rB,2)}: the probability that Theory B is true.`
+    : `\u03C1_B = ${fmt(rB,2)}: the intrinsic prospects of Method B \u2014 the ceiling on its success probability.`;
+  const pTip = `p = ${fmt(p,2)}: tractability \u2014 the probability that the true theory\u2019s problems can be overcome with enough effort.`;
+  const fnTipA = `The fraction of ${isT?'tractable':'Method A\u2019s'} potential realized by ${nA} scientist${nA!==1?'s':''} working on ${isT?'Theory':'Method'} A. f(${nA}) = ${fmt(Ff(nA,k))}.`;
+  const fnTipB = `The fraction of ${isT?'tractable':'Method B\u2019s'} potential realized by ${nB} scientist${nB!==1?'s':''} working on ${isT?'Theory':'Method'} B. f(${nB}) = ${fmt(Ff(nB,k))}.`;
+
+  // Build equation rows
+  function buildRow(label, css, nAv, nBv) {
+    const fAv=Ff(nAv,k), fBv=Ff(nBv,k);
+    const pvA=erA*fAv, pvB=erB*fBv, pvC=pvA+pvB;
+    const fnTipAv = `f(${nAv}) = ${fmt(Ff(nAv,k))}`;
+    const fnTipBv = `f(${nBv}) = ${fmt(Ff(nBv,k))}`;
+    if (isT) {
+      return `<div class="marg-eq-row ${css}"><strong>${label}</strong> (${nAv} on A, ${nBv} on B): &nbsp;`
+        + `E = <span class="mx mx-a" data-mg="rhoA" data-tip="${rhoTipA}">${fmt(rA,2)}</span>`
+        + `\u00B7<span class="mx" data-mg="pVal" data-tip="${pTip}" style="color:#7c3aed">${fmt(p,2)}</span>`
+        + `\u00B7<span class="mx mx-a" data-mg="fn${css}A" data-tip="${fnTipAv}">(1\u2212e<sup>\u2212${fmt(k,2)}\u00B7${nAv}</sup>)</span>`
+        + ` + <span class="mx mx-b" data-mg="rhoB" data-tip="${rhoTipB}">${fmt(rB,2)}</span>`
+        + `\u00B7<span class="mx" data-mg="pVal" data-tip="${pTip}" style="color:#7c3aed">${fmt(p,2)}</span>`
+        + `\u00B7<span class="mx mx-b" data-mg="fn${css}B" data-tip="${fnTipBv}">(1\u2212e<sup>\u2212${fmt(k,2)}\u00B7${nBv}</sup>)</span>`
+        + ` = <span class="mx mx-a" data-mg="pv${css}A">${fmt(pvA)}</span>`
+        + ` + <span class="mx mx-b" data-mg="pv${css}B">${fmt(pvB)}</span>`
+        + ` = <span class="mx mx-comm" data-mg="pv${css}C">${fmt(pvC)}</span></div>`;
+    } else {
+      return `<div class="marg-eq-row ${css}"><strong>${label}</strong> (${nAv} on A, ${nBv} on B): &nbsp;`
+        + `P = <span class="mx mx-a" data-mg="rhoA" data-tip="${rhoTipA}">${fmt(rA,2)}</span>`
+        + `\u00B7<span class="mx mx-a" data-mg="fn${css}A" data-tip="${fnTipAv}">(1\u2212e<sup>\u2212${fmt(k,2)}\u00B7${nAv}</sup>)</span>`
+        + ` + <span class="mx mx-b" data-mg="rhoB" data-tip="${rhoTipB}">${fmt(rB,2)}</span>`
+        + `\u00B7<span class="mx mx-b" data-mg="fn${css}B" data-tip="${fnTipBv}">(1\u2212e<sup>\u2212${fmt(k,2)}\u00B7${nBv}</sup>)</span>`
+        + ` = <span class="mx mx-a" data-mg="pv${css}A">${fmt(pvA)}</span>`
+        + ` + <span class="mx mx-b" data-mg="pv${css}B">${fmt(pvB)}</span>`
+        + ` = <span class="mx mx-comm" data-mg="pv${css}C">${fmt(pvC)}</span></div>`;
+    }
+  }
+
+  const word = isT ? 'Theory' : 'Method';
+  const pAval = pA, pBval = pB;
+
+  el.innerHTML = `
+    <div style="margin-bottom:8px; font-weight:bold; font-size:12px; color:#555;">${isT?'Expected community success':'Community success'} at three scenarios:</div>
+    ${buildRow('Current', 'current', nA, nB)}
+    ${buildRow('+1 to A', 'plus-a', nA+1, nB)}
+    ${buildRow('+1 to B', 'plus-b', nA, nB+1)}
+    <div class="marg-narrative">
+      <p>Currently, with <span class="mx" data-mg="nA">${nA}</span> scientist${nA!==1?'s':''} working on ${word} A and <span class="mx" data-mg="nB">${nB}</span> on ${word} B, ${isT?'the expected contribution from A is':'the probability that A will be successful is'} <span class="mx mx-a" data-mg="pvcurrentA">${fmt(pA)}</span>, and ${isT?'from B is':'the probability that B will be successful is'} <span class="mx mx-b" data-mg="pvcurrentB">${fmt(pB)}</span>. So ${isT?'expected':'total'} community success is <span class="mx mx-a" data-mg="pvcurrentA">${fmt(pA)}</span> + <span class="mx mx-b" data-mg="pvcurrentB">${fmt(pB)}</span> = <span class="mx mx-comm" data-mg="pvcurrentC">${fmt(pC)}</span>.</p>
+      <p>Adding one scientist to ${word} A would increase ${isT?'A\u2019s expected contribution':'the probability that A succeeds'} by <span class="mx mx-a" data-mg="mA">${fmt(mA)}</span>, to <span class="mx mx-a" data-mg="pvplus-aA">${fmt(pAplus)}</span>, ${isT?'raising expected':'increasing'} community success to <span class="mx mx-comm" data-mg="pvplus-aC">${fmt(pAplus+pB)}</span>.</p>
+      <p>Adding one scientist to ${word} B would increase ${isT?'B\u2019s expected contribution':'the probability that B succeeds'} by <span class="mx mx-b" data-mg="mB">${fmt(mB)}</span>, to <span class="mx mx-b" data-mg="pvplus-bB">${fmt(pBplus)}</span>, ${isT?'raising expected':'increasing'} community success to <span class="mx mx-comm" data-mg="pvplus-bC">${fmt(pA+pBplus)}</span>.</p>
+      <p style="color:#666; font-size:12px;">So the next scientist adds more to community success by going to <strong style="color:${mA>=mB?'#2563eb':'#d97706'}">${word} ${mA>=mB?'A':'B'}</strong> (<span class="mx" data-mg="${mA>=mB?'mA':'mB'}">${fmt(Math.max(mA,mB))}</span> vs. <span class="mx" data-mg="${mA>=mB?'mB':'mA'}">${fmt(Math.min(mA,mB))}</span>).</p>
+    </div>
+  `;
+
+  // Cross-highlighting + tooltips
+  el.querySelectorAll('.mx').forEach(span => {
+    span.addEventListener('mouseenter', () => {
+      el.querySelectorAll(`.mx[data-mg="${span.dataset.mg}"]`).forEach(s => s.classList.add('lit'));
+      if (span.dataset.tip) showTip(span, span.dataset.tip);
+    });
+    span.addEventListener('mouseleave', () => {
+      el.querySelectorAll('.mx.lit').forEach(s => s.classList.remove('lit'));
+      hideTip();
+    });
+  });
+}
+
+// =========================================================================
+// TOOLTIP SYSTEM
+// =========================================================================
+function showTip(el, text) {
+  const tip = document.getElementById('eqTip');
+  tip.textContent = text; tip.style.display = 'block';
+  const r = el.getBoundingClientRect();
+  tip.style.left = Math.max(10, Math.min(window.innerWidth - 300, r.left + r.width/2 - 140)) + 'px';
+  tip.style.top = (r.top - tip.offsetHeight - 10) + 'px';
+}
+function hideTip() { document.getElementById('eqTip').style.display = 'none'; }
+
+const HL_CLASSES = ['hl-rhoA','hl-rhoB','hl-p','hl-k','hl-n','hl-termA','hl-termB','hl-e'];
+function setupEqTooltips() {
+  const all = document.querySelectorAll('#eqBar .eq-hover');
+  all.forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      const text = el.dataset.tip; if (!text) return;
+      showTip(el, text);
+      const hl = el.dataset.hl;
+      if (hl) all.forEach(h => { if (h.dataset.hl===hl) h.classList.add(hl); });
+    });
+    el.addEventListener('mouseleave', () => {
+      hideTip();
+      all.forEach(h => HL_CLASSES.forEach(c => h.classList.remove(c)));
+    });
+  });
+}
+function setupParamEqLinks() {
+  const links = S.mode==='theory'
+    ? { paramRA:{ids:['eqRA'],cls:'hl-rhoA'}, paramRB:{ids:['eqRB'],cls:'hl-rhoB'}, paramP:{ids:['eqPA','eqPB'],cls:'hl-p'}, paramK:{ids:['eqKA','eqKB'],cls:'hl-k'}, paramN:{ids:['eqNA','eqNB'],cls:'hl-n'} }
+    : { paramRA:{ids:['eqRA'],cls:'hl-rhoA'}, paramRB:{ids:['eqRB'],cls:'hl-rhoB'}, paramK:{ids:['eqKA','eqKB'],cls:'hl-k'}, paramN:{ids:['eqNA','eqNB'],cls:'hl-n'} };
+  // Remove old listeners by cloning
+  ['paramRA','paramRB','paramP','paramK','paramN'].forEach(pid => {
+    const el = document.getElementById(pid); if (!el) return;
+    const clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+    // Reattach slider listener
+    const slider = clone.querySelector('input[type="range"]');
+    if (slider) slider.addEventListener('input', handleSlider);
+  });
+  Object.entries(links).forEach(([pid,{ids,cls}]) => {
+    const el=document.getElementById(pid); if(!el) return;
+    el.addEventListener('mouseenter', ()=>ids.forEach(id=>document.getElementById(id)?.classList.add(cls)));
+    el.addEventListener('mouseleave', ()=>ids.forEach(id=>document.getElementById(id)?.classList.remove(cls)));
+  });
+}
+
+// =========================================================================
+// RENDER
+// =========================================================================
+function renderQueue() {
+  const el=document.getElementById('queue'); el.innerHTML='';
+  for (let i=1;i<=S.N;i++) { const d=document.createElement('div'); d.className='sci'+(i<=S.assigned.length?' gone':''); d.textContent=String(i); el.appendChild(d); }
+}
+function renderLabs() {
+  const eAel=document.getElementById('sciA'), eBel=document.getElementById('sciB'); eAel.innerHTML=''; eBel.innerHTML='';
+  S.assigned.forEach((lab,i)=>{ const d=document.createElement('div'); d.className='lab-sci'; d.textContent=String(i+1); (lab==='A'?eAel:eBel).appendChild(d); });
+  document.getElementById('cntA').textContent=S.nA+(S.nA!==1?' scientists':' scientist');
+  document.getElementById('cntB').textContent=S.nB+(S.nB!==1?' scientists':' scientist');
+  const isT = S.mode==='theory';
+  document.getElementById('labTitleA').textContent = isT ? 'Theory A' : 'Method A';
+  document.getElementById('labTitleB').textContent = isT ? 'Theory B' : 'Method B';
+}
+
+function renderDiagram() {
+  const W=400, H=250, svg=document.getElementById('probSvg');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H+30}`);
+  const show=!isDone();
+  const erA=eA(), erB=eB();
+  const pAv=P(erA,S.nA,S.k), pBv=P(erB,S.nB,S.k);
+  const mAv=MG(erA,S.nA,S.k), mBv=MG(erB,S.nB,S.k);
+  let s='';
+
+  // SVG defs
+  s+=`<defs><pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#eee" stroke-width="0.5"/></pattern>`;
+  s+=`<pattern id="intract" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#d0d0d0" stroke-width="1"/></pattern></defs>`;
+
+  if (S.mode === 'theory') {
+    // Theory mode: columns = q, ceiling at p
+    const wA=S.rhoA*W, wB=S.rhoB*W;
+    const ceilH=S.p*H;
+    const hA=S.p*Ff(S.nA,S.k)*H, hB=S.p*Ff(S.nB,S.k)*H;
+    const hAm=S.p*Ff(S.nA+1,S.k)*H, hBm=S.p*Ff(S.nB+1,S.k)*H;
+
+    // Column backgrounds
+    s+=`<rect x="0" y="0" width="${wA}" height="${H}" fill="#f0f4ff"/>`;
+    s+=`<rect x="${wA}" y="0" width="${wB}" height="${H}" fill="#fffbeb"/>`;
+    // Intractable zone (above ceiling)
+    if (ceilH < H - 2) {
+      s+=`<rect x="0" y="0" width="${W}" height="${H-ceilH}" fill="url(#intract)" opacity="0.5"/>`;
+      s+=`<rect x="0" y="0" width="${W}" height="${H-ceilH}" fill="rgba(200,200,200,0.08)"/>`;
+    }
+    s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#g)"/>`;
+
+    // Marginal zones
+    if (show) {
+      const margHa=hAm-hA;
+      if (margHa>0 && wA>10) {
+        s+=`<rect x="0" y="${H-hAm}" width="${wA}" height="${margHa}" fill="#3b82f6" opacity="0.15"/>`;
+        s+=`<line x1="0" y1="${H-hAm}" x2="${wA}" y2="${H-hAm}" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+        if (wA>40) {
+          const topD=H-hAm; let ly;
+          if (margHa>20) ly=topD+margHa/2+4; else if (topD>16) ly=topD-6; else ly=H-hA+16;
+          s+=`<text x="${wA/2}" y="${ly}" text-anchor="middle" font-size="11" font-family="'Courier New',monospace" fill="#3b82f6" font-weight="bold">+${(mAv*100).toFixed(2)}%</text>`;
+        }
+      }
+      const margHb=hBm-hB;
+      if (margHb>0 && wB>10) {
+        s+=`<rect x="${wA}" y="${H-hBm}" width="${wB}" height="${margHb}" fill="#f59e0b" opacity="0.15"/>`;
+        s+=`<line x1="${wA}" y1="${H-hBm}" x2="${wA+wB}" y2="${H-hBm}" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+        if (wB>40) {
+          const topD=H-hBm; let ly;
+          if (margHb>20) ly=topD+margHb/2+4; else if (topD>16) ly=topD-6; else ly=H-hB+16;
+          s+=`<text x="${wA+wB/2}" y="${ly}" text-anchor="middle" font-size="11" font-family="'Courier New',monospace" fill="#d97706" font-weight="bold">+${(mBv*100).toFixed(2)}%</text>`;
+        }
+      }
+    }
+
+    // Filled regions
+    s+=`<rect x="0" y="${H-hA}" width="${wA}" height="${Math.max(0,hA)}" fill="#3b82f6" opacity="0.55"/>`;
+    s+=`<rect x="${wA}" y="${H-hB}" width="${wB}" height="${Math.max(0,hB)}" fill="#f59e0b" opacity="0.55"/>`;
+
+    // Ceiling line
+    if (ceilH < H - 2) {
+      s+=`<line x1="0" y1="${H-ceilH}" x2="${W}" y2="${H-ceilH}" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.7"/>`;
+      s+=`<text x="${W-4}" y="${H-ceilH-5}" text-anchor="end" font-size="10" font-family="Georgia,serif" fill="#7c3aed" opacity="0.9">p = ${S.p.toFixed(2)} (tractability ceiling)</text>`;
+    }
+
+    // Vertical divider
+    s+=`<line x1="${wA}" y1="0" x2="${wA}" y2="${H}" stroke="#999" stroke-width="1"/>`;
+    s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#999" stroke-width="1"/>`;
+
+    // Labels
+    const yL=H+16;
+    if(wA>30) s+=`<text x="${wA/2}" y="${yL}" text-anchor="middle" font-size="12" font-family="Georgia,serif" fill="#2563eb" font-weight="bold">A is true</text>`;
+    if(wB>30) s+=`<text x="${wA+wB/2}" y="${yL}" text-anchor="middle" font-size="12" font-family="Georgia,serif" fill="#d97706" font-weight="bold">B is true</text>`;
+
+    // Interior labels
+    if(hA>18&&wA>35) s+=`<text x="${wA/2}" y="${H-hA/2+4}" text-anchor="middle" font-size="13" font-family="'Courier New',monospace" fill="white" font-weight="bold">${(pAv*100).toFixed(1)}%</text>`;
+    if(hB>18&&wB>35) s+=`<text x="${wA+wB/2}" y="${H-hB/2+4}" text-anchor="middle" font-size="13" font-family="'Courier New',monospace" fill="white" font-weight="bold">${(pBv*100).toFixed(1)}%</text>`;
+    // Unrealized label (between filled and ceiling)
+    const gapA=ceilH-hA, gapB=ceilH-hB;
+    if(gapA>28&&wA>50&&S.nA>0) s+=`<text x="${wA/2}" y="${H-hA-gapA/2+4}" text-anchor="middle" font-size="11" font-family="Georgia,serif" fill="#8baae0" opacity="0.8">unrealized</text>`;
+    if(gapB>28&&wB>50&&S.nB>0) s+=`<text x="${wA+wB/2}" y="${H-hB-gapB/2+4}" text-anchor="middle" font-size="11" font-family="Georgia,serif" fill="#d4a84a" opacity="0.8">unrealized</text>`;
+    // Intractable label
+    const intractH=H-ceilH;
+    if(intractH>28) s+=`<text x="${W/2}" y="${intractH/2+4}" text-anchor="middle" font-size="11" font-family="Georgia,serif" fill="#999" opacity="0.8">intractable even if true</text>`;
+
+  } else {
+    // Methods mode (unchanged)
+    const wA=S.rhoA*W, wB=S.rhoB*W, wN=Math.max(0,(1-S.rhoA-S.rhoB))*W;
+    const fA=Ff(S.nA,S.k), fB=Ff(S.nB,S.k), hA=fA*H, hB=fB*H;
+    const hAm=Ff(S.nA+1,S.k)*H, hBm=Ff(S.nB+1,S.k)*H;
+
+    s+=`<rect x="0" y="0" width="${wA}" height="${H}" fill="#f0f4ff"/>`;
+    s+=`<rect x="${wA}" y="0" width="${wB}" height="${H}" fill="#fffbeb"/>`;
+    if(wN>2) s+=`<rect x="${wA+wB}" y="0" width="${wN}" height="${H}" fill="#f3f3f3"/>`;
+    s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="url(#g)"/>`;
+
+    if (show) {
+      const margHa=hAm-hA;
+      if (margHa>0 && wA>10) {
+        s+=`<rect x="0" y="${H-hAm}" width="${wA}" height="${margHa}" fill="#3b82f6" opacity="0.15"/>`;
+        s+=`<line x1="0" y1="${H-hAm}" x2="${wA}" y2="${H-hAm}" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+        if (wA>40) {
+          const topD=H-hAm; let ly;
+          if (margHa>20) ly=topD+margHa/2+4; else if (topD>16) ly=topD-6; else ly=H-hA+16;
+          s+=`<text x="${wA/2}" y="${ly}" text-anchor="middle" font-size="11" font-family="'Courier New',monospace" fill="#3b82f6" font-weight="bold">+${(mAv*100).toFixed(2)}%</text>`;
+        }
+      }
+      const margHb=hBm-hB;
+      if (margHb>0 && wB>10) {
+        s+=`<rect x="${wA}" y="${H-hBm}" width="${wB}" height="${margHb}" fill="#f59e0b" opacity="0.15"/>`;
+        s+=`<line x1="${wA}" y1="${H-hBm}" x2="${wA+wB}" y2="${H-hBm}" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6,4"/>`;
+        if (wB>40) {
+          const topD=H-hBm; let ly;
+          if (margHb>20) ly=topD+margHb/2+4; else if (topD>16) ly=topD-6; else ly=H-hB+16;
+          s+=`<text x="${wA+wB/2}" y="${ly}" text-anchor="middle" font-size="11" font-family="'Courier New',monospace" fill="#d97706" font-weight="bold">+${(mBv*100).toFixed(2)}%</text>`;
+        }
+      }
+    }
+
+    s+=`<rect x="0" y="${H-hA}" width="${wA}" height="${hA}" fill="#3b82f6" opacity="0.55"/>`;
+    s+=`<rect x="${wA}" y="${H-hB}" width="${wB}" height="${hB}" fill="#f59e0b" opacity="0.55"/>`;
+    s+=`<line x1="${wA}" y1="0" x2="${wA}" y2="${H}" stroke="#999" stroke-width="1"/>`;
+    if(wN>2) s+=`<line x1="${wA+wB}" y1="0" x2="${wA+wB}" y2="${H}" stroke="#bbb" stroke-width="0.5" stroke-dasharray="4,3"/>`;
+    s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="none" stroke="#999" stroke-width="1"/>`;
+    const yL=H+16;
+    if(wA>30) s+=`<text x="${wA/2}" y="${yL}" text-anchor="middle" font-size="12" font-family="Georgia,serif" fill="#2563eb" font-weight="bold">A can deliver</text>`;
+    if(wB>30) s+=`<text x="${wA+wB/2}" y="${yL}" text-anchor="middle" font-size="12" font-family="Georgia,serif" fill="#d97706" font-weight="bold">B can deliver</text>`;
+    if(wN>30) s+=`<text x="${wA+wB+wN/2}" y="${yL}" text-anchor="middle" font-size="11" font-family="Georgia,serif" fill="#999">Neither</text>`;
+    if(hA>18&&wA>35) s+=`<text x="${wA/2}" y="${H-hA/2+4}" text-anchor="middle" font-size="13" font-family="'Courier New',monospace" fill="white" font-weight="bold">${(pAv*100).toFixed(1)}%</text>`;
+    if(hB>18&&wB>35) s+=`<text x="${wA+wB/2}" y="${H-hB/2+4}" text-anchor="middle" font-size="13" font-family="'Courier New',monospace" fill="white" font-weight="bold">${(pBv*100).toFixed(1)}%</text>`;
+    if((H-hA)>28&&wA>50&&S.nA>0) s+=`<text x="${wA/2}" y="${(H-hA)/2+4}" text-anchor="middle" font-size="11" font-family="Georgia,serif" fill="#8baae0" opacity="0.8">unrealized</text>`;
+    if((H-hB)>28&&wB>50&&S.nB>0) s+=`<text x="${wA+wB/2}" y="${(H-hB)/2+4}" text-anchor="middle" font-size="11" font-family="Georgia,serif" fill="#d4a84a" opacity="0.8">unrealized</text>`;
+  }
+
+  svg.innerHTML=s;
+
+  // Stat labels
+  const isT = S.mode==='theory';
+  document.getElementById('psLabelA').textContent = isT ? 'E[A contributes]' : 'P(A succeeds)';
+  document.getElementById('psLabelB').textContent = isT ? 'E[B contributes]' : 'P(B succeeds)';
+  document.getElementById('psLabelC').textContent = isT ? 'E[community finds the truth]' : 'P(community finds the truth)';
+  document.getElementById('psA').textContent=pAv.toFixed(3);
+  document.getElementById('psB').textContent=pBv.toFixed(3);
+  document.getElementById('psC').textContent=(pAv+pBv).toFixed(3);
+
+  const mRow=document.getElementById('marginalRow');
+  if(isDone()){mRow.style.display='none';}
+  else { mRow.style.display='';
+    document.getElementById('mgValA').textContent='+'+mAv.toFixed(4);
+    document.getElementById('mgValB').textContent='+'+mBv.toFixed(4);
+    document.getElementById('mgA').classList.toggle('winner',mAv>=mBv);
+    document.getElementById('mgB').classList.toggle('winner',mBv>mAv);
+  }
+}
+
+function renderStats() {
+  const isT = S.mode==='theory';
+  const erA=eA(), erB=eB();
+  const pA=P(erA,S.nA,S.k), pB=P(erB,S.nB,S.k);
+  document.getElementById('thA').textContent = isT ? 'Theory A' : 'Method A';
+  document.getElementById('thB').textContent = isT ? 'Theory B' : 'Method B';
+
+  let rows = '';
+  rows += `<tr><td>Scientists assigned</td><td>${S.nA}</td><td>${S.nB}</td></tr>`;
+  rows += `<tr><td>${isT?'P(theory is true)':'Intrinsic prospects (\u03C1)'}</td><td>${S.rhoA.toFixed(2)}</td><td>${S.rhoB.toFixed(2)}</td></tr>`;
+  if (isT) rows += `<tr><td>Tractability (p)</td><td>${S.p.toFixed(2)}</td><td>${S.p.toFixed(2)}</td></tr>`;
+  rows += `<tr><td>f(n) \u2014 fraction of potential realized</td><td>${Ff(S.nA,S.k).toFixed(3)}</td><td>${Ff(S.nB,S.k).toFixed(3)}</td></tr>`;
+  if (isT) {
+    rows += `<tr><td>q\u00B7p \u2014 effective ceiling</td><td>${erA.toFixed(3)}</td><td>${erB.toFixed(3)}</td></tr>`;
+    rows += `<tr><td>q\u00B7p\u00B7f(n) \u2014 expected contribution</td><td>${pA.toFixed(3)}</td><td>${pB.toFixed(3)}</td></tr>`;
+  } else {
+    rows += `<tr><td>p(n) = \u03C1\u00B7f(n) \u2014 probability of success</td><td>${pA.toFixed(3)}</td><td>${pB.toFixed(3)}</td></tr>`;
+  }
+  if(!isDone()){
+    const mA=MG(erA,S.nA,S.k), mB=MG(erB,S.nB,S.k);
+    const cls = mA>mB?'highlight-a':mB>mA?'highlight-b':'';
+    rows += `<tr id="margRow" class="${cls}"><td>Marginal gain from next scientist</td><td>+${mA.toFixed(4)}</td><td>+${mB.toFixed(4)}</td></tr>`;
+  } else {
+    rows += `<tr id="margRow"><td>Marginal gain from next scientist</td><td>\u2014</td><td>\u2014</td></tr>`;
+  }
+  document.getElementById('statsBody').innerHTML = rows;
+}
+
+function renderExplanation() {
+  const el=document.getElementById('explBox'), pComm=CP(), opt=optDist();
+  const isT = S.mode==='theory';
+  const word = isT?'Theory':'Method';
+  const rhoSym = isT?'q':'\u03C1';
+  if(!isDone()){
+    if(S.alloc==='ir'){
+      const b=S.rhoA>=S.rhoB?'A':'B';
+      el.innerHTML=`<strong>IR:</strong> Each scientist follows the evidence \u2192 ${word} ${b} (${rhoSym} = ${(b==='A'?S.rhoA:S.rhoB).toFixed(2)} vs. ${(b==='A'?S.rhoB:S.rhoA).toFixed(2)}).${isT?' Each scientist rationally backs the more probable theory.':''} Click <strong>Next Scientist</strong> to watch.`;
+    } else if(S.alloc==='co'){
+      const mA=MG(eA(),S.nA,S.k),mB=MG(eB(),S.nB,S.k),next=mA>=mB?'A':'B';
+      el.innerHTML=`<strong>CO:</strong> Adding to ${word} A gains <strong>+${mA.toFixed(4)}</strong>, to ${word} B gains <strong>+${mB.toFixed(4)}</strong> \u2014 Scientist ${S.assigned.length+1} \u2192 <strong>${word} ${next}</strong>.`;
+    } else {
+      el.innerHTML=`<strong>Manual:</strong> Click a lab to assign Scientist ${S.assigned.length+1}.`;
+    }
+  } else {
+    const gap=opt.pC-pComm;
+    if(S.alloc==='ir') {
+      const piled=S.rhoA>=S.rhoB?'A':'B';
+      el.innerHTML=`<strong>Result:</strong> Everyone followed the evidence \u2192 ${word} ${piled}. ${isT?'Expected community success':'Community success'}: <strong>${pComm.toFixed(3)}</strong>. Optimal (${opt.nA} in A, ${opt.nB} in B) achieves <strong>${opt.pC.toFixed(3)}</strong> \u2014 gap of <strong>${gap.toFixed(3)}</strong>. ${isT?'Kitcher\u2019s insight: even when scientists are rationally backing the more probable theory, the community loses expected probability by not maintaining cognitive diversity.':'Kitcher\u2019s core insight: individually rational scientists leave valuable probability on the table.'}`;
+    } else if(S.alloc==='co') {
+      el.innerHTML=`<strong>Result:</strong> ${S.nA} in A, ${S.nB} in B. ${isT?'Expected community success':'Community success'}: <strong>${pComm.toFixed(3)}</strong>. ${gap<0.001?'Matches the global optimum.': `Brute-force optimum: ${opt.pC.toFixed(3)}.`} Diminishing returns mean later scientists add more value exploring the less-staffed ${word.toLowerCase()}.`;
+    } else {
+      el.innerHTML=`<strong>Your distribution:</strong> ${S.nA} in A, ${S.nB} in B. ${isT?'Expected community success':'Community success'}: <strong>${pComm.toFixed(3)}</strong>. ${gap<0.001?'You matched the optimum!':`Optimal (${opt.nA} in A, ${opt.nB} in B) achieves <strong>${opt.pC.toFixed(3)}</strong>, gap of ${gap.toFixed(3)}.`}`;
+    }
+  }
+}
+
+function renderCompare() {
+  const bar=document.getElementById('compareBar');
+  if(!isDone()||S.alloc!=='ir'){bar.classList.remove('visible');return;}
+  const isT = S.mode==='theory';
+  const word = isT?'theory':'Method';
+  const irP=CP(),opt=optDist(),irAll=S.rhoA>=S.rhoB?'A':'B';
+  bar.classList.add('visible');
+  bar.innerHTML=`<strong>The IR / CO Gap:</strong> Following evidence: ${isT?'E':'P'} = ${irP.toFixed(3)}. Optimal (${opt.nA} in A, ${opt.nB} in B): ${isT?'E':'P'} = ${opt.pC.toFixed(3)}. <strong>${((opt.pC-irP)*100).toFixed(1)} percentage points</strong> lost because everyone piled onto ${isT?'the more probable theory':'Method'} ${irAll}.`;
+}
+
+function updateButtons() {
+  const d=isDone(), btn=document.getElementById('btnNext');
+  btn.disabled=d||(S.alloc==='manual'&&S.speed==='one');
+  btn.textContent=d?'All Assigned \u2713':'Next Scientist \u2192';
+  document.getElementById('statusMsg').textContent=d?'':`Scientist ${S.assigned.length+1} of ${S.N}`;
+  document.getElementById('labA').classList.toggle('clickable',S.alloc==='manual'&&S.speed==='one'&&!d);
+  document.getElementById('labB').classList.toggle('clickable',S.alloc==='manual'&&S.speed==='one'&&!d);
+  const sb=S.alloc==='manual'&&S.speed==='all'&&!d;
+  document.getElementById('manualBulk').classList.toggle('visible',sb);
+  if(sb){document.getElementById('sBulk').max=S.N; document.getElementById('vBulk').textContent=`${document.getElementById('sBulk').value} in A, ${S.N-document.getElementById('sBulk').value} in B`;}
+}
+
+function renderLinkToggle() {
+  const wrap = document.getElementById('linkToggleWrap');
+  const cb = document.getElementById('linkToggle');
+  if (S.mode === 'theory') { wrap.style.display = 'none'; S.linked = true; }
+  else { wrap.style.display = ''; cb.checked = S.linked; }
+}
+
+function renderParamVisibility() {
+  document.getElementById('paramP').classList.toggle('hidden', S.mode !== 'theory');
+}
+
+function render() {
+  renderQueue(); renderLabs(); renderDiagram(); renderSteps(); renderMargMath();
+  renderStats(); renderExplanation(); renderCompare(); updateButtons();
+  renderLinkToggle(); renderParamVisibility();
+}
+
+// =========================================================================
+// ACTIONS
+// =========================================================================
+function assign(lab) { if(isDone())return; S.assigned.push(lab); if(lab==='A')S.nA++;else S.nB++; render(); }
+function assignNext() {
+  if(isDone())return;
+  if(S.alloc==='ir') assign(S.rhoA>=S.rhoB?'A':'B');
+  else if(S.alloc==='co') assign(MG(eA(),S.nA,S.k)>=MG(eB(),S.nB,S.k)?'A':'B');
+}
+function assignAll() {
+  resetState();
+  if(S.alloc==='manual'){
+    const nA=parseInt(document.getElementById('sBulk').value);
+    for(let i=0;i<nA;i++){S.assigned.push('A');S.nA++;}
+    for(let i=0;i<S.N-nA;i++){S.assigned.push('B');S.nB++;}
+  } else {
+    for(let i=0;i<S.N;i++){
+      if(S.alloc==='ir'){
+        const l=S.rhoA>=S.rhoB?'A':'B'; S.assigned.push(l); if(l==='A')S.nA++;else S.nB++;
+      } else {
+        const l=MG(eA(),S.nA,S.k)>=MG(eB(),S.nB,S.k)?'A':'B'; S.assigned.push(l); if(l==='A')S.nA++;else S.nB++;
+      }
+    }
+  }
+  render();
+}
+function resetState(){S.assigned=[];S.nA=0;S.nB=0;}
+function fullReset(){resetState();render();}
+
+// =========================================================================
+// PARAMS
+// =========================================================================
+function syncParams() {
+  S.N=parseInt(document.getElementById('sN').value);
+  S.rhoA=parseInt(document.getElementById('sRA').value)/100;
+  S.rhoB=parseInt(document.getElementById('sRB').value)/100;
+  S.k=parseInt(document.getElementById('sK').value)/100;
+  S.p=parseInt(document.getElementById('sP').value)/100;
+  document.getElementById('vN').textContent=S.N;
+  document.getElementById('vRA').textContent=S.rhoA.toFixed(2);
+  document.getElementById('vRB').textContent=S.rhoB.toFixed(2);
+  document.getElementById('vK').textContent=S.k.toFixed(2);
+  document.getElementById('vP').textContent=S.p.toFixed(2);
+
+  const sum=S.rhoA+S.rhoB, note=document.getElementById('rhoNote');
+  if(S.mode==='theory'){
+    note.innerHTML='q<sub>A</sub>+q<sub>B</sub>=1.00 \u2014 exactly one theory is true.';
+    note.style.color='';
+  } else if(S.linked) {
+    note.innerHTML=`\u03C1<sub>A</sub>+\u03C1<sub>B</sub>=${sum.toFixed(2)}.`;
+    note.style.color='';
+  } else if(sum<=1.001){
+    note.innerHTML=`\u03C1<sub>A</sub>+\u03C1<sub>B</sub>=${sum.toFixed(2)}`+(sum<0.999?` \u2014 ${((1-sum)*100).toFixed(0)}% probability neither method can deliver.`:'.');
+    note.style.color='';
+  } else {
+    note.innerHTML=`\u03C1<sub>A</sub>+\u03C1<sub>B</sub>=${sum.toFixed(2)} \u2014 exceeds 1. Kitcher\u2019s simplification is strained.`;
+    note.style.color='#c00';
+  }
+
+  if(S.mode==='theory'){
+    document.getElementById('lRA').innerHTML='q<sub>A</sub> \u2014 Probability Theory A is true';
+    document.getElementById('lRB').innerHTML='q<sub>B</sub> \u2014 Probability Theory B is true';
+    document.getElementById('paramRA').querySelector('label').title = 'The probability that Theory A is the true theory, given available evidence.';
+    document.getElementById('paramRB').querySelector('label').title = 'The probability that Theory B is the true theory.';
+  } else {
+    document.getElementById('lRA').innerHTML='\u03C1<sub>A</sub> \u2014 Intrinsic prospects of A';
+    document.getElementById('lRB').innerHTML='\u03C1<sub>B</sub> \u2014 Intrinsic prospects of B';
+    document.getElementById('paramRA').querySelector('label').title = 'The probability that Method A can deliver the answer, even with unlimited scientists.';
+    document.getElementById('paramRB').querySelector('label').title = 'The probability that Method B can deliver the answer, even with unlimited scientists.';
+  }
+  document.getElementById('sBulk').max=S.N;
+}
+
+// =========================================================================
+// EVENTS
+// =========================================================================
+function handleSlider(e) {
+  const id = e.target.id;
+  if(S.mode==='theory' || S.linked) {
+    if(id==='sRA') document.getElementById('sRB').value=100-parseInt(e.target.value);
+    else if(id==='sRB') document.getElementById('sRA').value=100-parseInt(e.target.value);
+  }
+  syncParams(); fullReset();
+}
+
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',e=>{
+  document.querySelectorAll('[data-mode]').forEach(x=>x.classList.remove('active'));
+  e.target.classList.add('active');
+  S.mode=e.target.dataset.mode;
+  if(S.mode==='theory'){
+    S.linked=true;
+    document.getElementById('sRA').value=60;
+    document.getElementById('sRB').value=40;
+    document.getElementById('sP').value=80;
+  } else {
+    document.getElementById('sRA').value=60;
+    document.getElementById('sRB').value=S.linked?40:30;
+  }
+  syncParams();
+  renderEquation();
+  fullReset();
+}));
+
+document.querySelectorAll('[data-alloc]').forEach(b=>b.addEventListener('click',e=>{
+  const t=e.target.closest('[data-alloc]');
+  document.querySelectorAll('[data-alloc]').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  S.alloc=t.dataset.alloc; fullReset();
+}));
+
+document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click',e=>{
+  document.querySelectorAll('[data-speed]').forEach(x=>x.classList.remove('active'));
+  e.target.classList.add('active');
+  S.speed=e.target.dataset.speed; updateButtons();
+}));
+
+['sN','sRA','sRB','sK','sP'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', handleSlider);
+});
+
+document.getElementById('linkToggle').addEventListener('change', e=>{
+  S.linked = e.target.checked;
+  if(S.linked) { document.getElementById('sRB').value = 100 - parseInt(document.getElementById('sRA').value); }
+  syncParams(); fullReset();
+});
+
+document.getElementById('btnNext').addEventListener('click',()=>{S.speed==='all'?assignAll():assignNext();});
+document.getElementById('btnReset').addEventListener('click',fullReset);
+document.getElementById('labA').addEventListener('click',()=>{if(S.alloc==='manual'&&S.speed==='one'&&!isDone())assign('A');});
+document.getElementById('labB').addEventListener('click',()=>{if(S.alloc==='manual'&&S.speed==='one'&&!isDone())assign('B');});
+document.getElementById('sBulk').addEventListener('input',e=>{document.getElementById('vBulk').textContent=`${e.target.value} in A, ${S.N-e.target.value} in B`;});
+document.getElementById('btnBulkAssign').addEventListener('click',assignAll);
+
+// Step navigation
+document.getElementById('stepToggle').addEventListener('click',()=>{S.stepOpen=!S.stepOpen;renderSteps();});
+document.getElementById('stepBack').addEventListener('click',()=>{if(S.stepIdx>0){S.stepIdx--;renderSteps();}});
+document.getElementById('stepFwd').addEventListener('click',()=>{if(S.stepIdx<totalSteps()-1){S.stepIdx++;renderSteps();}});
+document.getElementById('stepAll').addEventListener('click',()=>{S.stepIdx=totalSteps()-1;renderSteps();});
+
+// Marginal math toggle
+document.getElementById('margToggle').addEventListener('click',()=>{S.margOpen=!S.margOpen;renderMargMath();});
+
+// =========================================================================
+// INIT
+// =========================================================================
+syncParams(); renderEquation(); render();
+</script>
+</body>
+</html>
