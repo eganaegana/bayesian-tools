@@ -685,6 +685,20 @@
                     e.target.classList.add('active');
                     state.mode = parseInt(e.target.dataset.mode);
                     state.numGroups = state.mode;
+                    // Sync proportions with the mode's sliders
+                    if (state.numGroups === 2) {
+                        const redRatio = parseInt(document.getElementById('redRatioSlider').value) / 100;
+                        state.groupProportions = [redRatio, 1 - redRatio, 0];
+                    } else {
+                        const redProp = parseInt(document.getElementById('redPropSlider').value) / 100;
+                        const blueProp = parseInt(document.getElementById('bluePropSlider').value) / 100;
+                        state.groupProportions = [redProp, blueProp, Math.max(0, 1 - redProp - blueProp)];
+                    }
+                    state.steps = 0;
+                    state.chartData = [];
+                    state.running = false;
+                    updateRunButtonLabel();
+                    clearEquilibriumMessage();
                     updateModeDependentUI();
                     setup();
                     draw();
