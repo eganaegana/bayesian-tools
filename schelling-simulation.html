@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schelling's Segregation Model</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #222;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .mode-toggle {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .mode-buttons {
+            display: inline-flex;
+            gap: 10px;
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .mode-btn:hover {
+            border-color: #3498db;
+        }
+
+        /* Desktop: grid+chart side by side on top, controls as wide bar below */
+        .main-content {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-rows: auto auto;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .grid-container {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .chart-panel {
+            grid-column: 2;
+            grid-row: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .controls-panel {
+            grid-column: 1 / -1;
+            grid-row: 2;
+        }
+
+        /* Mobile: stack everything vertically in original order */
+        @media (max-width: 1000px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+            .grid-container { grid-column: 1; grid-row: 1; }
+            .controls-panel { grid-column: 1; grid-row: 2; }
+            .chart-panel { grid-column: 1; grid-row: 3; }
+        }
+
+        .grid-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        #gridCanvas {
+            display: block;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: default;
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+        }
+
+        .controls-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Desktop: controls flow horizontally */
+        @media (min-width: 1001px) {
+            .controls-inner {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px 25px;
+                align-items: flex-start;
+            }
+            .controls-inner .control-group,
+            .controls-inner .slider-group {
+                flex: 1 1 180px;
+                min-width: 160px;
+                margin-bottom: 0;
+            }
+            .controls-inner .control-group:first-child {
+                flex: 0 0 100%;
+            }
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: 2px solid #3498db;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn.secondary {
+            background: white;
+            color: #3498db;
+            border-color: #3498db;
+        }
+
+        .btn.secondary:hover {
+            background: #f0f8ff;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .slider-label-value {
+            color: #666;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+
+        input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .stats {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.8;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 15px;
+        }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .stat-value {
+            color: #666;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        #chartCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 2px;
+        }
+
+        .chart-legend {
+            font-size: 11px;
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-line {
+            width: 20px;
+            height: 2px;
+            background: currentColor;
+        }
+
+        .legend-dotted {
+            width: 20px;
+            height: 2px;
+            background: repeating-linear-gradient(90deg, currentColor 0, currentColor 3px, transparent 3px, transparent 6px);
+        }
+
+        .equilibrium-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .equilibrium-message.show {
+            display: block;
+        }
+
+        .info-section {
+            margin-top: 30px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .info-header {
+            padding: 15px 20px;
+            background: #f9f9f9;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-header:hover {
+            background: #f0f0f0;
+        }
+
+        .info-content {
+            padding: 20px;
+            display: none;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .info-content.show {
+            display: block;
+        }
+
+        .info-content p {
+            margin-bottom: 12px;
+        }
+
+        .toggle-arrow {
+            transition: transform 0.2s;
+        }
+
+        .info-content.show ~ .info-header .toggle-arrow {
+            transform: rotate(180deg);
+        }
+
+        .independent-thresholds-section {
+            display: none;
+        }
+
+        .independent-thresholds-section.show {
+            display: block;
+        }
+
+        .shared-threshold-section {
+            display: block;
+        }
+
+        .shared-threshold-section.hide {
+            display: none;
+        }
+
+        .color-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+        .color-red {
+            background: #e74c3c;
+        }
+
+        .color-blue {
+            background: #3498db;
+        }
+
+        .color-green {
+            background: #2ecc71;
+        }
+
+        .color-gray {
+            background: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Schelling's Segregation Model</h1>
+            <p>How mild individual preferences can produce dramatic collective segregation</p>
+        </div>
+
+        <div class="mode-toggle">
+            <div class="mode-buttons">
+                <button class="mode-btn active" data-mode="2">Two Groups</button>
+                <button class="mode-btn" data-mode="3">Three Groups</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="grid-container">
+                <canvas id="gridCanvas" width="500" height="500"></canvas>
+            </div>
+
+            <div class="controls-panel">
+                <div class="controls-inner">
+                <div class="control-group">
+                    <div class="control-buttons">
+                        <button class="btn" id="setupBtn">Setup</button>
+                        <button class="btn" id="stepBtn">Step</button>
+                        <button class="btn" id="runBtn">Run</button>
+                        <button class="btn secondary" id="resetBtn">Reset</button>
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Speed</span>
+                        <span class="slider-label-value"><span id="speedValue">5</span> steps/frame</span>
+                    </div>
+                    <input type="range" id="speedSlider" min="1" max="20" value="5">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Population Density</span>
+                        <span class="slider-label-value"><span id="densityValue">75</span>%</span>
+                    </div>
+                    <input type="range" id="densitySlider" min="50" max="95" value="75">
+                </div>
+
+                <div id="twoGroupRatios">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span><span class="color-indicator color-red"></span>Red Proportion</span>
+                            <span class="slider-label-value"><span id="redRatioValue">50</span>%</span>
+                        </div>
+                        <input type="range" id="redRatioSlider" min="0" max="100" value="50">
+                    </div>
+                </div>
+
+                <div id="threeGroupRatios" style="display: none;">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span><span class="color-indicator color-red"></span>Red Proportion</span>
+                            <span class="slider-label-value"><span id="redPropValue">33</span>%</span>
+                        </div>
+                        <input type="range" id="redPropSlider" min="0" max="100" value="33">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span><span class="color-indicator color-blue"></span>Blue Proportion</span>
+                            <span class="slider-label-value"><span id="bluePropValue">33</span>%</span>
+                        </div>
+                        <input type="range" id="bluePropSlider" min="0" max="100" value="33">
+                    </div>
+                </div>
+
+                <div class="shared-threshold-section">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>% Similar Wanted</span>
+                            <span class="slider-label-value"><span id="thresholdValue">33</span>%</span>
+                        </div>
+                        <input type="range" id="thresholdSlider" min="0" max="75" value="33">
+                    </div>
+                </div>
+
+                <div class="independent-thresholds-section" id="independentThresholds">
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span><span class="color-indicator color-red"></span>% Similar Wanted (Red)</span>
+                            <span class="slider-label-value"><span id="redThresholdValue">33</span>%</span>
+                        </div>
+                        <input type="range" id="redThresholdSlider" min="0" max="75" value="33">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span><span class="color-indicator color-blue"></span>% Similar Wanted (Blue)</span>
+                            <span class="slider-label-value"><span id="blueThresholdValue">33</span>%</span>
+                        </div>
+                        <input type="range" id="blueThresholdSlider" min="0" max="75" value="33">
+                    </div>
+                    <div class="slider-group" id="greenThresholdGroup" style="display: none;">
+                        <div class="slider-label">
+                            <span><span class="color-indicator color-green"></span>% Similar Wanted (Green)</span>
+                            <span class="slider-label-value"><span id="greenThresholdValue">33</span>%</span>
+                        </div>
+                        <input type="range" id="greenThresholdSlider" min="0" max="75" value="33">
+                    </div>
+                </div>
+
+                <div class="checkbox-group" id="independentCheckbox" style="display: none;">
+                    <input type="checkbox" id="independentToggle">
+                    <label for="independentToggle">Set thresholds independently</label>
+                </div>
+
+                </div><!-- end controls-inner -->
+            </div>
+
+            <div class="chart-panel">
+                <div class="equilibrium-message" id="equilibriumMessage2"></div>
+
+                <div class="stats" id="stats">
+                    <div class="stat-line">
+                        <span class="stat-label">Steps:</span>
+                        <span class="stat-value"><span id="stepCount">0</span></span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label"><span class="color-indicator color-red"></span>Unhappy (Red):</span>
+                        <span class="stat-value"><span id="unhappyRed">0</span>%</span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label"><span class="color-indicator color-blue"></span>Unhappy (Blue):</span>
+                        <span class="stat-value"><span id="unhappyBlue">0</span>%</span>
+                    </div>
+                    <div class="stat-line" id="unhappyGreenLine" style="display: none;">
+                        <span class="stat-label"><span class="color-indicator color-green"></span>Unhappy (Green):</span>
+                        <span class="stat-value"><span id="unhappyGreen">0</span>%</span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label">Unhappy (Total):</span>
+                        <span class="stat-value"><span id="unhappyPercent">0</span>%</span>
+                    </div>
+                    <div class="stat-line" style="border-top: 1px solid #e0e0e0; padding-top: 6px; margin-top: 4px;">
+                        <span class="stat-label"><span class="color-indicator color-red"></span>Avg % Similar (Red):</span>
+                        <span class="stat-value"><span id="avgSimilarRed">0</span>%</span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label"><span class="color-indicator color-blue"></span>Avg % Similar (Blue):</span>
+                        <span class="stat-value"><span id="avgSimilarBlue">0</span>%</span>
+                    </div>
+                    <div class="stat-line" id="avgSimilarGreenLine" style="display: none;">
+                        <span class="stat-label"><span class="color-indicator color-green"></span>Avg % Similar (Green):</span>
+                        <span class="stat-value"><span id="avgSimilarGreen">0</span>%</span>
+                    </div>
+                    <div class="stat-line">
+                        <span class="stat-label"><span class="color-indicator color-gray"></span>Avg % Similar (Overall):</span>
+                        <span class="stat-value"><span id="avgSimilarOverall">0</span>%</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="chartCanvas" style="width: 100%; height: 180px;"></canvas>
+                    <div class="chart-legend" id="chartLegend"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-header" id="infoHeader">
+                <span>How it works</span>
+                <span class="toggle-arrow">▼</span>
+            </div>
+            <div class="info-content" id="infoContent">
+                <p><strong>The Setup:</strong> Agents of different colors are placed on a grid. Each agent looks at their 8 neighbors and counts how many are the same color as themselves.</p>
+                <p><strong>Happiness:</strong> An agent is "happy" if the percentage of same-color neighbors meets or exceeds their similarity threshold. If not, they are "unhappy" and want to move.</p>
+                <p><strong>Movement:</strong> In each step, all unhappy agents move to random empty cells simultaneously. This continues until no unhappy agents remain (equilibrium).</p>
+                <p><strong>The Key Insight:</strong> Even with mild preferences (like wanting just 33% of neighbors to be the same color), agents naturally segregate into distinct regions. This happens not because of hatred, but through the accumulated effect of many small individual preferences.</p>
+                <p><strong>The Grid:</strong> The grid wraps around at the edges (toroidal), so an agent on the top edge has neighbors from the bottom edge, and vice versa.</p>
+                <p><strong>Explore:</strong> Try adjusting the sliders to see how different population ratios and threshold preferences affect the outcome. Does segregation increase with higher thresholds?</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const GRID_SIZE = 40;
+        const COLORS = {
+            2: {
+                0: { name: 'Red', hex: '#e74c3c', rgb: [231, 76, 60] },
+                1: { name: 'Blue', hex: '#3498db', rgb: [52, 152, 219] }
+            },
+            3: {
+                0: { name: 'Red', hex: '#e74c3c', rgb: [231, 76, 60] },
+                1: { name: 'Blue', hex: '#3498db', rgb: [52, 152, 219] },
+                2: { name: 'Green', hex: '#2ecc71', rgb: [46, 204, 113] }
+            }
+        };
+        const EMPTY_COLOR = '#f0f0f0';
+        const EMPTY_RGB = [240, 240, 240];
+
+        // State
+        let state = {
+            grid: [],
+            mode: 2,
+            numGroups: 2,
+            running: false,
+            steps: 0,
+            density: 75,
+            thresholds: [0.33, 0.33, 0.33],
+            independentThresholds: false,
+            groupProportions: [0.5, 0.5, 0],
+            speed: 5,
+            chartData: [],
+            maxChartPoints: 150
+        };
+
+        // DOM Elements
+        const gridCanvas = document.getElementById('gridCanvas');
+        const chartCanvas = document.getElementById('chartCanvas');
+        const ctx = gridCanvas.getContext('2d');
+        const chartCtx = chartCanvas.getContext('2d');
+
+        // Initialize
+        function init() {
+            setupEventListeners();
+            updateModeDependentUI();
+            setup();
+            draw();
+            startAnimation();
+        }
+
+        function setupEventListeners() {
+            // Mode toggle
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    state.mode = parseInt(e.target.dataset.mode);
+                    state.numGroups = state.mode;
+                    updateModeDependentUI();
+                    setup();
+                    draw();
+                });
+            });
+
+            // Buttons
+            document.getElementById('setupBtn').addEventListener('click', () => {
+                state.steps = 0;
+                state.chartData = [];
+                state.running = false;
+                updateRunButtonLabel();
+                setup();
+                draw();
+                clearEquilibriumMessage();
+            });
+
+            document.getElementById('stepBtn').addEventListener('click', () => {
+                if (!state.running) {
+                    doStep();
+                    draw();
+                }
+            });
+
+            document.getElementById('runBtn').addEventListener('click', () => {
+                state.running = !state.running;
+                updateRunButtonLabel();
+            });
+
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                state.steps = 0;
+                state.chartData = [];
+                state.running = false;
+                updateRunButtonLabel();
+                draw();
+                clearEquilibriumMessage();
+            });
+
+            // Sliders
+            document.getElementById('speedSlider').addEventListener('input', (e) => {
+                state.speed = parseInt(e.target.value);
+                document.getElementById('speedValue').textContent = state.speed;
+            });
+
+            document.getElementById('densitySlider').addEventListener('input', (e) => {
+                state.density = parseInt(e.target.value);
+                document.getElementById('densityValue').textContent = state.density;
+                setup();
+                draw();
+            });
+
+            document.getElementById('thresholdSlider').addEventListener('input', (e) => {
+                const val = parseInt(e.target.value) / 100;
+                state.thresholds[0] = val;
+                state.thresholds[1] = val;
+                if (state.numGroups === 3) state.thresholds[2] = val;
+                document.getElementById('thresholdValue').textContent = parseInt(e.target.value);
+                draw();
+            });
+
+            document.getElementById('redRatioSlider').addEventListener('input', (e) => {
+                const redRatio = parseInt(e.target.value) / 100;
+                state.groupProportions[0] = redRatio;
+                state.groupProportions[1] = 1 - redRatio;
+                document.getElementById('redRatioValue').textContent = parseInt(e.target.value);
+                setup();
+                draw();
+            });
+
+            document.getElementById('redPropSlider').addEventListener('input', (e) => {
+                updateThreeGroupProps();
+            });
+
+            document.getElementById('bluePropSlider').addEventListener('input', (e) => {
+                updateThreeGroupProps();
+            });
+
+            document.getElementById('redThresholdSlider').addEventListener('input', (e) => {
+                state.thresholds[0] = parseInt(e.target.value) / 100;
+                document.getElementById('redThresholdValue').textContent = parseInt(e.target.value);
+                draw();
+            });
+
+            document.getElementById('blueThresholdSlider').addEventListener('input', (e) => {
+                state.thresholds[1] = parseInt(e.target.value) / 100;
+                document.getElementById('blueThresholdValue').textContent = parseInt(e.target.value);
+                draw();
+            });
+
+            document.getElementById('greenThresholdSlider').addEventListener('input', (e) => {
+                state.thresholds[2] = parseInt(e.target.value) / 100;
+                document.getElementById('greenThresholdValue').textContent = parseInt(e.target.value);
+                draw();
+            });
+
+            document.getElementById('independentToggle').addEventListener('change', (e) => {
+                state.independentThresholds = e.target.checked;
+                updateThresholdUI();
+            });
+
+            // Info section toggle
+            document.getElementById('infoHeader').addEventListener('click', () => {
+                const content = document.getElementById('infoContent');
+                content.classList.toggle('show');
+            });
+        }
+
+        function updateModeDependentUI() {
+            const twoGroupRatios = document.getElementById('twoGroupRatios');
+            const threeGroupRatios = document.getElementById('threeGroupRatios');
+            const independentCheckbox = document.getElementById('independentCheckbox');
+            const independentThresholds = document.getElementById('independentThresholds');
+            const sharedThreshold = document.querySelector('.shared-threshold-section');
+            const greenThresholdGroup = document.getElementById('greenThresholdGroup');
+            const avgSimilarGreenLine = document.getElementById('avgSimilarGreenLine');
+            const unhappyGreenLine = document.getElementById('unhappyGreenLine');
+
+            if (state.mode === 2) {
+                twoGroupRatios.style.display = 'block';
+                threeGroupRatios.style.display = 'none';
+                independentCheckbox.style.display = 'flex';
+                greenThresholdGroup.style.display = 'none';
+                avgSimilarGreenLine.style.display = 'none';
+                unhappyGreenLine.style.display = 'none';
+
+                if (!state.independentThresholds) {
+                    sharedThreshold.classList.remove('hide');
+                    independentThresholds.classList.remove('show');
+                } else {
+                    sharedThreshold.classList.add('hide');
+                    independentThresholds.classList.add('show');
+                }
+            } else {
+                twoGroupRatios.style.display = 'none';
+                threeGroupRatios.style.display = 'block';
+                independentCheckbox.style.display = 'none';
+                greenThresholdGroup.style.display = 'block';
+                avgSimilarGreenLine.style.display = 'flex';
+                unhappyGreenLine.style.display = 'flex';
+                sharedThreshold.classList.add('hide');
+                independentThresholds.classList.add('show');
+            }
+        }
+
+        function updateThresholdUI() {
+            const sharedThreshold = document.querySelector('.shared-threshold-section');
+            const independentThresholds = document.getElementById('independentThresholds');
+
+            if (state.independentThresholds) {
+                sharedThreshold.classList.add('hide');
+                independentThresholds.classList.add('show');
+            } else {
+                sharedThreshold.classList.remove('hide');
+                independentThresholds.classList.remove('show');
+                // Set shared slider to average
+                const avg = (state.thresholds[0] + state.thresholds[1]) / 2;
+                document.getElementById('thresholdSlider').value = Math.round(avg * 100);
+                document.getElementById('thresholdValue').textContent = Math.round(avg * 100);
+                state.thresholds[0] = avg;
+                state.thresholds[1] = avg;
+                if (state.numGroups === 3) state.thresholds[2] = avg;
+            }
+        }
+
+        function updateThreeGroupProps() {
+            const redProp = parseInt(document.getElementById('redPropSlider').value) / 100;
+            const blueProp = parseInt(document.getElementById('bluePropSlider').value) / 100;
+            const greenProp = Math.max(0, 1 - redProp - blueProp);
+
+            state.groupProportions[0] = redProp;
+            state.groupProportions[1] = blueProp;
+            state.groupProportions[2] = greenProp;
+
+            document.getElementById('redPropValue').textContent = Math.round(redProp * 100);
+            document.getElementById('bluePropValue').textContent = Math.round(blueProp * 100);
+            setup();
+            draw();
+        }
+
+        function updateRunButtonLabel() {
+            const btn = document.getElementById('runBtn');
+            btn.textContent = state.running ? 'Pause' : 'Run';
+        }
+
+        function setup() {
+            const totalCells = GRID_SIZE * GRID_SIZE;
+            const occupiedCells = Math.floor(totalCells * state.density / 100);
+
+            state.grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(-1));
+
+            const agents = [];
+            for (let i = 0; i < state.numGroups; i++) {
+                const count = Math.floor(occupiedCells * state.groupProportions[i]);
+                for (let j = 0; j < count; j++) {
+                    agents.push(i);
+                }
+            }
+
+            // Shuffle agents
+            for (let i = agents.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [agents[i], agents[j]] = [agents[j], agents[i]];
+            }
+
+            // Place on grid
+            for (let i = 0; i < agents.length; i++) {
+                let placed = false;
+                while (!placed) {
+                    const x = Math.floor(Math.random() * GRID_SIZE);
+                    const y = Math.floor(Math.random() * GRID_SIZE);
+                    if (state.grid[y][x] === -1) {
+                        state.grid[y][x] = agents[i];
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        function getNeighbors(x, y) {
+            const neighbors = [];
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = (x + dx + GRID_SIZE) % GRID_SIZE;
+                    const ny = (y + dy + GRID_SIZE) % GRID_SIZE;
+                    neighbors.push(state.grid[ny][nx]);
+                }
+            }
+            return neighbors;
+        }
+
+        function isHappy(x, y) {
+            const agentType = state.grid[y][x];
+            if (agentType === -1) return true;
+
+            const neighbors = getNeighbors(x, y);
+            const occupiedNeighbors = neighbors.filter(n => n !== -1);
+            if (occupiedNeighbors.length === 0) return true;
+
+            const sameColorCount = occupiedNeighbors.filter(n => n === agentType).length;
+            const similarityRatio = sameColorCount / occupiedNeighbors.length;
+            const threshold = state.thresholds[agentType];
+
+            return similarityRatio >= threshold;
+        }
+
+        function doStep() {
+            // Find unhappy agents
+            const unhappyAgents = [];
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    if (state.grid[y][x] !== -1 && !isHappy(x, y)) {
+                        unhappyAgents.push({ x, y, type: state.grid[y][x] });
+                    }
+                }
+            }
+
+            // Move unhappy agents to random empty cells
+            for (const agent of unhappyAgents) {
+                state.grid[agent.y][agent.x] = -1;
+            }
+
+            for (const agent of unhappyAgents) {
+                let moved = false;
+                while (!moved) {
+                    const nx = Math.floor(Math.random() * GRID_SIZE);
+                    const ny = Math.floor(Math.random() * GRID_SIZE);
+                    if (state.grid[ny][nx] === -1) {
+                        state.grid[ny][nx] = agent.type;
+                        moved = true;
+                    }
+                }
+            }
+
+            state.steps += 1;
+
+            // Update chart data
+            const stats = calculateStats();
+            state.chartData.push({
+                red: stats.avgSimilarByGroup[0],
+                blue: stats.avgSimilarByGroup[1],
+                green: stats.avgSimilarByGroup[2],
+                overall: stats.avgSimilar
+            });
+
+            if (state.chartData.length > state.maxChartPoints) {
+                state.chartData.shift();
+            }
+
+            // Check for equilibrium
+            if (unhappyAgents.length === 0) {
+                state.running = false;
+                updateRunButtonLabel();
+                showEquilibriumMessage();
+            }
+        }
+
+        function calculateStats() {
+            let totalSimilarity = [0, 0, 0];
+            let count = [0, 0, 0];
+            let totalOverall = 0;
+            let countOverall = 0;
+
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const agent = state.grid[y][x];
+                    if (agent === -1) continue;
+
+                    const neighbors = getNeighbors(x, y);
+                    const occupiedNeighbors = neighbors.filter(n => n !== -1);
+                    if (occupiedNeighbors.length === 0) continue;
+
+                    const sameColorCount = occupiedNeighbors.filter(n => n === agent).length;
+                    const similarity = sameColorCount / occupiedNeighbors.length;
+
+                    totalSimilarity[agent] += similarity;
+                    count[agent] += 1;
+                    totalOverall += similarity;
+                    countOverall += 1;
+                }
+            }
+
+            const avgSimilarByGroup = [
+                count[0] > 0 ? totalSimilarity[0] / count[0] : 0,
+                count[1] > 0 ? totalSimilarity[1] / count[1] : 0,
+                state.numGroups === 3 && count[2] > 0 ? totalSimilarity[2] / count[2] : 0
+            ];
+
+            const avgSimilar = countOverall > 0 ? totalOverall / countOverall : 0;
+
+            let unhappyCount = 0;
+            let unhappyByGroup = [0, 0, 0];
+            let countByGroup = [0, 0, 0];
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const type = state.grid[y][x];
+                    if (type !== -1) {
+                        countByGroup[type]++;
+                        if (!isHappy(x, y)) {
+                            unhappyCount++;
+                            unhappyByGroup[type]++;
+                        }
+                    }
+                }
+            }
+
+            const totalCount = countByGroup.reduce((a, b) => a + b, 0);
+            const unhappyPercent = totalCount > 0 ? (unhappyCount / totalCount) * 100 : 0;
+            const unhappyPercentByGroup = countByGroup.map((c, i) => c > 0 ? (unhappyByGroup[i] / c) * 100 : 0);
+
+            return {
+                avgSimilar,
+                avgSimilarByGroup,
+                unhappyPercent,
+                unhappyPercentByGroup
+            };
+        }
+
+        function updateStats() {
+            const stats = calculateStats();
+
+            document.getElementById('stepCount').textContent = state.steps;
+            document.getElementById('unhappyPercent').textContent = Math.round(stats.unhappyPercent);
+            document.getElementById('unhappyRed').textContent = Math.round(stats.unhappyPercentByGroup[0]);
+            document.getElementById('unhappyBlue').textContent = Math.round(stats.unhappyPercentByGroup[1]);
+            document.getElementById('avgSimilarOverall').textContent = Math.round(stats.avgSimilar * 100);
+            document.getElementById('avgSimilarRed').textContent = Math.round(stats.avgSimilarByGroup[0] * 100);
+            document.getElementById('avgSimilarBlue').textContent = Math.round(stats.avgSimilarByGroup[1] * 100);
+            if (state.numGroups === 3) {
+                document.getElementById('unhappyGreen').textContent = Math.round(stats.unhappyPercentByGroup[2]);
+                document.getElementById('avgSimilarGreen').textContent = Math.round(stats.avgSimilarByGroup[2] * 100);
+            }
+        }
+
+        function draw() {
+            drawGrid();
+            drawChart();
+            updateStats();
+        }
+
+        function drawGrid() {
+            const cellSize = gridCanvas.width / GRID_SIZE;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, gridCanvas.width, gridCanvas.height);
+
+            // Draw grid lines
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                const pos = i * cellSize;
+                ctx.beginPath();
+                ctx.moveTo(pos, 0);
+                ctx.lineTo(pos, gridCanvas.height);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, pos);
+                ctx.lineTo(gridCanvas.width, pos);
+                ctx.stroke();
+            }
+
+            // Draw agents
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const agent = state.grid[y][x];
+                    if (agent !== -1) {
+                        const centerX = (x + 0.5) * cellSize;
+                        const centerY = (y + 0.5) * cellSize;
+                        const radius = cellSize * 0.35;
+
+                        // Draw circle
+                        ctx.fillStyle = COLORS[state.numGroups][agent].hex;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Draw border if unhappy
+                        if (!isHappy(x, y)) {
+                            ctx.strokeStyle = '#333';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+        }
+
+        function drawChart() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = chartCanvas.getBoundingClientRect();
+
+            chartCanvas.width = Math.round(rect.width * dpr);
+            chartCanvas.height = Math.round(rect.height * dpr);
+
+            chartCtx.scale(dpr, dpr);
+
+            const displayWidth = rect.width;
+            const displayHeight = rect.height;
+
+            // Clear
+            chartCtx.fillStyle = 'white';
+            chartCtx.fillRect(0, 0, displayWidth, displayHeight);
+
+            if (state.chartData.length === 0) {
+                chartCtx.fillStyle = '#999';
+                chartCtx.font = '12px sans-serif';
+                chartCtx.textAlign = 'center';
+                chartCtx.fillText('No data yet', displayWidth / 2, displayHeight / 2);
+                return;
+            }
+
+            const padding = { top: 20, right: 20, bottom: 30, left: 50 };
+            const chartWidth = displayWidth - padding.left - padding.right;
+            const chartHeight = displayHeight - padding.top - padding.bottom;
+
+            // Draw axes
+            chartCtx.strokeStyle = '#333';
+            chartCtx.lineWidth = 1;
+            chartCtx.beginPath();
+            chartCtx.moveTo(padding.left, padding.top);
+            chartCtx.lineTo(padding.left, displayHeight - padding.bottom);
+            chartCtx.lineTo(displayWidth - padding.right, displayHeight - padding.bottom);
+            chartCtx.stroke();
+
+            // Y-axis labels
+            chartCtx.fillStyle = '#333';
+            chartCtx.font = 'bold 11px sans-serif';
+            chartCtx.textAlign = 'right';
+            chartCtx.textBaseline = 'middle';
+
+            const yLabels = ['0%', '50%', '100%'];
+            const yPositions = [displayHeight - padding.bottom, padding.top + chartHeight / 2, padding.top];
+
+            for (let i = 0; i < yLabels.length; i++) {
+                chartCtx.fillText(yLabels[i], padding.left - 10, yPositions[i]);
+            }
+
+            // Y-axis grid lines
+            chartCtx.strokeStyle = '#f0f0f0';
+            chartCtx.lineWidth = 1;
+            for (let i = 0; i < yLabels.length; i++) {
+                chartCtx.beginPath();
+                chartCtx.moveTo(padding.left, yPositions[i]);
+                chartCtx.lineTo(displayWidth - padding.right, yPositions[i]);
+                chartCtx.stroke();
+            }
+
+            // X-axis label
+            chartCtx.fillStyle = '#333';
+            chartCtx.font = '11px sans-serif';
+            chartCtx.textAlign = 'center';
+            chartCtx.textBaseline = 'top';
+            chartCtx.fillText('Steps', displayWidth / 2, displayHeight - 8);
+
+            // Plot data
+            const dataPoints = state.chartData.length;
+            const xStep = dataPoints > 1 ? chartWidth / (dataPoints - 1) : chartWidth / 2;
+
+            const colors = state.numGroups === 2
+                ? [
+                    { solid: '#e74c3c', dotted: '#e74c3c' }, // Red
+                    { solid: '#3498db', dotted: '#3498db' }  // Blue
+                ]
+                : [
+                    { solid: '#e74c3c', dotted: '#e74c3c' }, // Red
+                    { solid: '#3498db', dotted: '#3498db' }, // Blue
+                    { solid: '#2ecc71', dotted: '#2ecc71' }  // Green
+                ];
+
+            // Draw threshold lines (dotted)
+            for (let i = 0; i < state.numGroups; i++) {
+                const thresholdY = displayHeight - padding.bottom - (state.thresholds[i] * chartHeight);
+                chartCtx.strokeStyle = colors[i].dotted;
+                chartCtx.lineWidth = 1.5;
+                chartCtx.setLineDash([4, 4]);
+                chartCtx.beginPath();
+                chartCtx.moveTo(padding.left, thresholdY);
+                chartCtx.lineTo(displayWidth - padding.right, thresholdY);
+                chartCtx.stroke();
+                chartCtx.setLineDash([]);
+            }
+
+            // Draw data lines
+            const drawLine = (dataKey, colorHex) => {
+                chartCtx.strokeStyle = colorHex;
+                chartCtx.lineWidth = 2;
+                chartCtx.beginPath();
+
+                for (let i = 0; i < dataPoints; i++) {
+                    const value = state.chartData[i][dataKey];
+                    const x = padding.left + (i * xStep);
+                    const y = displayHeight - padding.bottom - (value * chartHeight);
+
+                    if (i === 0) {
+                        chartCtx.moveTo(x, y);
+                    } else {
+                        chartCtx.lineTo(x, y);
+                    }
+                }
+                chartCtx.stroke();
+            };
+
+            // Draw overall line first (gray)
+            drawLine('overall', '#999');
+
+            // Draw group lines
+            drawLine('red', colors[0].solid);
+            drawLine('blue', colors[1].solid);
+            if (state.numGroups === 3) {
+                drawLine('green', colors[2].solid);
+            }
+
+            // Update legend
+            updateChartLegend();
+        }
+
+        function updateChartLegend() {
+            const legend = document.getElementById('chartLegend');
+            legend.innerHTML = '';
+
+            const items = [
+                { label: 'Red Avg %', color: '#e74c3c', dotted: false },
+                { label: 'Blue Avg %', color: '#3498db', dotted: false },
+                { label: 'Overall Avg %', color: '#999', dotted: false }
+            ];
+
+            if (state.numGroups === 3) {
+                items.splice(2, 0, { label: 'Green Avg %', color: '#2ecc71', dotted: false });
+            }
+
+            items.push(
+                { label: 'Red Threshold', color: '#e74c3c', dotted: true },
+                { label: 'Blue Threshold', color: '#3498db', dotted: true }
+            );
+
+            if (state.numGroups === 3) {
+                items.push({ label: 'Green Threshold', color: '#2ecc71', dotted: true });
+            }
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'legend-item';
+
+                const line = document.createElement('div');
+                line.style.width = '20px';
+                line.style.height = '2px';
+                line.style.backgroundColor = item.color;
+
+                if (item.dotted) {
+                    line.style.background = `repeating-linear-gradient(90deg, ${item.color} 0, ${item.color} 3px, transparent 3px, transparent 6px)`;
+                }
+
+                const label = document.createElement('span');
+                label.textContent = item.label;
+                label.style.color = item.color;
+                label.style.fontSize = '11px';
+
+                div.appendChild(line);
+                div.appendChild(label);
+                legend.appendChild(div);
+            });
+        }
+
+        function showEquilibriumMessage() {
+            const stats = calculateStats();
+            const msg = document.getElementById('equilibriumMessage2');
+            msg.innerHTML = `
+                <strong>Equilibrium reached!</strong> All agents are happy.<br>
+                Final steps: ${state.steps} |
+                Final avg similarity: ${Math.round(stats.avgSimilar * 100)}%
+            `;
+            msg.classList.add('show');
+        }
+
+        function clearEquilibriumMessage() {
+            const msg = document.getElementById('equilibriumMessage2');
+            msg.classList.remove('show');
+        }
+
+        function startAnimation() {
+            function animate() {
+                if (state.running) {
+                    for (let i = 0; i < state.speed; i++) {
+                        doStep();
+                    }
+                    draw();
+                }
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        init();
+    </script>
+</body>
+</html>

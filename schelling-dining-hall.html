@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schelling's Dining Hall Segregation Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: #7f8c8d;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hall {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+        }
+
+        .hall-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 5/3;
+            background: linear-gradient(135deg, #fef5e7 0%, #fdefd3 100%);
+            border: 3px solid #d4a574;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .hall-stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        .hall-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .hall-stats-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 0.95em;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .stat-dot.men {
+            background: #3498db;
+        }
+
+        .stat-dot.women {
+            background: #e74c3c;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .stat-ratio {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-left: auto;
+        }
+
+        .controls-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .control-value {
+            background: #e8f4f8;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #3498db;
+            font-size: 0.95em;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2980b9;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            background: #2980b9;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-setup {
+            background: #3498db;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn-setup:hover {
+            background: #2980b9;
+        }
+
+        .btn-step {
+            background: #27ae60;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn-step:hover {
+            background: #229954;
+        }
+
+        .btn-run {
+            background: #f39c12;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn-run:hover {
+            background: #e67e22;
+        }
+
+        .btn-pause {
+            background: #e74c3c;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn-pause:hover {
+            background: #c0392b;
+        }
+
+        .btn-reset {
+            background: #7f8c8d;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn-reset:hover {
+            background: #5d6d7b;
+        }
+
+        .stats-panel {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-card.warning {
+            border-left-color: #f39c12;
+        }
+
+        .stat-card.success {
+            border-left-color: #27ae60;
+        }
+
+        .stat-card-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-card-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .status-message {
+            grid-column: 1 / -1;
+            padding: 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            text-align: center;
+            font-size: 1.05em;
+        }
+
+        .status-message.running {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+        }
+
+        .status-message.equilibrium {
+            background: #fadbd8;
+            color: #c0392b;
+            border: 2px solid #c0392b;
+        }
+
+        .status-message.initial {
+            background: #d6eaf8;
+            color: #2980b9;
+            border: 2px solid #2980b9;
+        }
+
+        .info-section {
+            background: #f0f3f4;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .info-header {
+            background: #34495e;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .info-header:hover {
+            background: #2c3e50;
+        }
+
+        .info-toggle {
+            font-size: 1.2em;
+            transition: transform 0.3s ease;
+        }
+
+        .info-toggle.open {
+            transform: rotate(180deg);
+        }
+
+        .info-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .info-content.open {
+            max-height: 500px;
+        }
+
+        .info-text {
+            padding: 20px;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+
+        .info-text em {
+            color: #e74c3c;
+            font-style: normal;
+            font-weight: 600;
+        }
+
+        .legend {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95em;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.men {
+            background: #3498db;
+        }
+
+        .legend-dot.women {
+            background: #e74c3c;
+        }
+
+        .legend-dot.uncomfortable {
+            background: white;
+            border: 2px solid #f39c12;
+            box-shadow: 0 0 0 2px #f39c12;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Schelling's Dining Hall</h1>
+            <p>How mild preferences cascade into total segregation</p>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot men"></div>
+                <span>Men</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot women"></div>
+                <span>Women</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot uncomfortable"></div>
+                <span>Uncomfortable (will move)</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="hall">
+                <div class="hall-title">Dining Hall A</div>
+                <div class="hall-container">
+                    <svg id="hallA"></svg>
+                </div>
+                <div class="hall-stats">
+                    <div class="hall-stats-content">
+                        <div class="stat-item">
+                            <div class="stat-dot men"></div>
+                            <span class="stat-label">Men:</span>
+                            <span class="stat-ratio" id="hallA-men">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-dot women"></div>
+                            <span class="stat-label">Women:</span>
+                            <span class="stat-ratio" id="hallA-women">0</span>
+                        </div>
+                        <div style="grid-column: 1 / -1; padding-top: 8px; border-top: 1px solid #ddd;">
+                            <div class="stat-item">
+                                <span class="stat-label">Men %:</span>
+                                <span class="stat-ratio" id="hallA-ratio">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="hallA-next" style="font-size: 0.85em; color: #e74c3c; font-style: italic; min-height: 1.4em; margin-top: 6px; text-align: center;"></div>
+            </div>
+
+            <div class="hall">
+                <div class="hall-title">Dining Hall B</div>
+                <div class="hall-container">
+                    <svg id="hallB"></svg>
+                </div>
+                <div class="hall-stats">
+                    <div class="hall-stats-content">
+                        <div class="stat-item">
+                            <div class="stat-dot men"></div>
+                            <span class="stat-label">Men:</span>
+                            <span class="stat-ratio" id="hallB-men">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-dot women"></div>
+                            <span class="stat-label">Women:</span>
+                            <span class="stat-ratio" id="hallB-women">0</span>
+                        </div>
+                        <div style="grid-column: 1 / -1; padding-top: 8px; border-top: 1px solid #ddd;">
+                            <div class="stat-item">
+                                <span class="stat-label">Men %:</span>
+                                <span class="stat-ratio" id="hallB-ratio">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="hallB-next" style="font-size: 0.85em; color: #e74c3c; font-style: italic; min-height: 1.4em; margin-top: 6px; text-align: center;"></div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="button-group" style="margin-bottom: 20px;">
+                <button class="btn-setup" onclick="setup()">Setup</button>
+                <button class="btn-step" onclick="step()">Step</button>
+                <button class="btn-run" id="runBtn" onclick="run()">Run</button>
+                <button class="btn-reset" onclick="reset()">Reset</button>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Population Size</span>
+                    <span class="control-value" id="popValue">120</span>
+                </div>
+                <input type="range" id="populationSlider" min="40" max="200" value="120" step="10">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Starting % Men in Hall A</span>
+                    <span class="control-value" id="imbalanceValue">30%</span>
+                </div>
+                <input type="range" id="imbalanceSlider" min="10" max="50" value="30" step="1">
+                <div style="font-size: 0.85em; color: #7f8c8d; margin-top: 6px;">50% = perfectly balanced. Lower = more women in Hall A, more men in Hall B.</div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Average Comfort Threshold</span>
+                    <span class="control-value" id="thresholdValue">33%</span>
+                </div>
+                <input type="range" id="thresholdSlider" min="0" max="50" value="33" step="1">
+                <div style="font-size: 0.85em; color: #7f8c8d; margin-top: 6px;">Center of each person's comfort threshold (% of own gender needed to stay)</div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Preference Spread (σ)</span>
+                    <span class="control-value" id="spreadValue">8%</span>
+                </div>
+                <input type="range" id="spreadSlider" min="0" max="20" value="8" step="1">
+                <div style="font-size: 0.85em; color: #7f8c8d; margin-top: 6px;">How much people vary. 0 = everyone identical, higher = more diverse preferences.</div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Threshold Distribution</span>
+                </div>
+                <canvas id="distributionCanvas" style="width: 100%; height: 100px; border: 1px solid #e0e0e0; border-radius: 6px; background: #fafafa;"></canvas>
+                <div style="font-size: 0.8em; color: #999; margin-top: 4px; text-align: center;">Each person's individual comfort threshold</div>
+            </div>
+        </div>
+
+        <div class="stats-panel">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-label">Step Number</div>
+                    <div class="stat-card-value" id="stepCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Moved This Step</div>
+                    <div class="stat-card-value" id="movedCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Total Moves</div>
+                    <div class="stat-card-value" id="totalMoves">0</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-card-label">Uncomfortable</div>
+                    <div class="stat-card-value" id="uncomfortableCount">0</div>
+                </div>
+                <div id="statusDiv" class="status-message initial">
+                    Step 0: Press Setup to initialize
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-header" onclick="toggleInfo()">
+                <span>About This Model</span>
+                <span class="info-toggle" id="infoToggle">▼</span>
+            </div>
+            <div class="info-content" id="infoContent">
+                <div class="info-text">
+                    <p style="margin-bottom: 12px;">
+                        This simulation demonstrates <em>Schelling's segregation model</em> from his 1978 book <em>Micromotives and Macrobehavior</em>.
+                    </p>
+                    <p style="margin-bottom: 12px;">
+                        <strong>The mechanism:</strong> Each person has a mild preference — they'd rather not be in a dining hall where their gender comprises less than their personal comfort threshold (averaging 33%, but varying from person to person). This is a very modest preference; nobody wants to force others out or explicitly segregate.
+                    </p>
+                    <p style="margin-bottom: 12px;">
+                        <strong>What happens:</strong> Starting from a slightly uneven distribution, a cascade emerges. The most sensitive people leave first because they're below their threshold. This shifts the balance, making the next most sensitive people uncomfortable. They leave too. The cascade continues, and the halls separate almost completely — even though <em>nobody wanted segregation</em>.
+                    </p>
+                    <p style="margin-bottom: 12px;">
+                        <strong>The insight:</strong> Individual rationality and mild preferences can produce outcomes nobody intended. Macrobehavior emerges from micromotives.
+                    </p>
+                    <p>
+                        Try it: Leave the defaults (33% average threshold, 30% men in Hall A), press Setup, then Run. Watch the cascade unfold one person at a time. Then try lowering the threshold or the spread to see how the outcome changes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let people = [];
+        let hallA = [];
+        let hallB = [];
+        let stepCount = 0;
+        let totalMoves = 0;
+        let isRunning = false;
+        let positions = {}; // stable positions: { id: { x, y } }
+
+        // Constants
+        const MEN = 'men';
+        const WOMEN = 'women';
+        const COLORS = {
+            men: '#3498db',
+            women: '#e74c3c'
+        };
+        const PERSON_RADIUS = 5;
+
+        // Box-Muller transform for normal distribution
+        function randomNormal(mean, stddev) {
+            let u, v, s;
+            do {
+                u = Math.random() * 2 - 1;
+                v = Math.random() * 2 - 1;
+                s = u * u + v * v;
+            } while (s >= 1 || s === 0);
+            const mul = Math.sqrt(-2 * Math.log(s) / s);
+            return mean + stddev * u * mul;
+        }
+
+        // Assign a stable random position for a person within a hall
+        function assignPosition(personId, hallWidth, hallHeight) {
+            const padding = 20;
+            positions[personId] = {
+                x: padding + Math.random() * (hallWidth - 2 * padding),
+                y: padding + Math.random() * (hallHeight - 2 * padding)
+            };
+        }
+
+        // Initialize
+        function init() {
+            people = [];
+            hallA = [];
+            hallB = [];
+            stepCount = 0;
+            totalMoves = 0;
+            positions = {};
+            updateUI();
+            drawDistribution();
+        }
+
+        function setup() {
+            init();
+            const population = parseInt(document.getElementById('populationSlider').value);
+            const menPctInA = parseInt(document.getElementById('imbalanceSlider').value) / 100;
+            const thresholdMean = parseInt(document.getElementById('thresholdSlider').value) / 100;
+            const thresholdSpread = parseInt(document.getElementById('spreadSlider').value) / 100;
+
+            // Create people with individual thresholds
+            const numMen = Math.floor(population / 2);
+            const numWomen = population - numMen;
+
+            const allMen = [];
+            const allWomen = [];
+            for (let i = 0; i < numMen; i++) {
+                const thresh = Math.max(0, Math.min(0.50, randomNormal(thresholdMean, thresholdSpread)));
+                allMen.push({ gender: MEN, id: `m${i}`, threshold: thresh });
+            }
+            for (let i = 0; i < numWomen; i++) {
+                const thresh = Math.max(0, Math.min(0.50, randomNormal(thresholdMean, thresholdSpread)));
+                allWomen.push({ gender: WOMEN, id: `w${i}`, threshold: thresh });
+            }
+
+            // Distribute with the slider directly controlling gender ratio in Hall A
+            // Each hall gets half the population
+            const hallSize = Math.floor(population / 2);
+            const menInA = Math.round(hallSize * menPctInA);
+            const womenInA = hallSize - menInA;
+            const menInB = numMen - menInA;
+            const womenInB = numWomen - womenInA;
+
+            // Shuffle within each gender
+            allMen.sort(() => Math.random() - 0.5);
+            allWomen.sort(() => Math.random() - 0.5);
+
+            hallA = [...allMen.slice(0, menInA), ...allWomen.slice(0, womenInA)];
+            hallB = [...allMen.slice(menInA), ...allWomen.slice(womenInA)];
+
+            // Shuffle within each hall
+            hallA.sort(() => Math.random() - 0.5);
+            hallB.sort(() => Math.random() - 0.5);
+
+            people = [...hallA, ...hallB];
+
+            // Assign initial positions
+            const svgA = document.getElementById('hallA');
+            const rectA = svgA.parentElement.getBoundingClientRect();
+            const svgB = document.getElementById('hallB');
+            const rectB = svgB.parentElement.getBoundingClientRect();
+
+            for (let p of hallA) assignPosition(p.id, rectA.width, rectA.height);
+            for (let p of hallB) assignPosition(p.id, rectB.width, rectB.height);
+
+            render();
+            updateUI();
+            drawDistribution();
+            updateNextMoveDisplay();
+
+            const mA = hallA.filter(p => p.gender === MEN).length;
+            const wA = hallA.filter(p => p.gender === WOMEN).length;
+            const mB = hallB.filter(p => p.gender === MEN).length;
+            const wB = hallB.filter(p => p.gender === WOMEN).length;
+            document.getElementById('statusDiv').className = 'status-message initial';
+            document.getElementById('statusDiv').innerHTML = `Setup: Hall A has ${mA}M/${wA}W (${Math.round(mA/(mA+wA)*100)}% men), Hall B has ${mB}M/${wB}W (${Math.round(mB/(mB+wB)*100)}% men). Click <b>Step</b> or <b>Run</b>.`;
+        }
+
+        function getUncomfortable(hall) {
+            if (hall.length === 0) return [];
+            const uncomfortable = [];
+
+            for (let person of hall) {
+                const sameGenderCount = hall.filter(p => p.gender === person.gender).length;
+                const ratio = sameGenderCount / hall.length;
+
+                // Use this person's INDIVIDUAL threshold
+                if (ratio < person.threshold) {
+                    uncomfortable.push(person);
+                }
+            }
+
+            return uncomfortable;
+        }
+
+        function step() {
+            if (stepCount === 0 && people.length === 0) {
+                setup();
+                return;
+            }
+
+            // Find ALL uncomfortable people in both halls
+            const uncomfA = getUncomfortable(hallA);
+            const uncomfB = getUncomfortable(hallB);
+
+            if (uncomfA.length === 0 && uncomfB.length === 0) {
+                announceEquilibrium();
+                return;
+            }
+
+            // Get target hall dimensions for new positions
+            const svgB = document.getElementById('hallB');
+            const rectB = svgB.parentElement.getBoundingClientRect();
+            const svgA = document.getElementById('hallA');
+            const rectA = svgA.parentElement.getBoundingClientRect();
+
+            // Move ALL unhappy people simultaneously
+            const movedFromA = uncomfA.length;
+            const movedFromB = uncomfB.length;
+
+            for (let person of uncomfA) {
+                hallA = hallA.filter(p => p.id !== person.id);
+                hallB.push(person);
+                assignPosition(person.id, rectB.width, rectB.height);
+            }
+
+            for (let person of uncomfB) {
+                hallB = hallB.filter(p => p.id !== person.id);
+                hallA.push(person);
+                assignPosition(person.id, rectA.width, rectA.height);
+            }
+
+            const totalMoved = movedFromA + movedFromB;
+            stepCount++;
+            totalMoves += totalMoved;
+
+            render();
+            updateUI();
+            updateNextMoveDisplay();
+
+            const uncomfNow = getUncomfortable(hallA).length + getUncomfortable(hallB).length;
+
+            if (uncomfNow === 0) {
+                announceEquilibrium();
+            } else {
+                // Build descriptive status message
+                const parts = [];
+                if (movedFromA > 0) parts.push(`${movedFromA} left Hall A`);
+                if (movedFromB > 0) parts.push(`${movedFromB} left Hall B`);
+                document.getElementById('statusDiv').className = 'status-message running';
+                document.getElementById('statusDiv').innerHTML = `Step ${stepCount}: ${parts.join(', ')}. ${uncomfNow} still uncomfortable.`;
+            }
+        }
+
+        function announceEquilibrium() {
+            isRunning = false;
+            document.getElementById('runBtn').textContent = 'Run';
+            document.getElementById('runBtn').className = 'btn-run';
+
+            const menA = hallA.filter(p => p.gender === MEN).length;
+            const womenA = hallA.filter(p => p.gender === WOMEN).length;
+            const menB = hallB.filter(p => p.gender === MEN).length;
+            const womenB = hallB.filter(p => p.gender === WOMEN).length;
+
+            const isSeg = (menA === 0 || womenA === 0) || (menB === 0 || womenB === 0);
+            const threshVal = document.getElementById('thresholdSlider').value;
+
+            let outcome = `Equilibrium after ${stepCount} steps (${totalMoves} moves).`;
+            if (isSeg) {
+                outcome = `Complete segregation after ${stepCount} steps — from an average comfort threshold of only ${threshVal}%.`;
+            }
+            outcome += ` Hall A: ${menA}M/${womenA}W. Hall B: ${menB}M/${womenB}W.`;
+
+            document.getElementById('statusDiv').className = 'status-message equilibrium';
+            document.getElementById('statusDiv').innerHTML = outcome;
+            updateNextMoveDisplay();
+        }
+
+        // Show "who moves next" under each hall
+        function updateNextMoveDisplay() {
+            updateNextMoveForHall(hallA, 'hallA-next');
+            updateNextMoveForHall(hallB, 'hallB-next');
+        }
+
+        function updateNextMoveForHall(hall, elemId) {
+            const el = document.getElementById(elemId);
+            if (hall.length === 0) { el.textContent = ''; return; }
+
+            const uncomf = getUncomfortable(hall);
+            if (uncomf.length === 0) {
+                el.innerHTML = '<span style="color: #27ae60;">Everyone here is comfortable.</span>';
+                return;
+            }
+
+            // Figure out which gender is the minority and what threshold line triggers them
+            const menCount = hall.filter(p => p.gender === MEN).length;
+            const womenCount = hall.filter(p => p.gender === WOMEN).length;
+            const menPct = Math.round((menCount / hall.length) * 100);
+            const womenPct = 100 - menPct;
+
+            // The uncomfortable people: find the minority gender and threshold cutoff
+            const uncomfMen = uncomf.filter(p => p.gender === MEN);
+            const uncomfWomen = uncomf.filter(p => p.gender === WOMEN);
+
+            const parts = [];
+            if (uncomfMen.length > 0) {
+                // Men who want > menPct% are uncomfortable
+                const minThresh = Math.min(...uncomfMen.map(p => p.threshold));
+                const minThreshPct = Math.round(minThresh * 100);
+                parts.push(`${uncomfMen.length} men wanting ≥${minThreshPct}% will leave (men are ${menPct}%)`);
+            }
+            if (uncomfWomen.length > 0) {
+                const minThresh = Math.min(...uncomfWomen.map(p => p.threshold));
+                const minThreshPct = Math.round(minThresh * 100);
+                parts.push(`${uncomfWomen.length} women wanting ≥${minThreshPct}% will leave (women are ${womenPct}%)`);
+            }
+
+            el.innerHTML = '→ ' + parts.join('; ');
+        }
+
+        // Draw the threshold distribution curve
+        function drawDistribution() {
+            const canvas = document.getElementById('distributionCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Fix retina/HiDPI blurriness
+            const dpr = window.devicePixelRatio || 1;
+            const displayWidth = canvas.clientWidth;
+            const displayHeight = canvas.clientHeight;
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+            ctx.scale(dpr, dpr);
+
+            const W = displayWidth;
+            const H = displayHeight;
+            const pad = { left: 35, right: 10, top: 10, bottom: 20 };
+
+            ctx.clearRect(0, 0, W, H);
+
+            const mean = parseInt(document.getElementById('thresholdSlider').value);
+            const sigma = parseInt(document.getElementById('spreadSlider').value);
+
+            const chartW = W - pad.left - pad.right;
+            const chartH = H - pad.top - pad.bottom;
+
+            // Draw axis
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(pad.left, H - pad.bottom);
+            ctx.lineTo(W - pad.right, H - pad.bottom);
+            ctx.stroke();
+
+            // Axis labels
+            ctx.fillStyle = '#999';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+            for (let pct = 0; pct <= 50; pct += 10) {
+                const x = pad.left + (pct / 50) * chartW;
+                ctx.fillText(pct + '%', x, H - 3);
+            }
+
+            // If sigma is 0, draw a single spike
+            if (sigma === 0) {
+                const x = pad.left + (mean / 50) * chartW;
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(x, H - pad.bottom);
+                ctx.lineTo(x, pad.top + 5);
+                ctx.stroke();
+
+                ctx.fillStyle = '#e74c3c';
+                ctx.font = 'bold 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('everyone at ' + mean + '%', x, pad.top + 2);
+                return;
+            }
+
+            // Draw normal curve
+            const normalPDF = (x, mu, sig) => {
+                const exp = -0.5 * ((x - mu) / sig) ** 2;
+                return (1 / (sig * Math.sqrt(2 * Math.PI))) * Math.exp(exp);
+            };
+
+            const peak = normalPDF(mean, mean, sigma);
+
+            // Fill
+            ctx.beginPath();
+            ctx.moveTo(pad.left, H - pad.bottom);
+            for (let px = 0; px <= chartW; px++) {
+                const val = (px / chartW) * 50;
+                const density = normalPDF(val, mean, sigma);
+                const y = H - pad.bottom - (density / peak) * chartH * 0.9;
+                ctx.lineTo(pad.left + px, y);
+            }
+            ctx.lineTo(W - pad.right, H - pad.bottom);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.15)';
+            ctx.fill();
+
+            // Stroke
+            ctx.beginPath();
+            for (let px = 0; px <= chartW; px++) {
+                const val = (px / chartW) * 50;
+                const density = normalPDF(val, mean, sigma);
+                const y = H - pad.bottom - (density / peak) * chartH * 0.9;
+                if (px === 0) ctx.moveTo(pad.left + px, y);
+                else ctx.lineTo(pad.left + px, y);
+            }
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Mean line
+            const meanX = pad.left + (mean / 50) * chartW;
+            ctx.setLineDash([4, 3]);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(meanX, H - pad.bottom);
+            ctx.lineTo(meanX, pad.top);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('μ=' + mean + '%', meanX, pad.top + 2);
+
+            // If people exist, draw their actual thresholds as tick marks
+            if (people.length > 0) {
+                ctx.fillStyle = 'rgba(44, 62, 80, 0.3)';
+                for (let p of people) {
+                    const tx = pad.left + (p.threshold / 0.50) * chartW;
+                    ctx.fillRect(tx - 0.5, H - pad.bottom - 4, 1, 4);
+                }
+            }
+        }
+
+        function run() {
+            if (people.length === 0) {
+                setup();
+                return;
+            }
+
+            isRunning = !isRunning;
+            const btn = document.getElementById('runBtn');
+
+            if (isRunning) {
+                btn.textContent = 'Pause';
+                btn.className = 'btn-pause';
+
+                const runLoop = () => {
+                    if (!isRunning) return;
+
+                    const uncomfBefore = getUncomfortable(hallA).length + getUncomfortable(hallB).length;
+
+                    if (uncomfBefore === 0) {
+                        isRunning = false;
+                        btn.textContent = 'Run';
+                        btn.className = 'btn-run';
+                        return;
+                    }
+
+                    step();
+                    setTimeout(runLoop, 800);
+                };
+
+                runLoop();
+            } else {
+                btn.textContent = 'Run';
+                btn.className = 'btn-run';
+            }
+        }
+
+        function reset() {
+            isRunning = false;
+            document.getElementById('runBtn').textContent = 'Run';
+            document.getElementById('runBtn').className = 'btn-run';
+            init();
+        }
+
+        function render() {
+            renderHall('hallA', hallA);
+            renderHall('hallB', hallB);
+        }
+
+        function renderHall(svgId, hall) {
+            const svg = document.getElementById(svgId);
+            const rect = svg.parentElement.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+
+            svg.innerHTML = '';
+
+            // Background
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', width);
+            bg.setAttribute('height', height);
+            bg.setAttribute('fill', 'transparent');
+            svg.appendChild(bg);
+
+            // Identify uncomfortable people (using individual thresholds)
+            const uncomfortable = new Set();
+
+            for (let person of hall) {
+                const sameGenderCount = hall.filter(p => p.gender === person.gender).length;
+                const ratio = sameGenderCount / hall.length;
+                if (ratio < person.threshold) {
+                    uncomfortable.add(person.id);
+                }
+            }
+
+            // Draw circles using stable positions
+            for (let person of hall) {
+                // If no position assigned yet (shouldn't happen, but safety)
+                if (!positions[person.id]) {
+                    assignPosition(person.id, width, height);
+                }
+                const pos = positions[person.id];
+                const isUncomfortable = uncomfortable.has(person.id);
+
+                // Highlight ring if uncomfortable (draw first so it's behind)
+                if (isUncomfortable) {
+                    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    ring.setAttribute('cx', pos.x);
+                    ring.setAttribute('cy', pos.y);
+                    ring.setAttribute('r', PERSON_RADIUS + 4);
+                    ring.setAttribute('fill', 'none');
+                    ring.setAttribute('stroke', '#f39c12');
+                    ring.setAttribute('stroke-width', '2');
+                    ring.setAttribute('opacity', '0.8');
+                    svg.appendChild(ring);
+                }
+
+                // Main circle
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', PERSON_RADIUS);
+                circle.setAttribute('fill', COLORS[person.gender]);
+                circle.setAttribute('opacity', isUncomfortable ? '0.7' : '1');
+                svg.appendChild(circle);
+            }
+        }
+
+        function updateUI() {
+            // Update sliders
+            document.getElementById('popValue').textContent = document.getElementById('populationSlider').value;
+            document.getElementById('imbalanceValue').textContent = document.getElementById('imbalanceSlider').value + '%';
+            document.getElementById('thresholdValue').textContent = document.getElementById('thresholdSlider').value + '%';
+            document.getElementById('spreadValue').textContent = document.getElementById('spreadSlider').value + '%';
+
+            // Update stats
+            document.getElementById('stepCount').textContent = stepCount;
+
+            const movedThisStep = (stepCount === 0) ? 0 : (() => {
+                const uncomfA = getUncomfortable(hallA);
+                const uncomfB = getUncomfortable(hallB);
+                return uncomfA.length + uncomfB.length;
+            })();
+
+            document.getElementById('movedCount').textContent = movedThisStep;
+            document.getElementById('totalMoves').textContent = totalMoves;
+
+            const uncomfCount = getUncomfortable(hallA).length + getUncomfortable(hallB).length;
+            document.getElementById('uncomfortableCount').textContent = uncomfCount;
+
+            // Update hall stats
+            const menA = hallA.filter(p => p.gender === MEN).length;
+            const womenA = hallA.filter(p => p.gender === WOMEN).length;
+            const menB = hallB.filter(p => p.gender === MEN).length;
+            const womenB = hallB.filter(p => p.gender === WOMEN).length;
+
+            document.getElementById('hallA-men').textContent = menA;
+            document.getElementById('hallA-women').textContent = womenA;
+            document.getElementById('hallB-men').textContent = menB;
+            document.getElementById('hallB-women').textContent = womenB;
+
+            const ratioA = hallA.length === 0 ? 0 : Math.round((menA / hallA.length) * 100);
+            const ratioB = hallB.length === 0 ? 0 : Math.round((menB / hallB.length) * 100);
+
+            document.getElementById('hallA-ratio').textContent = ratioA + '%';
+            document.getElementById('hallB-ratio').textContent = ratioB + '%';
+        }
+
+        function toggleInfo() {
+            const content = document.getElementById('infoContent');
+            const toggle = document.getElementById('infoToggle');
+
+            content.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
+
+        // Event listeners
+        document.getElementById('populationSlider').addEventListener('input', () => {
+            updateUI();
+        });
+
+        document.getElementById('imbalanceSlider').addEventListener('input', () => {
+            updateUI();
+        });
+
+        document.getElementById('thresholdSlider').addEventListener('input', () => {
+            updateUI();
+            drawDistribution();
+        });
+
+        document.getElementById('spreadSlider').addEventListener('input', () => {
+            updateUI();
+            drawDistribution();
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            init();
+        });
+    </script>
+</body>
+</html>
