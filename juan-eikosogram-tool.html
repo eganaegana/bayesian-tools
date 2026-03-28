@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eikosogram Studio</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --paper: #fffdf8;
+      --ink: #1f2a37;
+      --muted: #6b7280;
+      --line: #d8d0c2;
+      --accent: #b6513a;
+      --accent-2: #305f72;
+      --blue-1: #8ecae6;
+      --blue-2: #c5e7f3;
+      --green-1: #9fd5b3;
+      --green-2: #d6eddc;
+      --shadow: 0 18px 40px rgba(31, 42, 55, 0.09);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(182, 81, 58, 0.08), transparent 24rem),
+        radial-gradient(circle at bottom right, rgba(48, 95, 114, 0.08), transparent 26rem),
+        var(--bg);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 24px;
+      padding: 24px;
+    }
+
+    .panel,
+    .stage {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 22px;
+      overflow: auto;
+    }
+
+    .stage {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .subtle {
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.96rem;
+    }
+
+    .section {
+      margin-top: 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .field input[type="text"],
+    .field input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .area-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .area-card header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .area-card h3 {
+      font-size: 1rem;
+    }
+
+    .pct {
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 92px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toggle-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toggle-row label {
+      font-size: 0.95rem;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 0.96rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: var(--ink);
+    }
+
+    button.secondary {
+      background: var(--accent-2);
+    }
+
+    button.light {
+      background: #ece6da;
+      color: var(--ink);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.7);
+      display: grid;
+      gap: 4px;
+    }
+
+    .stat .label {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .stat .value {
+      font-size: 1.45rem;
+      font-weight: 700;
+    }
+
+    .canvas-wrap {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 247, 239, 0.98));
+      overflow: auto;
+    }
+
+    svg {
+      width: 100%;
+      min-width: 620px;
+      height: auto;
+      display: block;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .status {
+      font-size: 0.92rem;
+      color: var(--accent-2);
+      min-height: 1.2em;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .grid2,
+      .buttons,
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      svg {
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <h1>Eikosogram Studio</h1>
+      <p class="subtle">Control the eikosogram with conditional probabilities, or drag inside the diagram. Export the result as SVG or PNG for Keynote and PowerPoint.</p>
+
+      <div class="section">
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" type="text" value="Probability Eikosogram" />
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="labelA">Left Category</label>
+            <input id="labelA" type="text" value="H" />
+          </div>
+          <div class="field">
+            <label for="labelNotA">Right Category</label>
+            <input id="labelNotA" type="text" value="not H" />
+          </div>
+          <div class="field">
+            <label for="labelB">Top Outcome</label>
+            <input id="labelB" type="text" value="E" />
+          </div>
+          <div class="field">
+            <label for="labelNotB">Bottom Outcome</label>
+            <input id="labelNotB" type="text" value="not E" />
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Probability Controls</h2>
+        <p class="subtle">Use sliders or typed values for the three defining probabilities. The four eikosogram regions update automatically.</p>
+
+        <div class="area-card">
+          <header>
+            <h3 id="controlLabel-pA">P(H)</h3>
+            <div class="pct" id="controlPct-pA">50.0%</div>
+          </header>
+          <div class="row">
+            <input id="controlRange-pA" type="range" min="0.001" max="0.999" step="0.001" />
+            <input id="controlInput-pA" type="number" min="0.001" max="0.999" step="0.001" />
+          </div>
+        </div>
+
+        <div class="area-card">
+          <header>
+            <h3 id="controlLabel-pBgA">P(E|H)</h3>
+            <div class="pct" id="controlPct-pBgA">50.0%</div>
+          </header>
+          <div class="row">
+            <input id="controlRange-pBgA" type="range" min="0.001" max="0.999" step="0.001" />
+            <input id="controlInput-pBgA" type="number" min="0.001" max="0.999" step="0.001" />
+          </div>
+        </div>
+
+        <div class="area-card">
+          <header>
+            <h3 id="controlLabel-pBgNotA">P(E|not H)</h3>
+            <div class="pct" id="controlPct-pBgNotA">50.0%</div>
+          </header>
+          <div class="row">
+            <input id="controlRange-pBgNotA" type="range" min="0.001" max="0.999" step="0.001" />
+            <input id="controlInput-pBgNotA" type="number" min="0.001" max="0.999" step="0.001" />
+          </div>
+        </div>
+
+        <div class="area-card">
+          <header>
+            <h3 id="derivedLabel-pAgB">P(H|E)</h3>
+            <div class="pct" id="derivedPct-pAgB">50.0%</div>
+          </header>
+          <div class="row">
+            <input id="derivedRange-pAgB" type="range" min="0" max="1" step="0.001" disabled />
+            <input id="derivedInput-pAgB" type="number" step="0.001" disabled />
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Export</h2>
+        <div class="toggle-row">
+          <input id="transparentBg" type="checkbox" />
+          <label for="transparentBg">Transparent export background</label>
+        </div>
+        <div class="buttons">
+          <button id="svgBtn">Export SVG</button>
+          <button id="pngBtn" class="secondary">Export PNG</button>
+          <button id="copyLinkBtn" class="light">Copy Shareable Link</button>
+          <button id="resetBtn" class="light">Reset</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="section">
+        <p class="helper">For slide decks, exported SVG is usually the best choice. It stays crisp when resized. The app itself remains interactive in a browser window, while PowerPoint and Keynote generally treat inserted SVG or PNG as static artwork.</p>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="stats">
+        <div class="stat">
+          <div class="label" id="statPA-label">P(A)</div>
+          <div class="value" id="statPA-value">50.0%</div>
+          <div class="label" id="statPA-detail">Left column</div>
+        </div>
+        <div class="stat">
+          <div class="label" id="statPB-label">P(B)</div>
+          <div class="value" id="statPB-value">50.0%</div>
+          <div class="label" id="statPB-detail">Top row total</div>
+        </div>
+        <div class="stat">
+          <div class="label" id="statPBgA-label">P(B|A)</div>
+          <div class="value" id="statPBgA-value">50.0%</div>
+          <div class="label" id="statPBgA-detail">Left split</div>
+        </div>
+        <div class="stat">
+          <div class="label" id="statPAgB-label">P(A|B)</div>
+          <div class="value" id="statPAgB-value">50.0%</div>
+          <div class="label" id="statPAgB-detail">Bayes view</div>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <svg id="svg" viewBox="0 0 920 620" aria-label="Interactive eikosogram"></svg>
+      </div>
+      <p class="helper">Drag the center vertical divider, either horizontal divider, or any corner handle. You can also edit <span id="helperPH">P(H)</span>, <span id="helperPEH">P(E|H)</span>, and <span id="helperPEnH">P(E|not H)</span> directly from the control panel.</p>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      title: "Probability Eikosogram",
+      a: "H",
+      notA: "not H",
+      b: "E",
+      notB: "not E",
+      transparentBg: false,
+      pA: 0.5,
+      pBgA: 0.5,
+      pBgNotA: 0.5
+    };
+
+    const SVG_W = 920;
+    const SVG_H = 620;
+    const PLOT_X = 52;
+    const PLOT_Y = 86;
+    const PLOT_W = 816;
+    const PLOT_H = 472;
+    const MIN_PROB = 0.001;
+
+    const svg = document.getElementById("svg");
+    const statusNode = document.getElementById("status");
+
+    const inputs = {
+      title: document.getElementById("title"),
+      labelA: document.getElementById("labelA"),
+      labelNotA: document.getElementById("labelNotA"),
+      labelB: document.getElementById("labelB"),
+      labelNotB: document.getElementById("labelNotB"),
+      transparentBg: document.getElementById("transparentBg")
+    };
+
+    const probControls = {
+      pA: {
+        range: document.getElementById("controlRange-pA"),
+        input: document.getElementById("controlInput-pA"),
+        pct: document.getElementById("controlPct-pA"),
+        label: document.getElementById("controlLabel-pA")
+      },
+      pBgA: {
+        range: document.getElementById("controlRange-pBgA"),
+        input: document.getElementById("controlInput-pBgA"),
+        pct: document.getElementById("controlPct-pBgA"),
+        label: document.getElementById("controlLabel-pBgA")
+      },
+      pBgNotA: {
+        range: document.getElementById("controlRange-pBgNotA"),
+        input: document.getElementById("controlInput-pBgNotA"),
+        pct: document.getElementById("controlPct-pBgNotA"),
+        label: document.getElementById("controlLabel-pBgNotA")
+      }
+    };
+
+    let drag = null;
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function fmtPct(value) {
+      return `${(value * 100).toFixed(1)}%`;
+    }
+
+    function fmtProb(value) {
+      return value.toFixed(3);
+    }
+
+    function escapeXml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+    }
+
+    function cleanProb(value, fallback) {
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed)) return fallback;
+      return clamp(parsed, MIN_PROB, 1 - MIN_PROB);
+    }
+
+    function metrics() {
+      const tl = state.pA * state.pBgA;
+      const bl = state.pA * (1 - state.pBgA);
+      const tr = (1 - state.pA) * state.pBgNotA;
+      const br = (1 - state.pA) * (1 - state.pBgNotA);
+      const pA = tl + bl;
+      const pNotA = tr + br;
+      const pB = tl + tr;
+      const pNotB = bl + br;
+      const pBgA = pA > 0 ? tl / pA : 0;
+      const pBgNotA = pNotA > 0 ? tr / pNotA : 0;
+      const pAgB = pB > 0 ? tl / pB : 0;
+      return {
+        tl,
+        bl,
+        tr,
+        br,
+        pA,
+        pNotA,
+        pB,
+        pNotB,
+        pBgA,
+        pBgNotA,
+        pAgB,
+        leftW: PLOT_W * pA,
+        rightW: PLOT_W * pNotA,
+        leftTopH: pA > 0 ? PLOT_H * pBgA : 0,
+        rightTopH: pNotA > 0 ? PLOT_H * pBgNotA : 0
+      };
+    }
+
+    function syncTextInputs() {
+      state.title = inputs.title.value;
+      state.a = inputs.labelA.value || "H";
+      state.notA = inputs.labelNotA.value || "not H";
+      state.b = inputs.labelB.value || "E";
+      state.notB = inputs.labelNotB.value || "not E";
+      state.transparentBg = inputs.transparentBg.checked;
+    }
+
+    function syncControls() {
+      inputs.title.value = state.title;
+      inputs.labelA.value = state.a;
+      inputs.labelNotA.value = state.notA;
+      inputs.labelB.value = state.b;
+      inputs.labelNotB.value = state.notB;
+      inputs.transparentBg.checked = state.transparentBg;
+
+      probControls.pA.label.textContent = `P(${state.a})`;
+      probControls.pBgA.label.textContent = `P(${state.b}|${state.a})`;
+      probControls.pBgNotA.label.textContent = `P(${state.b}|${state.notA})`;
+      probControls.pA.pct.textContent = fmtPct(state.pA);
+      probControls.pBgA.pct.textContent = fmtPct(state.pBgA);
+      probControls.pBgNotA.pct.textContent = fmtPct(state.pBgNotA);
+      probControls.pA.range.value = fmtProb(state.pA);
+      probControls.pBgA.range.value = fmtProb(state.pBgA);
+      probControls.pBgNotA.range.value = fmtProb(state.pBgNotA);
+      probControls.pA.input.value = fmtProb(state.pA);
+      probControls.pBgA.input.value = fmtProb(state.pBgA);
+      probControls.pBgNotA.input.value = fmtProb(state.pBgNotA);
+      document.getElementById("helperPH").textContent = `P(${state.a})`;
+      document.getElementById("helperPEH").textContent = `P(${state.b}|${state.a})`;
+      document.getElementById("helperPEnH").textContent = `P(${state.b}|${state.notA})`;
+    }
+
+    function stat(id, label, value, detail) {
+      document.getElementById(`${id}-label`).textContent = label;
+      document.getElementById(`${id}-value`).textContent = fmtPct(value);
+      document.getElementById(`${id}-detail`).textContent = detail;
+    }
+
+    function svgText(x, y, text, size, weight, anchor = "middle", extra = "") {
+      return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="${size}" font-weight="${weight}" fill="#1f2a37" ${extra}>${escapeXml(text)}</text>`;
+    }
+
+    function drawRect(x, y, w, h, fill, dragKind = "", cursor = "default") {
+      const dragAttr = dragKind ? ` data-drag="${dragKind}"` : "";
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${fill}"${dragAttr} style="cursor:${cursor}" />`;
+    }
+
+    function drawLine(x1, y1, x2, y2, stroke, width, dragKind = "", cursor = "default", dash = "") {
+      const dragAttr = dragKind ? ` data-drag="${dragKind}"` : "";
+      const dashAttr = dash ? ` stroke-dasharray="${dash}"` : "";
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round"${dashAttr}${dragAttr} style="cursor:${cursor}" />`;
+    }
+
+    function drawHandle(cx, cy, dragKind) {
+      return `<g data-drag="${dragKind}" style="cursor:move"><circle cx="${cx}" cy="${cy}" r="12" fill="#fffdf8" stroke="#1f2a37" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="4" fill="#b6513a"/></g>`;
+    }
+
+    function buildSvgMarkup() {
+      const m = metrics();
+      const bgFill = state.transparentBg ? "transparent" : "#fffdf8";
+      const leftX = PLOT_X;
+      const midX = PLOT_X + m.leftW;
+      const rightX = PLOT_X + PLOT_W;
+      const topY = PLOT_Y;
+      const bottomY = PLOT_Y + PLOT_H;
+      const leftSplitY = PLOT_Y + m.leftTopH;
+      const rightSplitY = PLOT_Y + m.rightTopH;
+
+      return `
+        <rect x="0" y="0" width="${SVG_W}" height="${SVG_H}" fill="${bgFill}" />
+        ${svgText(SVG_W / 2, 44, state.title, 30, 700)}
+
+        ${drawRect(leftX, topY, m.leftW, m.leftTopH, "#8ecae6", "topLeft", "move")}
+        ${drawRect(leftX, leftSplitY, m.leftW, PLOT_H - m.leftTopH, "#c5e7f3", "bottomLeft", "move")}
+        ${drawRect(midX, topY, m.rightW, m.rightTopH, "#9fd5b3", "topRight", "move")}
+        ${drawRect(midX, rightSplitY, m.rightW, PLOT_H - m.rightTopH, "#d6eddc", "bottomRight", "move")}
+
+        ${drawRect(leftX, topY, PLOT_W, PLOT_H, "none")}
+        ${drawLine(leftX, topY, rightX, topY, "#1f2a37", 2)}
+        ${drawLine(leftX, bottomY, rightX, bottomY, "#1f2a37", 2)}
+        ${drawLine(leftX, topY, leftX, bottomY, "#1f2a37", 2)}
+        ${drawLine(rightX, topY, rightX, bottomY, "#1f2a37", 2)}
+        ${drawLine(midX, topY, midX, bottomY, "#1f2a37", 2, "", "default")}
+        ${drawLine(leftX, leftSplitY, midX, leftSplitY, "#1f2a37", 2)}
+        ${drawLine(midX, rightSplitY, rightX, rightSplitY, "#1f2a37", 2)}
+
+        ${drawLine(midX, topY, midX, bottomY, "transparent", 20, "vertical", "col-resize")}
+        ${drawLine(leftX, leftSplitY, midX, leftSplitY, "transparent", 20, "leftHorizontal", "row-resize")}
+        ${drawLine(midX, rightSplitY, rightX, rightSplitY, "transparent", 20, "rightHorizontal", "row-resize")}
+
+        ${drawHandle(midX, leftSplitY, "topLeft")}
+        ${drawHandle(midX, rightSplitY, "topRight")}
+
+        ${svgText(leftX + m.leftW / 2, 72, `${state.a} (${fmtPct(m.pA)})`, 18, 700)}
+        ${svgText(midX + m.rightW / 2, 72, `${state.notA} (${fmtPct(m.pNotA)})`, 18, 700)}
+
+        ${svgText(leftX + m.leftW / 2, topY + m.leftTopH / 2, `${state.b}: ${fmtPct(m.tl)}`, 22, 700, "middle", 'dominant-baseline="middle"')}
+        ${svgText(leftX + m.leftW / 2, leftSplitY + (PLOT_H - m.leftTopH) / 2, `${state.notB}: ${fmtPct(m.bl)}`, 22, 700, "middle", 'dominant-baseline="middle"')}
+        ${svgText(midX + m.rightW / 2, topY + m.rightTopH / 2, `${state.b}: ${fmtPct(m.tr)}`, 22, 700, "middle", 'dominant-baseline="middle"')}
+        ${svgText(midX + m.rightW / 2, rightSplitY + (PLOT_H - m.rightTopH) / 2, `${state.notB}: ${fmtPct(m.br)}`, 22, 700, "middle", 'dominant-baseline="middle"')}
+
+        ${svgText(leftX - 12, topY + m.leftTopH / 2, state.b, 18, 700, "end", 'dominant-baseline="middle"')}
+        ${svgText(leftX - 12, leftSplitY + (PLOT_H - m.leftTopH) / 2, state.notB, 18, 700, "end", 'dominant-baseline="middle"')}
+      `;
+    }
+
+    function render() {
+      syncControls();
+      const m = metrics();
+
+      stat("statPA", `P(${state.a})`, m.pA, `P(${state.a}) = ${fmtProb(m.pA)}`);
+      stat("statPB", `P(${state.b})`, m.pB, `P(${state.b}) = ${fmtProb(m.pB)}`);
+      stat("statPBgA", `P(${state.b}|${state.a})`, m.pBgA, `Within ${state.a}`);
+      stat("statPAgB", `P(${state.a}|${state.b})`, m.pAgB, `Among ${state.b}`);
+      document.getElementById("derivedLabel-pAgB").textContent = `P(${state.a}|${state.b})`;
+      document.getElementById("derivedPct-pAgB").textContent = fmtPct(m.pAgB);
+      document.getElementById("derivedRange-pAgB").value = fmtProb(m.pAgB);
+      document.getElementById("derivedInput-pAgB").value = fmtProb(m.pAgB);
+
+      svg.innerHTML = buildSvgMarkup();
+      updateUrlHash();
+    }
+
+    function setStatus(message) {
+      statusNode.textContent = message;
+      window.clearTimeout(setStatus.timer);
+      setStatus.timer = window.setTimeout(() => {
+        statusNode.textContent = "";
+      }, 2400);
+    }
+
+    function plotPoint(event) {
+      const bounds = svg.getBoundingClientRect();
+      const x = clamp((event.clientX - bounds.left) * (SVG_W / bounds.width), PLOT_X, PLOT_X + PLOT_W);
+      const y = clamp((event.clientY - bounds.top) * (SVG_H / bounds.height), PLOT_Y, PLOT_Y + PLOT_H);
+      return { x, y };
+    }
+
+    function onPointerMove(event) {
+      if (!drag) return;
+      const point = plotPoint(event);
+      let pA = state.pA;
+      let pBgA = state.pBgA;
+      let pBgNotA = state.pBgNotA;
+
+      const nextPA = clamp((point.x - PLOT_X) / PLOT_W, 0.04, 0.96);
+      const leftY = clamp((point.y - PLOT_Y) / PLOT_H, 0.04, 0.96);
+
+      if (drag.kind === "vertical") {
+        pA = nextPA;
+      }
+      if (drag.kind === "leftHorizontal") {
+        pBgA = leftY;
+      }
+      if (drag.kind === "rightHorizontal") {
+        pBgNotA = leftY;
+      }
+      if (drag.kind === "topLeft" || drag.kind === "bottomLeft") {
+        pA = nextPA;
+        pBgA = leftY;
+      }
+      if (drag.kind === "topRight" || drag.kind === "bottomRight") {
+        pA = nextPA;
+        pBgNotA = leftY;
+      }
+
+      state.pA = pA;
+      state.pBgA = pBgA;
+      state.pBgNotA = pBgNotA;
+      render();
+    }
+
+    function endDrag() {
+      drag = null;
+    }
+
+    svg.addEventListener("pointerdown", (event) => {
+      const kind = event.target.closest("[data-drag]")?.getAttribute("data-drag");
+      if (!kind) return;
+      drag = { kind };
+      svg.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+
+    svg.addEventListener("pointermove", onPointerMove);
+    svg.addEventListener("pointerup", endDrag);
+    svg.addEventListener("pointerleave", endDrag);
+    window.addEventListener("pointerup", endDrag);
+
+    for (const node of Object.values(inputs)) {
+      node.addEventListener("input", () => {
+        syncTextInputs();
+        render();
+      });
+    }
+
+    for (const [key, control] of Object.entries(probControls)) {
+      const handler = (value) => {
+        state[key] = cleanProb(value, state[key]);
+        render();
+      };
+      control.range.addEventListener("input", () => handler(control.range.value));
+      control.input.addEventListener("change", () => handler(control.input.value));
+      control.input.addEventListener("blur", () => handler(control.input.value));
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      state.title = "Probability Eikosogram";
+      state.a = "H";
+      state.notA = "not H";
+      state.b = "E";
+      state.notB = "not E";
+      state.transparentBg = false;
+      state.pA = 0.5;
+      state.pBgA = 0.5;
+      state.pBgNotA = 0.5;
+      render();
+      setStatus("Reset to default probabilities.");
+    });
+
+    function buildSvgFile() {
+      return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}">${buildSvgMarkup()}</svg>`;
+    }
+
+    function download(name, blob) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("svgBtn").addEventListener("click", () => {
+      download("eikosogram.svg", new Blob([buildSvgFile()], { type: "image/svg+xml;charset=utf-8" }));
+      setStatus("SVG exported.");
+    });
+
+    document.getElementById("pngBtn").addEventListener("click", () => {
+      const svgText = buildSvgFile();
+      const svgBlob = new Blob([svgText], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = SVG_W * 2;
+        canvas.height = SVG_H * 2;
+        const ctx = canvas.getContext("2d");
+        if (!state.transparentBg) {
+          ctx.fillStyle = "#fffdf8";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            download("eikosogram.png", blob);
+            setStatus("PNG exported.");
+          }
+          URL.revokeObjectURL(url);
+        }, "image/png");
+      };
+      img.src = url;
+    });
+
+    function updateUrlHash() {
+      const payload = {
+        t: state.title,
+        a: state.a,
+        na: state.notA,
+        b: state.b,
+        nb: state.notB,
+        bg: state.transparentBg ? 1 : 0,
+        pA: fmtProb(state.pA),
+        pBgA: fmtProb(state.pBgA),
+        pBgNotA: fmtProb(state.pBgNotA)
+      };
+      const params = new URLSearchParams(payload);
+      history.replaceState(null, "", `${location.pathname}#${params.toString()}`);
+    }
+
+    function loadFromHash() {
+      if (!location.hash) return;
+      const params = new URLSearchParams(location.hash.slice(1));
+      state.title = params.get("t") || state.title;
+      state.a = params.get("a") || state.a;
+      state.notA = params.get("na") || state.notA;
+      state.b = params.get("b") || state.b;
+      state.notB = params.get("nb") || state.notB;
+      state.transparentBg = params.get("bg") === "1";
+      state.pA = cleanProb(params.get("pA"), state.pA);
+      state.pBgA = cleanProb(params.get("pBgA"), state.pBgA);
+      state.pBgNotA = cleanProb(params.get("pBgNotA"), state.pBgNotA);
+    }
+
+    document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        setStatus("Link copied.");
+      } catch (error) {
+        setStatus("Could not copy the link in this browser.");
+      }
+    });
+
+    loadFromHash();
+    render();
+  </script>
+</body>
+</html>
