@@ -1,0 +1,2385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O'Connor & Weatherall Selective Sharing Propagandist Model</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-button {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab-button:hover {
+            color: #333;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .card h3 {
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #555;
+        }
+
+        .control-group {
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        .control-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-item label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        .slider-with-input {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .slider-with-input input[type="range"] {
+            flex: 1;
+        }
+
+        .slider-with-input input[type="number"] {
+            width: 70px;
+            padding: 0.6rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .control-item input[type="range"] {
+            width: 100%;
+        }
+
+        .control-item .range-value {
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+
+        .control-item select,
+        .control-item input[type="number"] {
+            padding: 0.6rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        button {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+            transform: translateY(-2px);
+        }
+
+        .viz-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .viz-container canvas,
+        .viz-container svg {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
+        .status-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .status-box strong {
+            color: #333;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toggle-item input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .toggle-item label {
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-box {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: #999;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-box .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .red-text { color: #e74c3c; }
+        .blue-text { color: #3498db; }
+        .green-text { color: #27ae60; }
+
+        .network-tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            max-width: 300px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            line-height: 1.4;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Explore tab sidebar layout */
+        .explore-layout {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .explore-sidebar {
+            width: 280px;
+            min-width: 280px;
+            position: sticky;
+            top: 1rem;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+        }
+
+        .explore-sidebar .card {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .explore-sidebar .card h3 {
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .explore-sidebar .control-group {
+            padding: 0.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .explore-sidebar .button-group {
+            margin: 0.5rem 0;
+        }
+
+        .explore-sidebar button {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .explore-sidebar .slider-with-input {
+            gap: 0.5rem;
+        }
+
+        .explore-sidebar .slider-with-input input[type="number"] {
+            width: 60px;
+            padding: 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        .explore-sidebar .control-item label {
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .explore-sidebar .toggle-group {
+            flex-direction: column;
+            gap: 0.4rem;
+            margin: 0.5rem 0;
+        }
+
+        .explore-sidebar .toggle-item label {
+            font-size: 0.82rem;
+        }
+
+        .explore-sidebar .toggle-item input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+        }
+
+        .explore-sidebar select {
+            padding: 0.4rem;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .explore-sidebar .range-value {
+            font-size: 0.8rem;
+        }
+
+        .explore-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .explore-main .viz-container {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .explore-main .viz-container h3 {
+            font-size: 1rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 1100px) {
+            .explore-layout {
+                flex-direction: column;
+            }
+
+            .explore-sidebar {
+                width: 100%;
+                min-width: unset;
+                position: static;
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .container {
+                padding: 0 0.75rem;
+            }
+
+            .control-row {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .slider-with-input {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>O'Connor & Weatherall Propagandist Model</h1>
+        <p>Exploring selective information sharing in scientific networks and policymaking</p>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" data-tab="explore">Explore</button>
+            <button class="tab-button" data-tab="batch">Batch</button>
+        </div>
+
+        <!-- EXPLORE TAB -->
+        <div id="explore" class="tab-content active">
+            <!-- Model parameters: full width at top, set before running -->
+            <div class="card">
+                <h2>Model Parameters</h2>
+                <div class="control-group">
+                    <div class="control-row">
+                        <div class="control-item">
+                            <label for="explore-K">Scientists (K)</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="explore-K" min="3" max="20" value="10">
+                                <input type="number" id="explore-K-input" min="3" max="20" value="10">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="explore-n">Trial Size per Step (n)</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="explore-n" min="1" max="50" value="10">
+                                <input type="number" id="explore-n-input" min="1" max="50" value="10">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="explore-c">Effect Size (c)</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="explore-c" min="0.01" max="0.2" step="0.01" value="0.05">
+                                <input type="number" id="explore-c-input" min="0.01" max="0.2" step="0.01" value="0.05">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="explore-k">PM Connectedness (k)</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="explore-k" min="1" max="20" value="5">
+                                <input type="number" id="explore-k-input" min="1" max="20" value="5">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="explore-topology">Topology</label>
+                            <select id="explore-topology">
+                                <option value="cycle">Cycle</option>
+                                <option value="complete">Complete</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label for="explore-preset">Preset</label>
+                            <select id="explore-preset">
+                                <option value="">-- Choose --</option>
+                                <option value="standard">Standard (paper defaults)</option>
+                                <option value="easy-deceive">Easy to Deceive</option>
+                                <option value="hard-deceive">Hard to Deceive</option>
+                                <option value="more-scientists">More Scientists Backfires</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar + main viz area -->
+            <div class="explore-layout">
+                <!-- LEFT SIDEBAR: run controls, always visible alongside viz -->
+                <div class="explore-sidebar">
+                    <div class="card">
+                        <div class="button-group" style="margin-top: 0;">
+                            <button class="btn-primary" id="explore-step">Step (→)</button>
+                            <button class="btn-primary" id="explore-run-pause">Run</button>
+                            <button class="btn-secondary" id="explore-reset">Reset</button>
+                        </div>
+
+                        <div class="control-item">
+                            <label for="explore-speed">Speed</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="explore-speed" min="100" max="2000" step="100" value="500">
+                                <input type="number" id="explore-speed-input" min="100" max="2000" step="100" value="500">
+                            </div>
+                            <span class="range-value"><span id="explore-speed-value">500</span> ms</span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-top: 0;">Stop Condition</h3>
+                        <div style="margin-bottom: 0.4rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; font-size: 0.85rem;">
+                                <input type="radio" name="explore-stop" value="consensus" checked>
+                                <span>Scientific consensus</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                <input type="radio" name="explore-stop" value="rounds">
+                                <span>After N rounds:</span>
+                            </label>
+                        </div>
+                        <div class="control-item">
+                            <div class="slider-with-input">
+                                <input type="range" id="explore-max-rounds" min="10" max="100" step="10" value="50">
+                                <input type="number" id="explore-max-rounds-input" min="10" max="100" step="10" value="50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-top: 0;">Display</h3>
+                        <div class="toggle-group">
+                            <div class="toggle-item">
+                                <input type="checkbox" id="explore-show-scientist-connections">
+                                <label for="explore-show-scientist-connections">Scientist connections</label>
+                            </div>
+                            <div class="toggle-item">
+                                <input type="checkbox" id="explore-show-scientist-pm">
+                                <label for="explore-show-scientist-pm">Scientist–PM connections</label>
+                            </div>
+                            <div class="toggle-item">
+                                <input type="checkbox" id="explore-show-propagandist">
+                                <label for="explore-show-propagandist">Propagandist selections</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-top: 0;">Options</h3>
+                        <div class="toggle-group">
+                            <div class="toggle-item">
+                                <input type="checkbox" id="explore-double-counting" checked>
+                                <label for="explore-double-counting">Allow double counting</label>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.78rem; color: #888; margin-top: 0.25rem;">PMs count propagandist evidence even if already heard directly from scientist</div>
+                    </div>
+                </div>
+
+                <!-- MAIN: status + visualizations -->
+                <div class="explore-main">
+                    <div class="status-box" id="explore-status">
+                        Round 0 — Simulation not started. Click "Step" or "Run" to begin.
+                    </div>
+
+                    <div class="viz-container">
+                        <h3>Network Visualization</h3>
+                        <svg id="explore-network" width="100%" height="480" viewBox="0 0 800 480"></svg>
+                        <div class="network-tooltip" id="explore-tooltip"></div>
+                    </div>
+
+                    <div class="viz-container">
+                        <h3>Policymaker Credence Over Time</h3>
+                        <canvas id="explore-timeline" width="800" height="300"></canvas>
+                        <div class="legend">
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #e74c3c;"></span>
+                                <span>WITH propagandist</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #3498db;"></span>
+                                <span>WITHOUT propagandist</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color" style="background: #999; height: 2px; margin-top: 7px;"></span>
+                                <span>Decision boundary (0.5)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BATCH TAB -->
+        <div id="batch" class="tab-content">
+            <div class="card">
+                <h2>Batch Simulation Parameters</h2>
+
+                <div class="control-group">
+                    <div class="control-item">
+                        <label for="batch-preset">Preset Configuration</label>
+                        <select id="batch-preset">
+                            <option value="">— Choose a preset —</option>
+                            <option value="standard">Standard (Paper defaults)</option>
+                            <option value="easy-deceive">Easy to Deceive (low power, hard problem)</option>
+                            <option value="hard-deceive">Hard to Deceive (high power, easy problem)</option>
+                            <option value="more-scientists">More Scientists Backfires (K=20, k=5)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-row">
+                        <div class="control-item">
+                            <label for="batch-K">Number of Scientists (K)</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="batch-K" min="3" max="20" value="10">
+                                <input type="number" id="batch-K-input" min="3" max="20" value="10">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="batch-n">Trial Size per Step (n)</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="batch-n" min="1" max="50" value="10">
+                                <input type="number" id="batch-n-input" min="1" max="50" value="10">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="batch-c">Effect Size (c)</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="batch-c" min="0.01" max="0.2" step="0.01" value="0.05">
+                                <input type="number" id="batch-c-input" min="0.01" max="0.2" step="0.01" value="0.05">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-item">
+                            <label for="batch-k">PM Connectedness (k)</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="batch-k" min="1" max="20" value="5">
+                                <input type="number" id="batch-k-input" min="1" max="20" value="5">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="batch-topology">Network Topology</label>
+                            <select id="batch-topology">
+                                <option value="cycle">Cycle</option>
+                                <option value="complete">Complete</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label for="batch-runs">Number of Runs</label>
+                            <div class="slider-with-input">
+                                <input type="range" id="batch-runs" min="500" max="5000" step="500" value="2000">
+                                <input type="number" id="batch-runs-input" min="500" max="5000" step="500" value="2000">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Simulation Options</h3>
+                    <div class="toggle-group">
+                        <div class="toggle-item">
+                            <input type="checkbox" id="batch-double-counting" checked>
+                            <label for="batch-double-counting">Allow double counting (PMs count evidence from propagandist even if already heard from scientist directly)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Stop Condition</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                            <input type="radio" name="batch-stop" value="consensus" checked>
+                            <span>Stop at scientific consensus (all scientists agree: unanimously ≥ 0.99 or unanimously ≤ 0.5)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.75rem;">
+                            <input type="radio" name="batch-stop" value="rounds">
+                            <span>Stop after N rounds:</span>
+                        </label>
+                    </div>
+                    <div class="control-item">
+                        <label for="batch-max-rounds">Max Rounds</label>
+                        <div class="slider-with-input">
+                            <input type="range" id="batch-max-rounds" min="10" max="100" value="50">
+                            <input type="number" id="batch-max-rounds-input" min="10" max="100" value="50">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" id="batch-run">Run Batch</button>
+                    <button class="btn-secondary" id="batch-clear">Clear Results</button>
+                </div>
+            </div>
+
+            <div id="batch-progress-container" style="display: none;">
+                <div class="card">
+                    <h3>Progress</h3>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" id="batch-progress-fill" style="width: 0%;">
+                            <span id="batch-progress-text">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="batch-results-container" style="display: none;">
+                <div class="viz-container">
+                    <h3>Results: Average Policymaker Credence Over Time</h3>
+                    <canvas id="batch-timeline" width="800" height="400"></canvas>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #e74c3c;"></span>
+                            <span>WITH propagandist (avg across runs)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #3498db;"></span>
+                            <span>WITHOUT propagandist (avg across runs)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: #27ae60; width: 8px; height: 2px; margin-top: 7px;"></span>
+                            <span>Avg round to scientific consensus</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Summary Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="label">WITH Propagandist</div>
+                            <div class="value red-text" id="batch-with-final">–</div>
+                            <div style="font-size: 0.8rem; color: #999; margin-top: 0.5rem;">Final avg PM credence</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">WITHOUT Propagandist</div>
+                            <div class="value blue-text" id="batch-without-final">–</div>
+                            <div style="font-size: 0.8rem; color: #999; margin-top: 0.5rem;">Final avg PM credence</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Propagandist Impact</div>
+                            <div class="value red-text" id="batch-impact">–</div>
+                            <div style="font-size: 0.8rem; color: #999; margin-top: 0.5rem;">Difference (with - without)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">WITH: Deceived PMs</div>
+                            <div class="value red-text" id="batch-deceived-with">–</div>
+                            <div style="font-size: 0.8rem; color: #999; margin-top: 0.5rem;">% runs with avg PM credence < 0.5</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">WITHOUT: Deceived PMs</div>
+                            <div class="value blue-text" id="batch-deceived-without">–</div>
+                            <div style="font-size: 0.8rem; color: #999; margin-top: 0.5rem;">% runs with avg PM credence < 0.5</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="label">Consensus Rounds</div>
+                            <div class="value green-text" id="batch-consensus-rounds">–</div>
+                            <div style="font-size: 0.8rem; color: #999; margin-top: 0.5rem;">Avg rounds to scientific consensus</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ================================================================
+            // RANDOM NUMBER GENERATION (deterministic seeding for paired runs)
+            // ================================================================
+            // Mulberry32 — good quality 32-bit PRNG
+            class SeededRandom {
+                constructor(seed = 42) {
+                    this.state = Math.floor(seed) | 0;
+                }
+
+                next() {
+                    this.state |= 0;
+                    this.state = this.state + 0x6D2B79F5 | 0;
+                    let t = Math.imul(this.state ^ this.state >>> 15, 1 | this.state);
+                    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+                }
+
+                clone() {
+                    const rng = new SeededRandom(0);
+                    rng.state = this.state;
+                    return rng;
+                }
+            }
+
+            // ================================================================
+            // BAYESIAN UPDATING (odds form)
+            // ================================================================
+            function updateCredence(credence, successes, failures, c) {
+                if (credence <= 0) credence = 0.0001;
+                if (credence >= 1) credence = 0.9999;
+
+                const pgB = 0.5 + c;  // probability success if B is better (true hypothesis)
+                const pgA = 0.5 - c;  // probability success if A is better (false hypothesis)
+
+                let odds = credence / (1 - credence);
+
+                for (let i = 0; i < successes; i++) {
+                    odds *= (pgB / pgA);
+                }
+                for (let i = 0; i < failures; i++) {
+                    odds *= (pgA / pgB);
+                }
+
+                const newCredence = odds / (1 + odds);
+                return Math.max(0.0001, Math.min(0.9999, newCredence));
+            }
+
+            // ================================================================
+            // SCIENTIST SIMULATION
+            // ================================================================
+            class Scientist {
+                constructor(id, initialCredence = 0.5) {
+                    this.id = id;
+                    this.credence = initialCredence;
+                    this.hasExperimented = false;
+                    this.lastResults = null; // { successes, failures }
+                }
+
+                experiment(n, c, rng) {
+                    this.hasExperimented = false;
+                    this.lastResults = null;
+                    if (this.credence <= 0.5) {
+                        return; // Don't experiment if not convinced B is better
+                    }
+
+                    const pB = 0.5 + c;
+                    let successes = 0;
+                    for (let i = 0; i < n; i++) {
+                        if (rng.next() < pB) successes++;
+                    }
+                    const failures = n - successes;
+
+                    this.lastResults = { successes, failures };
+                    this.hasExperimented = true;
+                }
+
+                update(neighborResults, c) {
+                    // Collect own results + neighbor results (matches NetLogo:
+                    // total-positive = incoming-positive + my-positive)
+                    let totalSuccesses = 0;
+                    let totalFailures = 0;
+
+                    // Own results
+                    if (this.hasExperimented && this.lastResults) {
+                        totalSuccesses += this.lastResults.successes;
+                        totalFailures += this.lastResults.failures;
+                    }
+
+                    // Neighbor results
+                    for (const result of neighborResults) {
+                        totalSuccesses += result.successes;
+                        totalFailures += result.failures;
+                    }
+
+                    if (totalSuccesses + totalFailures > 0) {
+                        this.credence = updateCredence(
+                            this.credence,
+                            totalSuccesses,
+                            totalFailures,
+                            c
+                        );
+                    }
+                }
+
+                clone() {
+                    const s = new Scientist(this.id, this.credence);
+                    s.hasExperimented = this.hasExperimented;
+                    if (this.lastResults) {
+                        s.lastResults = { ...this.lastResults };
+                    }
+                    return s;
+                }
+            }
+
+            // ================================================================
+            // POLICYMAKER SIMULATION
+            // ================================================================
+            class PolicyMaker {
+                constructor(id, initialCredence) {
+                    this.id = id;
+                    this.credence = initialCredence;
+                    this.connectedScientists = [];
+                }
+
+                update(connectedResults, propagandistResults, c) {
+                    let allResults = [];
+
+                    for (const result of connectedResults) {
+                        allResults.push(result);
+                    }
+
+                    for (const result of propagandistResults) {
+                        allResults.push(result);
+                    }
+
+                    let totalSuccesses = 0;
+                    let totalFailures = 0;
+
+                    for (const result of allResults) {
+                        totalSuccesses += result.successes;
+                        totalFailures += result.failures;
+                    }
+
+                    if (totalSuccesses + totalFailures > 0) {
+                        this.credence = updateCredence(
+                            this.credence,
+                            totalSuccesses,
+                            totalFailures,
+                            c
+                        );
+                    }
+                }
+
+                clone() {
+                    const pm = new PolicyMaker(this.id, this.credence);
+                    pm.connectedScientists = [...this.connectedScientists];
+                    return pm;
+                }
+            }
+
+            // ================================================================
+            // PAIRED SIMULATION
+            // ================================================================
+            class PairedSimulation {
+                constructor(K, n, c, k, topology, seed, doubleCounting = true) {
+                    this.K = K;
+                    this.n = n;
+                    this.c = c;
+                    this.k = Math.min(k, K);
+                    this.topology = topology;
+                    this.doubleCounting = doubleCounting;
+                    this.rng = new SeededRandom(seed);
+
+                    this.round = 0;
+
+                    // Initialize scientists with random credences Uniform(0,1)
+                    // (Paper: "scientists are given random credences...between 0 and 1")
+                    this.scientists = [];
+                    for (let i = 0; i < K; i++) {
+                        this.scientists.push(new Scientist(i, this.rng.next()));
+                    }
+
+                    // Build scientist network
+                    this.scientistNetwork = this.buildScientistNetwork();
+
+                    // Build PM-scientist connections (shared by both runs)
+                    this.pmScientistConnections = {};
+                    for (let pmId = 0; pmId < 5; pmId++) {
+                        const indices = Array.from({ length: K }, (_, i) => i);
+                        // Fisher-Yates shuffle and take first k
+                        for (let i = K - 1; i > 0; i--) {
+                            const j = Math.floor(this.rng.next() * (i + 1));
+                            [indices[i], indices[j]] = [indices[j], indices[i]];
+                        }
+                        this.pmScientistConnections[pmId] = indices.slice(0, this.k);
+                    }
+
+                    // Initialize two sets of policymakers with IDENTICAL starting credences
+                    // (Paper: PMs start with credences from Uniform(0, 0.5) — skeptical)
+                    this.pmsWithPropa = [];
+                    this.pmsNoPropa = [];
+                    for (let i = 0; i < 5; i++) {
+                        const initialCredence = this.rng.next() * 0.5;
+                        const pmWith = new PolicyMaker(i, initialCredence);
+                        pmWith.connectedScientists = this.pmScientistConnections[i];
+                        this.pmsWithPropa.push(pmWith);
+
+                        const pmWithout = new PolicyMaker(i, initialCredence);
+                        pmWithout.connectedScientists = this.pmScientistConnections[i];
+                        this.pmsNoPropa.push(pmWithout);
+                    }
+
+                    // History for graphing
+                    this.historyWithPropa = [];
+                    this.historyNoPropa = [];
+                    // Track which scientist IDs the propagandist shared this round
+                    this.lastPropagandistSharedIds = [];
+                    this.lastPropagandistResults = [];
+                }
+
+                buildScientistNetwork() {
+                    const network = {};
+                    if (this.topology === 'cycle') {
+                        for (let i = 0; i < this.K; i++) {
+                            network[i] = [
+                                (i - 1 + this.K) % this.K,
+                                (i + 1) % this.K
+                            ];
+                        }
+                    } else if (this.topology === 'complete') {
+                        for (let i = 0; i < this.K; i++) {
+                            network[i] = Array.from({ length: this.K }, (_, j) => j).filter(j => j !== i);
+                        }
+                    }
+                    return network;
+                }
+
+                step() {
+                    this.round++;
+
+                    // ===== PHASE 1: ALL SCIENTISTS EXPERIMENT =====
+                    // Scientists with credence > 0.5 run trials
+                    for (const scientist of this.scientists) {
+                        scientist.experiment(this.n, this.c, this.rng);
+                    }
+
+                    // ===== PHASE 2: SCIENTISTS UPDATE (own + neighbor results) =====
+                    // Collect all results first (simultaneous update)
+                    const newCredences = [];
+                    for (const scientist of this.scientists) {
+                        const neighbors = this.scientistNetwork[scientist.id];
+                        const neighborResults = neighbors
+                            .map(nId => this.scientists[nId])
+                            .filter(n => n.hasExperimented)
+                            .map(n => ({ ...n.lastResults }));
+
+                        // scientist.update adds own results + neighbor results internally
+                        // But we need simultaneous update, so compute new credence without applying
+                        let totalSuccesses = 0;
+                        let totalFailures = 0;
+
+                        // Own results
+                        if (scientist.hasExperimented && scientist.lastResults) {
+                            totalSuccesses += scientist.lastResults.successes;
+                            totalFailures += scientist.lastResults.failures;
+                        }
+
+                        // Neighbor results
+                        for (const result of neighborResults) {
+                            totalSuccesses += result.successes;
+                            totalFailures += result.failures;
+                        }
+
+                        if (totalSuccesses + totalFailures > 0) {
+                            newCredences.push({
+                                id: scientist.id,
+                                credence: updateCredence(scientist.credence, totalSuccesses, totalFailures, this.c)
+                            });
+                        } else {
+                            newCredences.push({ id: scientist.id, credence: scientist.credence });
+                        }
+                    }
+
+                    // Apply all scientist credence updates simultaneously
+                    for (const update of newCredences) {
+                        this.scientists[update.id].credence = update.credence;
+                    }
+
+                    // ===== PHASE 3: PROPAGANDIST SELECTS BAD RESULTS =====
+                    // Find scientists whose results had more failures than successes
+                    this.lastPropagandistSharedIds = [];
+                    const propagandistShares = [];
+                    for (const scientist of this.scientists) {
+                        if (scientist.hasExperimented && scientist.lastResults) {
+                            if (scientist.lastResults.failures > scientist.lastResults.successes) {
+                                this.lastPropagandistSharedIds.push(scientist.id);
+                                propagandistShares.push({
+                                    successes: scientist.lastResults.successes,
+                                    failures: scientist.lastResults.failures
+                                });
+                            }
+                        }
+                    }
+                    this.lastPropagandistResults = propagandistShares;
+
+                    // ===== PHASE 4: POLICYMAKERS UPDATE =====
+                    // Both PM groups see the SAME scientist results from their connections
+                    // The WITH-propagandist group ALSO receives the propagandist's shares
+
+                    // PMs WITHOUT propagandist
+                    for (const pm of this.pmsNoPropa) {
+                        const connectedResults = pm.connectedScientists
+                            .map(sId => this.scientists[sId])
+                            .filter(s => s.hasExperimented)
+                            .map(s => ({ ...s.lastResults }));
+
+                        pm.update(connectedResults, [], this.c);
+                    }
+
+                    // PMs WITH propagandist (same scientist data + propagandist shares)
+                    for (const pm of this.pmsWithPropa) {
+                        const connectedResults = pm.connectedScientists
+                            .map(sId => this.scientists[sId])
+                            .filter(s => s.hasExperimented)
+                            .map(s => ({ ...s.lastResults }));
+
+                        let propaSharesForPM = propagandistShares;
+                        if (!this.doubleCounting) {
+                            // Filter out shares from scientists this PM already hears from directly
+                            const connectedSet = new Set(pm.connectedScientists);
+                            propaSharesForPM = [];
+                            for (let i = 0; i < this.lastPropagandistSharedIds.length; i++) {
+                                if (!connectedSet.has(this.lastPropagandistSharedIds[i])) {
+                                    propaSharesForPM.push(propagandistShares[i]);
+                                }
+                            }
+                        }
+
+                        pm.update(connectedResults, propaSharesForPM, this.c);
+                    }
+
+                    // Record average PM credences for timeline graph
+                    const avgPmNoPropa = this.pmsNoPropa.reduce((sum, pm) => sum + pm.credence, 0) / this.pmsNoPropa.length;
+                    this.historyNoPropa.push(avgPmNoPropa);
+
+                    const avgPmWithPropa = this.pmsWithPropa.reduce((sum, pm) => sum + pm.credence, 0) / this.pmsWithPropa.length;
+                    this.historyWithPropa.push(avgPmWithPropa);
+                }
+
+                hasScientificConsensus() {
+                    // All scientists unanimously agree: ALL convinced B is better (≥0.99) OR ALL have given up on B (≤0.5)
+                    return this.scientists.every(s => s.credence >= 0.99) || this.scientists.every(s => s.credence <= 0.5);
+                }
+
+                getStatus() {
+                    const experimenters = this.scientists.filter(s => s.hasExperimented).length;
+                    const badResults = this.lastPropagandistResults.length;
+
+                    let description = `Round ${this.round}: ${experimenters} of ${this.K} scientists experimented.`;
+                    if (badResults > 0) {
+                        description += ` The propagandist found ${badResults} scientist(s) with bad results and shared them with policymakers.`;
+                    } else {
+                        description += ` The propagandist found no bad results to share.`;
+                    }
+
+                    if (this.hasScientificConsensus()) {
+                        const avgNoPropa = this.pmsNoPropa.reduce((sum, pm) => sum + pm.credence, 0) / this.pmsNoPropa.length;
+                        const avgWithPropa = this.pmsWithPropa.reduce((sum, pm) => sum + pm.credence, 0) / this.pmsWithPropa.length;
+                        description += ` [CONSENSUS] Scientists agree. Avg PM credence: WITH propaganda=${avgWithPropa.toFixed(3)}, WITHOUT=${avgNoPropa.toFixed(3)}.`;
+                    }
+
+                    return description;
+                }
+            }
+
+            // ================================================================
+            // UI STATE
+            // ================================================================
+            let sim = null;
+            let isRunning = false;
+            let animationId = null;
+
+            // ================================================================
+            // SYNCED SLIDER + NUMBER INPUT SYSTEM
+            // ================================================================
+            function syncSliderInput(sliderId, inputId, callback) {
+                const slider = document.getElementById(sliderId);
+                const input = document.getElementById(inputId);
+
+                if (!slider || !input) return;
+
+                slider.addEventListener('input', () => {
+                    input.value = slider.value;
+                    if (callback) callback();
+                });
+
+                input.addEventListener('change', () => {
+                    let val = parseFloat(input.value);
+                    const min = parseFloat(slider.min);
+                    const max = parseFloat(slider.max);
+                    if (isNaN(val) || val < min) val = min;
+                    if (val > max) val = max;
+                    slider.value = val;
+                    input.value = val;
+                    if (callback) callback();
+                });
+            }
+
+            // Cap PM connectedness (k) at number of scientists (K)
+            function capKAtK(prefix) {
+                const KSlider = document.getElementById(`${prefix}-K`);
+                const kSlider = document.getElementById(`${prefix}-k`);
+                const kInput = document.getElementById(`${prefix}-k-input`);
+                if (!KSlider || !kSlider || !kInput) return;
+                const maxK = parseInt(KSlider.value);
+                kSlider.max = maxK;
+                kInput.max = maxK;
+                if (parseInt(kSlider.value) > maxK) {
+                    kSlider.value = maxK;
+                    kInput.value = maxK;
+                }
+            }
+
+            // Setup sync for all parameters
+            function setupParameterSync(prefix) {
+                syncSliderInput(`${prefix}-K`, `${prefix}-K-input`, () => capKAtK(prefix));
+                syncSliderInput(`${prefix}-n`, `${prefix}-n-input`);
+                syncSliderInput(`${prefix}-c`, `${prefix}-c-input`);
+                syncSliderInput(`${prefix}-k`, `${prefix}-k-input`);
+                syncSliderInput(`${prefix}-speed`, `${prefix}-speed-input`);
+                syncSliderInput(`${prefix}-runs`, `${prefix}-runs-input`);
+                syncSliderInput(`${prefix}-max-rounds`, `${prefix}-max-rounds-input`);
+            }
+
+            setupParameterSync('explore');
+            setupParameterSync('batch');
+            capKAtK('explore');
+            capKAtK('batch');
+
+            // ================================================================
+            // PRESETS
+            // ================================================================
+            function applyPreset(name, prefix) {
+                const presets = {
+                    standard: { K: 10, n: 10, c: 0.05, k: 5, topology: 'cycle' },
+                    'easy-deceive': { K: 10, n: 2, c: 0.01, k: 3, topology: 'cycle' },
+                    'hard-deceive': { K: 10, n: 50, c: 0.1, k: 10, topology: 'complete' },
+                    'more-scientists': { K: 20, n: 10, c: 0.05, k: 5, topology: 'cycle' }
+                };
+
+                const config = presets[name];
+                if (config) {
+                    for (const [key, value] of Object.entries(config)) {
+                        const elem = document.getElementById(`${prefix}-${key}`);
+                        const inputElem = document.getElementById(`${prefix}-${key}-input`);
+                        if (elem) {
+                            elem.value = value;
+                            if (inputElem) {
+                                inputElem.value = value;
+                            }
+                        }
+                    }
+                }
+            }
+
+            document.getElementById('explore-preset').addEventListener('change', (e) => {
+                if (e.target.value) {
+                    applyPreset(e.target.value, 'explore');
+                    capKAtK('explore');
+                }
+            });
+
+            document.getElementById('batch-preset').addEventListener('change', (e) => {
+                if (e.target.value) {
+                    applyPreset(e.target.value, 'batch');
+                    capKAtK('batch');
+                }
+            });
+
+            // ================================================================
+            // EXPLORE TAB LOGIC
+            // ================================================================
+
+            // Reset button
+            document.getElementById('explore-reset').addEventListener('click', () => {
+                isRunning = false;
+                if (animationId) clearTimeout(animationId);
+                document.getElementById('explore-run-pause').textContent = 'Run';
+
+                const K = parseInt(document.getElementById('explore-K').value);
+                const n = parseInt(document.getElementById('explore-n').value);
+                const c = parseFloat(document.getElementById('explore-c').value);
+                const k = parseInt(document.getElementById('explore-k').value);
+                const topology = document.getElementById('explore-topology').value;
+
+                const doubleCounting = document.getElementById('explore-double-counting').checked;
+                sim = new PairedSimulation(K, n, c, k, topology, Math.random() * 100000, doubleCounting);
+
+                document.getElementById('explore-status').textContent = 'Round 0 — Ready. Click "Step" or "Run" to begin.';
+                drawExploreNetwork();
+                drawExploreTimeline();
+            });
+
+            // Step button
+            document.getElementById('explore-step').addEventListener('click', () => {
+                if (!sim) {
+                    const K = parseInt(document.getElementById('explore-K').value);
+                    const n = parseInt(document.getElementById('explore-n').value);
+                    const c = parseFloat(document.getElementById('explore-c').value);
+                    const k = parseInt(document.getElementById('explore-k').value);
+                    const topology = document.getElementById('explore-topology').value;
+                    const doubleCounting = document.getElementById('explore-double-counting').checked;
+                    sim = new PairedSimulation(K, n, c, k, topology, Math.random() * 100000, doubleCounting);
+                }
+
+                sim.step();
+                document.getElementById('explore-status').textContent = sim.getStatus();
+                drawExploreNetwork();
+                drawExploreTimeline();
+            });
+
+            // Run/Pause button
+            document.getElementById('explore-run-pause').addEventListener('click', () => {
+                if (!sim) {
+                    const K = parseInt(document.getElementById('explore-K').value);
+                    const n = parseInt(document.getElementById('explore-n').value);
+                    const c = parseFloat(document.getElementById('explore-c').value);
+                    const k = parseInt(document.getElementById('explore-k').value);
+                    const topology = document.getElementById('explore-topology').value;
+                    const doubleCounting = document.getElementById('explore-double-counting').checked;
+                    sim = new PairedSimulation(K, n, c, k, topology, Math.random() * 100000, doubleCounting);
+                }
+
+                isRunning = !isRunning;
+                document.getElementById('explore-run-pause').textContent = isRunning ? 'Pause' : 'Run';
+
+                function runLoop() {
+                    if (!isRunning) return;
+
+                    const exploreStop = document.querySelector('input[name="explore-stop"]:checked').value;
+                    const exploreMaxRounds = parseInt(document.getElementById('explore-max-rounds').value);
+
+                    let shouldStop = false;
+                    let stopReason = '';
+
+                    if (exploreStop === 'consensus') {
+                        if (sim.hasScientificConsensus()) {
+                            shouldStop = true;
+                            stopReason = '';
+                        } else if (sim.round >= 500) {
+                            shouldStop = true;
+                            stopReason = ' [TIMEOUT: 500 rounds reached without scientific consensus]';
+                        }
+                    } else {
+                        if (sim.round >= exploreMaxRounds) {
+                            shouldStop = true;
+                            stopReason = ` [Stopped after ${exploreMaxRounds} rounds]`;
+                        }
+                    }
+
+                    if (!shouldStop) {
+                        sim.step();
+                        document.getElementById('explore-status').textContent = sim.getStatus();
+                        drawExploreNetwork();
+                        drawExploreTimeline();
+
+                        const speed = parseInt(document.getElementById('explore-speed').value);
+                        animationId = setTimeout(runLoop, speed);
+                    } else {
+                        isRunning = false;
+                        document.getElementById('explore-run-pause').textContent = 'Run';
+                        if (stopReason) {
+                            document.getElementById('explore-status').textContent += stopReason;
+                        }
+                    }
+                }
+
+                runLoop();
+            });
+
+            // Toggle redraw when checkbox changes
+            document.getElementById('explore-show-scientist-connections').addEventListener('change', () => {
+                if (sim) drawExploreNetwork();
+            });
+            document.getElementById('explore-show-scientist-pm').addEventListener('change', () => {
+                if (sim) drawExploreNetwork();
+            });
+            document.getElementById('explore-show-propagandist').addEventListener('change', () => {
+                if (sim) drawExploreNetwork();
+            });
+
+            // ================================================================
+            // VISUALIZATION: Network with Mouseover Tooltips
+            // ================================================================
+
+            function drawExploreNetwork() {
+                if (!sim) return;
+
+                const svg = document.getElementById('explore-network');
+                svg.innerHTML = '';
+
+                // Network layout: LEFT-RIGHT organization
+                const leftCenterX = 150;
+                const midCenterX = 400;
+                const rightCenterX = 650;
+                const centerY = 225;
+
+                // Scientists in circle on LEFT
+                const scientistPositions = {};
+                const scientistRadius = 100;
+                for (let i = 0; i < sim.K; i++) {
+                    const angle = (i / sim.K) * 2 * Math.PI - Math.PI / 2;
+                    scientistPositions[i] = {
+                        x: leftCenterX + scientistRadius * Math.cos(angle),
+                        y: centerY + scientistRadius * Math.sin(angle)
+                    };
+                }
+
+                // Propagandist ABOVE and BETWEEN, pulled UP
+                const propagandistPos = { x: midCenterX, y: 55 };
+
+                // Policymakers in VERTICAL LINE on RIGHT
+                const pmPositions = {};
+                const pmSpacing = (420 - 70) / 4;
+                for (let i = 0; i < 5; i++) {
+                    pmPositions[i] = {
+                        x: rightCenterX,
+                        y: 70 + i * pmSpacing
+                    };
+                }
+
+                // Draw structural connections (always visible)
+                const connectionsGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                connectionsGroup.id = 'connections-group';
+
+                // Scientist network (if toggled)
+                if (document.getElementById('explore-show-scientist-connections').checked) {
+                    for (const [sciId, neighbors] of Object.entries(sim.scientistNetwork)) {
+                        for (const neighborId of neighbors) {
+                            if (parseInt(sciId) < neighborId) {
+                                const p1 = scientistPositions[sciId];
+                                const p2 = scientistPositions[neighborId];
+
+                                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                line.setAttribute('x1', p1.x);
+                                line.setAttribute('y1', p1.y);
+                                line.setAttribute('x2', p2.x);
+                                line.setAttribute('y2', p2.y);
+                                line.setAttribute('stroke', '#ddd');
+                                line.setAttribute('stroke-width', '1');
+                                connectionsGroup.appendChild(line);
+                            }
+                        }
+                    }
+                }
+
+                // PM-scientist connections (if toggled)
+                if (document.getElementById('explore-show-scientist-pm').checked) {
+                    for (let pmId = 0; pmId < 5; pmId++) {
+                        const pmPos = pmPositions[pmId];
+                        for (const sciId of sim.pmScientistConnections[pmId]) {
+                            const sciPos = scientistPositions[sciId];
+
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line.setAttribute('x1', sciPos.x);
+                            line.setAttribute('y1', sciPos.y);
+                            line.setAttribute('x2', pmPos.x);
+                            line.setAttribute('y2', pmPos.y);
+                            line.setAttribute('stroke', '#ccc');
+                            line.setAttribute('stroke-width', '1');
+                            connectionsGroup.appendChild(line);
+                        }
+                    }
+                }
+
+                // Propagandist selections (if toggled)
+                if (document.getElementById('explore-show-propagandist').checked && sim.lastPropagandistResults.length > 0) {
+                    for (const sciId of sim.lastPropagandistSharedIds) {
+                        const sciPos = scientistPositions[sciId];
+
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', sciPos.x);
+                        line.setAttribute('y1', sciPos.y);
+                        line.setAttribute('x2', propagandistPos.x);
+                        line.setAttribute('y2', propagandistPos.y);
+                        line.setAttribute('stroke', '#e74c3c');
+                        line.setAttribute('stroke-width', '2');
+                        line.setAttribute('stroke-dasharray', '5,5');
+                        connectionsGroup.appendChild(line);
+                    }
+                }
+
+                svg.appendChild(connectionsGroup);
+
+                // Draw scientist nodes with interactive hit areas
+                for (let i = 0; i < sim.K; i++) {
+                    const scientist = sim.scientists[i];
+                    const pos = scientistPositions[i];
+
+                    let color;
+                    if (scientist.credence <= 0.5) {
+                        color = '#e74c3c';
+                    } else if (scientist.credence >= 0.99) {
+                        color = '#27ae60';
+                    } else {
+                        color = '#95d977';
+                    }
+
+                    // Hit area (transparent, larger)
+                    const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    hitArea.setAttribute('cx', pos.x);
+                    hitArea.setAttribute('cy', pos.y);
+                    hitArea.setAttribute('r', 30);
+                    hitArea.setAttribute('fill', 'transparent');
+                    hitArea.setAttribute('cursor', 'pointer');
+                    hitArea.setAttribute('data-type', 'scientist');
+                    hitArea.setAttribute('data-id', i);
+                    svg.appendChild(hitArea);
+
+                    // Visible circle
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', pos.x);
+                    circle.setAttribute('cy', pos.y);
+                    circle.setAttribute('r', 20);
+                    circle.setAttribute('fill', color);
+                    circle.setAttribute('stroke', '#fff');
+                    circle.setAttribute('stroke-width', '2');
+                    circle.setAttribute('pointer-events', 'none');
+                    svg.appendChild(circle);
+
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', pos.x);
+                    text.setAttribute('y', pos.y + 5);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('font-size', '11px');
+                    text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('fill', '#fff');
+                    text.setAttribute('pointer-events', 'none');
+                    text.textContent = scientist.credence.toFixed(2);
+                    svg.appendChild(text);
+                }
+
+                // Draw PM nodes with interactive hit areas
+                for (let i = 0; i < 5; i++) {
+                    const pm = sim.pmsWithPropa[i];
+                    const pos = pmPositions[i];
+
+                    let color;
+                    if (pm.credence <= 0.25) {
+                        color = '#8b0000';
+                    } else if (pm.credence <= 0.5) {
+                        color = '#e67e22';
+                    } else if (pm.credence <= 0.75) {
+                        color = '#87ceeb';
+                    } else {
+                        color = '#2c3e50';
+                    }
+
+                    // Hit area
+                    const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    hitArea.setAttribute('x', pos.x - 25);
+                    hitArea.setAttribute('y', pos.y - 25);
+                    hitArea.setAttribute('width', 50);
+                    hitArea.setAttribute('height', 50);
+                    hitArea.setAttribute('fill', 'transparent');
+                    hitArea.setAttribute('cursor', 'pointer');
+                    hitArea.setAttribute('data-type', 'policymaker');
+                    hitArea.setAttribute('data-id', i);
+                    svg.appendChild(hitArea);
+
+                    // Visible rect
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', pos.x - 18);
+                    rect.setAttribute('y', pos.y - 18);
+                    rect.setAttribute('width', 36);
+                    rect.setAttribute('height', 36);
+                    rect.setAttribute('fill', color);
+                    rect.setAttribute('stroke', '#fff');
+                    rect.setAttribute('stroke-width', '2');
+                    rect.setAttribute('rx', '4');
+                    rect.setAttribute('pointer-events', 'none');
+                    svg.appendChild(rect);
+
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', pos.x);
+                    text.setAttribute('y', pos.y + 5);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('font-size', '11px');
+                    text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('fill', '#fff');
+                    text.setAttribute('pointer-events', 'none');
+                    text.textContent = pm.credence.toFixed(2);
+                    svg.appendChild(text);
+                }
+
+                // Draw propagandist node with hit area
+                const propagandistSize = 20;
+
+                // Hit area
+                const propHitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                propHitArea.setAttribute('cx', propagandistPos.x);
+                propHitArea.setAttribute('cy', propagandistPos.y);
+                propHitArea.setAttribute('r', 30);
+                propHitArea.setAttribute('fill', 'transparent');
+                propHitArea.setAttribute('cursor', 'pointer');
+                propHitArea.setAttribute('data-type', 'propagandist');
+                svg.appendChild(propHitArea);
+
+                // Visible diamond
+                const diamond = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                diamond.setAttribute('points', `${propagandistPos.x},${propagandistPos.y - propagandistSize} ${propagandistPos.x + propagandistSize},${propagandistPos.y} ${propagandistPos.x},${propagandistPos.y + propagandistSize} ${propagandistPos.x - propagandistSize},${propagandistPos.y}`);
+                diamond.setAttribute('fill', '#c0392b');
+                diamond.setAttribute('stroke', '#fff');
+                diamond.setAttribute('stroke-width', '2');
+                diamond.setAttribute('pointer-events', 'none');
+                svg.appendChild(diamond);
+
+                const pText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                pText.setAttribute('x', propagandistPos.x);
+                pText.setAttribute('y', propagandistPos.y + 4);
+                pText.setAttribute('text-anchor', 'middle');
+                pText.setAttribute('font-size', '10px');
+                pText.setAttribute('font-weight', 'bold');
+                pText.setAttribute('fill', '#fff');
+                pText.setAttribute('pointer-events', 'none');
+                pText.textContent = 'P';
+                svg.appendChild(pText);
+
+                // Setup mouseover interactions
+                const tooltip = document.getElementById('explore-tooltip');
+
+                svg.addEventListener('mouseover', (e) => {
+                    if (e.target.getAttribute('data-type') === 'scientist') {
+                        const sciId = parseInt(e.target.getAttribute('data-id'));
+                        showScientistHover(sciId, scientistPositions, propagandistPos, pmPositions, svg);
+                    } else if (e.target.getAttribute('data-type') === 'policymaker') {
+                        const pmId = parseInt(e.target.getAttribute('data-id'));
+                        showPolicymakerHover(pmId, pmPositions, scientistPositions, propagandistPos, svg);
+                    } else if (e.target.getAttribute('data-type') === 'propagandist') {
+                        showPropagandistHover(scientistPositions, propagandistPos, pmPositions, svg);
+                    }
+                });
+
+                svg.addEventListener('mousemove', (e) => {
+                    if (tooltip.style.display === 'block') {
+                        tooltip.style.left = (e.clientX + 12) + 'px';
+                        tooltip.style.top = (e.clientY + 12) + 'px';
+                    }
+                });
+
+                svg.addEventListener('mouseout', (e) => {
+                    if (e.target.getAttribute('data-type')) {
+                        removeHoverConnections(svg);
+                        tooltip.style.display = 'none';
+                        tooltip.innerHTML = '';
+                    }
+                });
+            }
+
+            function showScientistHover(sciId, scientistPositions, propagandistPos, pmPositions, svg) {
+                removeHoverConnections(svg);
+
+                const scientist = sim.scientists[sciId];
+                const pos = scientistPositions[sciId];
+                const tooltip = document.getElementById('explore-tooltip');
+
+                // Build tooltip
+                let tooltipHtml = `<strong>Scientist ${sciId}</strong><br>`;
+                tooltipHtml += `Credence: ${scientist.credence.toFixed(3)}<br>`;
+
+                if (scientist.hasExperimented && scientist.lastResults) {
+                    tooltipHtml += `This round: ${scientist.lastResults.successes} successes, ${scientist.lastResults.failures} failures out of ${sim.n} trials<br>`;
+                    if (scientist.lastResults.successes > scientist.lastResults.failures) {
+                        tooltipHtml += `Evidence direction: Supports B<br>`;
+                    } else if (scientist.lastResults.failures > scientist.lastResults.successes) {
+                        tooltipHtml += `Evidence direction: Supports A<br>`;
+                    } else {
+                        tooltipHtml += `Evidence direction: Neutral<br>`;
+                    }
+                } else {
+                    tooltipHtml += `Did not experiment<br>`;
+                }
+
+                if (sim.lastPropagandistSharedIds.includes(sciId)) {
+                    tooltipHtml += `Being publicized by propagandist: Yes`;
+                } else {
+                    tooltipHtml += `Being publicized by propagandist: No`;
+                }
+
+                tooltip.innerHTML = tooltipHtml;
+                tooltip.style.display = 'block';
+
+                // Draw hover connections
+                const hoverGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                hoverGroup.id = 'hover-connections';
+
+                // Determine this scientist's evidence color
+                let sciEvidenceColor = '#999'; // gray = neutral or didn't experiment
+                if (scientist.hasExperimented && scientist.lastResults) {
+                    if (scientist.lastResults.successes > scientist.lastResults.failures) {
+                        sciEvidenceColor = '#27ae60'; // green = supports B
+                    } else if (scientist.lastResults.failures > scientist.lastResults.successes) {
+                        sciEvidenceColor = '#e74c3c'; // red = supports A
+                    }
+                }
+
+                // Lines to network neighbors (colored by THIS scientist's evidence)
+                const neighbors = sim.scientistNetwork[sciId] || [];
+                for (const neighborId of neighbors) {
+                    const neighborPos = scientistPositions[neighborId];
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', pos.x);
+                    line.setAttribute('y1', pos.y);
+                    line.setAttribute('x2', neighborPos.x);
+                    line.setAttribute('y2', neighborPos.y);
+                    line.setAttribute('stroke', sciEvidenceColor);
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('opacity', '0.7');
+                    hoverGroup.appendChild(line);
+                }
+
+                // Lines to connected policymakers (colored by THIS scientist's evidence)
+                for (let pmId = 0; pmId < 5; pmId++) {
+                    const connectedScis = sim.pmScientistConnections[pmId];
+                    if (connectedScis.includes(sciId)) {
+                        const pmPos = pmPositions[pmId];
+
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', pos.x);
+                        line.setAttribute('y1', pos.y);
+                        line.setAttribute('x2', pmPos.x);
+                        line.setAttribute('y2', pmPos.y);
+                        line.setAttribute('stroke', sciEvidenceColor);
+                        line.setAttribute('stroke-width', '2');
+                        line.setAttribute('opacity', '0.7');
+                        hoverGroup.appendChild(line);
+                    }
+                }
+
+                // If scientist has bad results and propagandist is sharing, show propagandist path
+                if (scientist.hasExperimented && scientist.lastResults &&
+                    scientist.lastResults.failures > scientist.lastResults.successes &&
+                    sim.lastPropagandistSharedIds.includes(sciId)) {
+                    // Line to propagandist
+                    const propLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    propLine.setAttribute('x1', pos.x);
+                    propLine.setAttribute('y1', pos.y);
+                    propLine.setAttribute('x2', propagandistPos.x);
+                    propLine.setAttribute('y2', propagandistPos.y);
+                    propLine.setAttribute('stroke', '#e74c3c');
+                    propLine.setAttribute('stroke-width', '2');
+                    propLine.setAttribute('stroke-dasharray', '5,5');
+                    propLine.setAttribute('opacity', '0.7');
+                    hoverGroup.appendChild(propLine);
+
+                    // Lines from propagandist to all PMs
+                    for (let pmId = 0; pmId < 5; pmId++) {
+                        const pmPos = pmPositions[pmId];
+                        const pmLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        pmLine.setAttribute('x1', propagandistPos.x);
+                        pmLine.setAttribute('y1', propagandistPos.y);
+                        pmLine.setAttribute('x2', pmPos.x);
+                        pmLine.setAttribute('y2', pmPos.y);
+                        pmLine.setAttribute('stroke', '#e74c3c');
+                        pmLine.setAttribute('stroke-width', '2');
+                        pmLine.setAttribute('stroke-dasharray', '5,5');
+                        pmLine.setAttribute('opacity', '0.7');
+                        hoverGroup.appendChild(pmLine);
+                    }
+                }
+
+                svg.appendChild(hoverGroup);
+            }
+
+            function showPolicymakerHover(pmId, pmPositions, scientistPositions, propagandistPos, svg) {
+                removeHoverConnections(svg);
+
+                const pm = sim.pmsWithPropa[pmId];
+                const pos = pmPositions[pmId];
+                const tooltip = document.getElementById('explore-tooltip');
+
+                const pmNoPropa = sim.pmsNoPropa[pmId];
+
+                // Build tooltip
+                let tooltipHtml = `<strong>Policymaker ${pmId}</strong><br>`;
+                tooltipHtml += `Credence: ${pm.credence.toFixed(3)} (WITH propagandist)<br>`;
+                tooltipHtml += `Credence: ${pmNoPropa.credence.toFixed(3)} (WITHOUT propagandist)<br>`;
+                tooltipHtml += `Connected to scientists: ${sim.pmScientistConnections[pmId].join(', ')}<br>`;
+
+                if (sim.lastPropagandistResults.length > 0) {
+                    tooltipHtml += `Receiving from propagandist: ${sim.lastPropagandistResults.length} results`;
+                } else {
+                    tooltipHtml += `Receiving from propagandist: Nothing this round`;
+                }
+
+                tooltip.innerHTML = tooltipHtml;
+                tooltip.style.display = 'block';
+
+                // Draw hover connections
+                const hoverGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                hoverGroup.id = 'hover-connections';
+
+                // Lines from connected scientists
+                const connectedScis = sim.pmScientistConnections[pmId];
+                for (const sciId of connectedScis) {
+                    const sciPos = scientistPositions[sciId];
+                    const scientist = sim.scientists[sciId];
+
+                    let color = '#999';
+                    if (scientist.hasExperimented && scientist.lastResults) {
+                        if (scientist.lastResults.successes > scientist.lastResults.failures) {
+                            color = '#27ae60';
+                        } else if (scientist.lastResults.failures > scientist.lastResults.successes) {
+                            color = '#e74c3c';
+                        }
+                    }
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', sciPos.x);
+                    line.setAttribute('y1', sciPos.y);
+                    line.setAttribute('x2', pos.x);
+                    line.setAttribute('y2', pos.y);
+                    line.setAttribute('stroke', color);
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('opacity', '0.7');
+                    hoverGroup.appendChild(line);
+                }
+
+                // If propagandist is sharing bad results, show dashed lines
+                if (sim.lastPropagandistResults.length > 0) {
+                    // Line from propagandist to this PM
+                    const propLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    propLine.setAttribute('x1', propagandistPos.x);
+                    propLine.setAttribute('y1', propagandistPos.y);
+                    propLine.setAttribute('x2', pos.x);
+                    propLine.setAttribute('y2', pos.y);
+                    propLine.setAttribute('stroke', '#e74c3c');
+                    propLine.setAttribute('stroke-width', '2');
+                    propLine.setAttribute('stroke-dasharray', '5,5');
+                    propLine.setAttribute('opacity', '0.7');
+                    hoverGroup.appendChild(propLine);
+
+                    // Lines from propagandist to the scientists they're sharing
+                    for (const sciId of sim.lastPropagandistSharedIds) {
+                        const sciPos = scientistPositions[sciId];
+                        const sciLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        sciLine.setAttribute('x1', propagandistPos.x);
+                        sciLine.setAttribute('y1', propagandistPos.y);
+                        sciLine.setAttribute('x2', sciPos.x);
+                        sciLine.setAttribute('y2', sciPos.y);
+                        sciLine.setAttribute('stroke', '#e74c3c');
+                        sciLine.setAttribute('stroke-width', '2');
+                        sciLine.setAttribute('stroke-dasharray', '5,5');
+                        sciLine.setAttribute('opacity', '0.7');
+                        sciLine.setAttribute('pointer-events', 'none');
+                        hoverGroup.appendChild(sciLine);
+                    }
+                }
+
+                svg.appendChild(hoverGroup);
+            }
+
+            function showPropagandistHover(scientistPositions, propagandistPos, pmPositions, svg) {
+                removeHoverConnections(svg);
+
+                const tooltip = document.getElementById('explore-tooltip');
+
+                // Build tooltip
+                let tooltipHtml = `<strong>Propagandist (Selective Sharing)</strong><br>`;
+                tooltipHtml += `This round: Found ${sim.lastPropagandistSharedIds.length} scientist(s) with A-supporting results<br>`;
+
+                for (let i = 0; i < sim.lastPropagandistResults.length; i++) {
+                    const sciId = sim.lastPropagandistSharedIds[i];
+                    const result = sim.lastPropagandistResults[i];
+                    tooltipHtml += `Scientist ${sciId}: ${result.successes} successes, ${result.failures} failures<br>`;
+                }
+
+                if (sim.lastPropagandistResults.length > 0) {
+                    tooltipHtml += `Sharing these results with all 5 policymakers`;
+                } else {
+                    tooltipHtml += `No results to share this round`;
+                }
+
+                tooltip.innerHTML = tooltipHtml;
+                tooltip.style.display = 'block';
+
+                // Draw hover connections
+                const hoverGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                hoverGroup.id = 'hover-connections';
+
+                // Lines from scientists with bad results to propagandist
+                for (const sciId of sim.lastPropagandistSharedIds) {
+                    const sciPos = scientistPositions[sciId];
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', sciPos.x);
+                    line.setAttribute('y1', sciPos.y);
+                    line.setAttribute('x2', propagandistPos.x);
+                    line.setAttribute('y2', propagandistPos.y);
+                    line.setAttribute('stroke', '#e74c3c');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('stroke-dasharray', '5,5');
+                    line.setAttribute('opacity', '0.7');
+                    hoverGroup.appendChild(line);
+                }
+
+                // Lines from propagandist to all PMs (if has bad results)
+                if (sim.lastPropagandistResults.length > 0) {
+                    for (let pmId = 0; pmId < 5; pmId++) {
+                        const pmPos = pmPositions[pmId];
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', propagandistPos.x);
+                        line.setAttribute('y1', propagandistPos.y);
+                        line.setAttribute('x2', pmPos.x);
+                        line.setAttribute('y2', pmPos.y);
+                        line.setAttribute('stroke', '#e74c3c');
+                        line.setAttribute('stroke-width', '2');
+                        line.setAttribute('stroke-dasharray', '5,5');
+                        line.setAttribute('opacity', '0.7');
+                        hoverGroup.appendChild(line);
+                    }
+                }
+
+                svg.appendChild(hoverGroup);
+            }
+
+            function removeHoverConnections(svg) {
+                const existing = svg.querySelector('#hover-connections');
+                if (existing) existing.remove();
+            }
+
+            // ================================================================
+            // VISUALIZATION: Timeline
+            // ================================================================
+
+            function drawExploreTimeline() {
+                if (!sim) return;
+
+                const canvas = document.getElementById('explore-timeline');
+                const ctx = canvas.getContext('2d');
+
+                const width = canvas.width;
+                const height = canvas.height;
+                const padding = 40;
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Axes
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, height - padding);
+                ctx.lineTo(width - 20, height - padding);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, height - padding);
+                ctx.stroke();
+
+                // Labels
+                ctx.fillStyle = '#999';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Round', width / 2, height - 10);
+
+                ctx.save();
+                ctx.translate(10, height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.textAlign = 'center';
+                ctx.fillText('Avg PM Credence', 0, 0);
+                ctx.restore();
+
+                // Y-axis ticks
+                for (let i = 0; i <= 5; i++) {
+                    const y = height - padding - (i / 5) * (height - 2 * padding);
+                    ctx.beginPath();
+                    ctx.moveTo(padding - 5, y);
+                    ctx.lineTo(padding, y);
+                    ctx.stroke();
+
+                    ctx.textAlign = 'right';
+                    ctx.fillText((i / 5).toFixed(1), padding - 10, y + 5);
+                }
+
+                // Decision boundary at 0.5
+                const y50 = height - padding - 0.5 * (height - 2 * padding);
+                ctx.strokeStyle = '#999';
+                ctx.setLineDash([3, 3]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, y50);
+                ctx.lineTo(width - 20, y50);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw lines
+                const maxRound = Math.max(sim.historyWithPropa.length, sim.historyNoPropa.length);
+                if (maxRound === 0) return;
+
+                const plotWidth = width - padding - 20;
+                const plotHeight = height - 2 * padding;
+
+                // WITH propagandist (red)
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < sim.historyWithPropa.length; i++) {
+                    const x = padding + (i / maxRound) * plotWidth;
+                    const y = height - padding - sim.historyWithPropa[i] * plotHeight;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+
+                // WITHOUT propagandist (blue)
+                ctx.strokeStyle = '#3498db';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < sim.historyNoPropa.length; i++) {
+                    const x = padding + (i / maxRound) * plotWidth;
+                    const y = height - padding - sim.historyNoPropa[i] * plotHeight;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+
+            // Initialize
+            document.getElementById('explore-reset').click();
+
+            // ================================================================
+            // TAB SWITCHING
+            // ================================================================
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabName = button.getAttribute('data-tab');
+
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                    button.classList.add('active');
+                    document.getElementById(tabName).classList.add('active');
+                });
+            });
+
+            // ================================================================
+            // BATCH TAB
+            // ================================================================
+
+            document.getElementById('batch-clear').addEventListener('click', () => {
+                document.getElementById('batch-results-container').style.display = 'none';
+                document.getElementById('batch-progress-container').style.display = 'none';
+            });
+
+            document.getElementById('batch-run').addEventListener('click', async () => {
+                const K = parseInt(document.getElementById('batch-K').value);
+                const n = parseInt(document.getElementById('batch-n').value);
+                const c = parseFloat(document.getElementById('batch-c').value);
+                const k = parseInt(document.getElementById('batch-k').value);
+                const topology = document.getElementById('batch-topology').value;
+                const numRuns = parseInt(document.getElementById('batch-runs').value);
+
+                const stopCondition = document.querySelector('input[name="batch-stop"]:checked').value;
+                const maxRounds = parseInt(document.getElementById('batch-max-rounds').value);
+                const doubleCounting = document.getElementById('batch-double-counting').checked;
+
+                document.getElementById('batch-progress-container').style.display = 'block';
+                document.getElementById('batch-results-container').style.display = 'none';
+
+                const historyWithPropa = [];
+                const historyNoPropa = [];
+                let totalDeceived = 0;
+                let totalDeceivedNoPropa = 0;
+                let consensusRound = 0;
+                let consensusCount = 0;
+                const individualConsensusRounds = [];
+
+                async function runBatch() {
+                    for (let runIdx = 0; runIdx < numRuns; runIdx++) {
+                        const seed = runIdx * 1000 + Math.random() * 1000;
+                        const pairedSim = new PairedSimulation(K, n, c, k, topology, seed, doubleCounting);
+
+                        let roundIdx = 0;
+                        let foundConsensus = false;
+                        const hardMax = stopCondition === 'consensus' ? 500 : maxRounds;
+                        while (true) {
+                            if (!foundConsensus && pairedSim.hasScientificConsensus()) {
+                                foundConsensus = true;
+                                consensusRound += pairedSim.round;
+                                consensusCount++;
+                                individualConsensusRounds.push(pairedSim.round);
+                                if (stopCondition === 'consensus') break;
+                            }
+
+                            if (roundIdx >= hardMax) {
+                                break;
+                            }
+
+                            pairedSim.step();
+                            roundIdx++;
+                        }
+
+                        // Pad histories to same length
+                        const maxLen = Math.max(historyWithPropa.length, historyNoPropa.length,
+                                               pairedSim.historyWithPropa.length, pairedSim.historyNoPropa.length);
+
+                        while (historyWithPropa.length < maxLen) {
+                            historyWithPropa.push([]);
+                        }
+                        while (historyNoPropa.length < maxLen) {
+                            historyNoPropa.push([]);
+                        }
+
+                        for (let i = 0; i < pairedSim.historyWithPropa.length; i++) {
+                            historyWithPropa[i].push(pairedSim.historyWithPropa[i]);
+                        }
+                        for (let i = 0; i < pairedSim.historyNoPropa.length; i++) {
+                            historyNoPropa[i].push(pairedSim.historyNoPropa[i]);
+                        }
+
+                        const finalAvgWithPropa = pairedSim.pmsWithPropa.reduce((sum, pm) => sum + pm.credence, 0) / pairedSim.pmsWithPropa.length;
+                        const finalAvgNoPropa = pairedSim.pmsNoPropa.reduce((sum, pm) => sum + pm.credence, 0) / pairedSim.pmsNoPropa.length;
+
+                        if (finalAvgWithPropa < 0.5) totalDeceived++;
+                        if (finalAvgNoPropa < 0.5) totalDeceivedNoPropa++;
+
+                        // Update progress
+                        const progress = ((runIdx + 1) / numRuns) * 100;
+                        const progressFill = document.getElementById('batch-progress-fill');
+                        const progressText = document.getElementById('batch-progress-text');
+                        progressFill.style.width = progress + '%';
+                        progressText.textContent = Math.round(progress) + '%';
+
+                        // Yield every 50 runs instead of 10
+                        if (runIdx % 50 === 0) {
+                            await new Promise(resolve => setTimeout(resolve, 10));
+                        }
+                    }
+                }
+
+                await runBatch();
+
+                // Compute averages
+                const avgWithPropa = [];
+                const avgNoPropa = [];
+
+                for (let i = 0; i < historyWithPropa.length; i++) {
+                    const sum = historyWithPropa[i].reduce((a, b) => a + b, 0);
+                    avgWithPropa.push(sum / historyWithPropa[i].length);
+                }
+
+                for (let i = 0; i < historyNoPropa.length; i++) {
+                    const sum = historyNoPropa[i].reduce((a, b) => a + b, 0);
+                    avgNoPropa.push(sum / historyNoPropa[i].length);
+                }
+
+                // Determine x-axis cutoff
+                let displayMaxRound = avgWithPropa.length;
+                if (stopCondition === 'consensus' && individualConsensusRounds.length > 0) {
+                    // Show up to 95th percentile consensus round so graph isn't dominated by outliers
+                    const sorted = [...individualConsensusRounds].sort((a, b) => a - b);
+                    const p95 = sorted[Math.floor(sorted.length * 0.95)];
+                    displayMaxRound = Math.min(displayMaxRound, Math.ceil(p95 * 1.1)); // 10% padding past 95th percentile
+                }
+
+                // Trim averaged data to display range
+                const trimmedWithPropa = avgWithPropa.slice(0, displayMaxRound);
+                const trimmedNoPropa = avgNoPropa.slice(0, displayMaxRound);
+
+                // Draw graph
+                const avgConsensus = consensusCount > 0 ? consensusRound / consensusCount : 0;
+                drawBatchTimeline(trimmedWithPropa, trimmedNoPropa, avgConsensus, displayMaxRound);
+
+                // Update stats
+                const finalWithPropa = avgWithPropa[avgWithPropa.length - 1];
+                const finalNoPropa = avgNoPropa[avgNoPropa.length - 1];
+                const impact = finalWithPropa - finalNoPropa;
+                const percentDeceivedWith = (totalDeceived / numRuns) * 100;
+                const percentDeceivedWithout = (totalDeceivedNoPropa / numRuns) * 100;
+
+                document.getElementById('batch-with-final').textContent = finalWithPropa.toFixed(3);
+                document.getElementById('batch-without-final').textContent = finalNoPropa.toFixed(3);
+                document.getElementById('batch-impact').textContent = (impact > 0 ? '+' : '') + impact.toFixed(3);
+                document.getElementById('batch-deceived-with').textContent = percentDeceivedWith.toFixed(1) + '%';
+                document.getElementById('batch-deceived-without').textContent = percentDeceivedWithout.toFixed(1) + '%';
+                document.getElementById('batch-consensus-rounds').textContent = consensusCount > 0 ? (consensusRound / consensusCount).toFixed(1) : 'N/A';
+
+                document.getElementById('batch-progress-container').style.display = 'none';
+                document.getElementById('batch-results-container').style.display = 'block';
+            });
+
+            function drawBatchTimeline(avgWithPropa, avgNoPropa, consensusRound, displayMaxRound) {
+                const canvas = document.getElementById('batch-timeline');
+                const ctx = canvas.getContext('2d');
+
+                const width = canvas.width;
+                const height = canvas.height;
+                const padding = 60;
+                const rightPadding = 20;
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Axes
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, height - padding);
+                ctx.lineTo(width - rightPadding, height - padding);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, height - padding);
+                ctx.stroke();
+
+                const maxRound = displayMaxRound || Math.max(avgWithPropa.length, avgNoPropa.length);
+                if (maxRound === 0) return;
+
+                const plotWidth = width - padding - rightPadding;
+                const plotHeight = height - 2 * padding;
+
+                // Axis labels
+                ctx.fillStyle = '#999';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Round', width / 2, height - 5);
+
+                ctx.save();
+                ctx.translate(12, height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.textAlign = 'center';
+                ctx.fillText('Avg PM Credence', 0, 0);
+                ctx.restore();
+
+                // Y-axis ticks
+                ctx.fillStyle = '#999';
+                for (let i = 0; i <= 5; i++) {
+                    const y = height - padding - (i / 5) * plotHeight;
+                    ctx.beginPath();
+                    ctx.moveTo(padding - 5, y);
+                    ctx.lineTo(padding, y);
+                    ctx.stroke();
+
+                    ctx.textAlign = 'right';
+                    ctx.fillText((i / 5).toFixed(1), padding - 10, y + 5);
+                }
+
+                // X-axis ticks: 0, 20, 40, 60, 80, 100 (those that fit within maxRound)
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                const xTicks = [0, 20, 40, 60, 80, 100, 150, 200, 300, 400, 500].filter(t => t <= maxRound);
+                // If maxRound > 100, use bigger steps
+                const tickSet = maxRound <= 120 ? xTicks.filter(t => t <= 100 && t % 20 === 0) :
+                                maxRound <= 250 ? xTicks.filter(t => t % 50 === 0 || t === 20) :
+                                xTicks.filter(t => t % 100 === 0);
+
+                for (const tick of tickSet) {
+                    const x = padding + (tick / maxRound) * plotWidth;
+                    ctx.beginPath();
+                    ctx.moveTo(x, height - padding);
+                    ctx.lineTo(x, height - padding + 5);
+                    ctx.stroke();
+                    ctx.fillText(tick, x, height - padding + 18);
+                }
+
+                // Decision boundary at 0.5
+                const y50 = height - padding - 0.5 * plotHeight;
+                ctx.strokeStyle = '#999';
+                ctx.setLineDash([3, 3]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, y50);
+                ctx.lineTo(width - rightPadding, y50);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // WITH propagandist (red)
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < avgWithPropa.length; i++) {
+                    const x = padding + (i / maxRound) * plotWidth;
+                    const y = height - padding - avgWithPropa[i] * plotHeight;
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // WITHOUT propagandist (blue)
+                ctx.strokeStyle = '#3498db';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < avgNoPropa.length; i++) {
+                    const x = padding + (i / maxRound) * plotWidth;
+                    const y = height - padding - avgNoPropa[i] * plotHeight;
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Consensus line with label
+                if (consensusRound > 0 && consensusRound < maxRound) {
+                    const x = padding + (consensusRound / maxRound) * plotWidth;
+                    ctx.strokeStyle = '#27ae60';
+                    ctx.setLineDash([5, 5]);
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, padding);
+                    ctx.lineTo(x, height - padding);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Label the consensus line
+                    ctx.fillStyle = '#27ae60';
+                    ctx.font = '11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Avg consensus: ${Math.round(consensusRound)}`, x, padding - 8);
+                }
+
+                // Legend
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'left';
+                const legendX = padding + 10;
+                const legendY = padding + 15;
+
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(legendX, legendY - 8, 14, 3);
+                ctx.fillText('With propagandist', legendX + 20, legendY);
+
+                ctx.fillStyle = '#3498db';
+                ctx.fillRect(legendX, legendY + 12, 14, 3);
+                ctx.fillText('Without propagandist', legendX + 20, legendY + 20);
+            }
+
+        })();
+    </script>
+</body>
+</html>
