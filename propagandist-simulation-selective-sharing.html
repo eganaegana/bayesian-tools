@@ -960,6 +960,13 @@
                     this.id = id;
                     this.credence = initialCredence;
                     this.connectedScientists = [];
+                    // Cumulative result tracking (raw = pre-filter, dedup = post-filter)
+                    this.cumSciPos = 0;
+                    this.cumSciNeg = 0;
+                    this.cumPropaRawPos = 0;
+                    this.cumPropaRawNeg = 0;
+                    this.cumDedupPos = 0;
+                    this.cumDedupNeg = 0;
                 }
 
                 update(connectedResults, propagandistResults, c) {
@@ -1175,6 +1182,39 @@
                                 }
                             }
                         }
+
+                        // Track per-round scientist results
+                        let roundSciPos = 0, roundSciNeg = 0;
+                        for (const r of connectedResults) { roundSciPos += r.successes; roundSciNeg += r.failures; }
+                        pm.cumSciPos += roundSciPos;
+                        pm.cumSciNeg += roundSciNeg;
+                        pm.lastRoundSciPos = roundSciPos;
+                        pm.lastRoundSciNeg = roundSciNeg;
+
+                        // Track raw propagandist results (all shares, pre-filter)
+                        let roundPropaRawPos = 0, roundPropaRawNeg = 0;
+                        for (const r of propagandistShares) { roundPropaRawPos += r.successes; roundPropaRawNeg += r.failures; }
+                        pm.cumPropaRawPos += roundPropaRawPos;
+                        pm.cumPropaRawNeg += roundPropaRawNeg;
+                        pm.lastRoundPropaRawPos = roundPropaRawPos;
+                        pm.lastRoundPropaRawNeg = roundPropaRawNeg;
+
+                        // Always compute deduplicated totals, regardless of doubleCounting toggle
+                        const connectedSetDedup = new Set(pm.connectedScientists);
+                        let roundDedupPropaPos = 0, roundDedupPropaNeg = 0;
+                        for (let i = 0; i < this.lastPropagandistSharedIds.length; i++) {
+                            if (!connectedSetDedup.has(this.lastPropagandistSharedIds[i])) {
+                                roundDedupPropaPos += propagandistShares[i].successes;
+                                roundDedupPropaNeg += propagandistShares[i].failures;
+                            }
+                        }
+                        pm.cumDedupPos += (roundSciPos + roundDedupPropaPos);
+                        pm.cumDedupNeg += (roundSciNeg + roundDedupPropaNeg);
+                        pm.lastRoundDedupPos = roundSciPos + roundDedupPropaPos;
+                        pm.lastRoundDedupNeg = roundSciNeg + roundDedupPropaNeg;
+
+                        // Track which propagandist-shared scientists overlap with this PM's connections
+                        pm.lastRoundPropaOverlap = this.lastPropagandistSharedIds.filter(id => connectedSetDedup.has(id));
 
                         pm.update(connectedResults, propaSharesForPM, this.c);
                     }
@@ -1634,7 +1674,7 @@
                 }
 
                 // Draw propagandist node with hit area
-                const propagandistSize = 20;
+                const propagandistSize = 25;
 
                 // Hit area
                 const propHitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -1828,11 +1868,28 @@
                 tooltipHtml += `Credence: ${pmNoPropa.credence.toFixed(3)} (WITHOUT propagandist)<br>`;
                 tooltipHtml += `Connected to scientists: ${sim.pmScientistConnections[pmId].join(', ')}<br>`;
 
-                if (sim.lastPropagandistResults.length > 0) {
-                    tooltipHtml += `Receiving from propagandist: ${sim.lastPropagandistResults.length} results`;
+                if (sim.lastPropagandistSharedIds.length > 0) {
+                    tooltipHtml += `Via propagandist: results from scientists ${sim.lastPropagandistSharedIds.join(', ')}`;
+                    if (pm.lastRoundPropaOverlap && pm.lastRoundPropaOverlap.length > 0) {
+                        tooltipHtml += `<br><span style="color:#e67e22;">Overlap (received both directly &amp; via propagandist): scientists ${pm.lastRoundPropaOverlap.join(', ')}</span>`;
+                    }
                 } else {
-                    tooltipHtml += `Receiving from propagandist: Nothing this round`;
+                    tooltipHtml += `Via propagandist: Nothing this round`;
                 }
+
+                tooltipHtml += `<br><br><strong>Results this round:</strong><br>`;
+                tooltipHtml += `Direct from scientists: ${pm.lastRoundSciPos || 0} pos / ${pm.lastRoundSciNeg || 0} neg<br>`;
+                tooltipHtml += `Via propagandist: ${pm.lastRoundPropaRawPos || 0} pos / ${pm.lastRoundPropaRawNeg || 0} neg<br>`;
+                tooltipHtml += `All sources: ${(pm.lastRoundSciPos || 0) + (pm.lastRoundPropaRawPos || 0)} pos / ${(pm.lastRoundSciNeg || 0) + (pm.lastRoundPropaRawNeg || 0)} neg<br>`;
+                tooltipHtml += `All sources, no double counting: ${pm.lastRoundDedupPos || 0} pos / ${pm.lastRoundDedupNeg || 0} neg`;
+
+                tooltipHtml += `<br><br><strong>Cumulative results received:</strong><br>`;
+                tooltipHtml += `Direct from scientists: ${pm.cumSciPos} pos / ${pm.cumSciNeg} neg<br>`;
+                tooltipHtml += `Via propagandist: ${pm.cumPropaRawPos} pos / ${pm.cumPropaRawNeg} neg<br>`;
+                const cumAllPos = pm.cumSciPos + pm.cumPropaRawPos;
+                const cumAllNeg = pm.cumSciNeg + pm.cumPropaRawNeg;
+                tooltipHtml += `All sources: ${cumAllPos} pos / ${cumAllNeg} neg<br>`;
+                tooltipHtml += `All sources, no double counting: ${pm.cumDedupPos} pos / ${pm.cumDedupNeg} neg`;
 
                 tooltip.innerHTML = tooltipHtml;
                 tooltip.style.display = 'block';
