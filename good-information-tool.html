@@ -913,8 +913,14 @@
                     </div>
                 </div>
 
+                <div class="card" style="margin-top: 0.75rem; background: #f4f4fb; border-left: 3px solid #667eea;">
+                    <p style="font-size: 0.95rem;"><strong>Notation note.</strong> <strong>U(a, s<sub>j</sub>)</strong> is Good's way of writing the payoff (utility) of taking action a when the world is in state s<sub>j</sub>. In the walkthroughs that follow, we'll write the same quantity as <strong>EV(a&amp;s<sub>j</sub>)</strong> — the expected value of the action-and-state combination. Two notations, same thing. We come back to this at the end of "The math" tab, where Good's formula and the one we've built out of the walkthroughs sit side by side.</p>
+                </div>
+
                 <div class="card">
                     <p>The left side is your expected utility if you get to hear the evidence before deciding. The right side is your expected utility if you have to decide without hearing it. Good's theorem says the left side is always at least as big as the right side.</p>
+
+                    <p style="margin-top: 1rem;">Two things the result is assuming: (i) the information is <em>free</em> — there's no cost to acquiring it, and (ii) acquiring the information doesn't <em>change the decision situation itself</em>. The available actions, the payoffs, and the underlying probabilities are the same whether or not you got the evidence. Good's theorem is a claim about information that just slides in alongside the decision without disturbing it.</p>
 
                     <p style="margin-top: 1rem;">That's potentially intimidating and non-transparent, so we're going to unpack it — but not by staring at the symbols. We'll work through some concrete decisions first and build the intuition, then come back and see how the math encodes what we've already seen.</p>
                 </div>
@@ -1068,6 +1074,10 @@
                 </div>
             </div>
 
+            <div class="card" style="margin-top: 1.5rem;">
+                <p>In this case the two available bets were perfectly symmetric — same payoffs, same state probabilities. You might suspect that Good's result is leaning on that symmetry. Next we'll break it: same coin, but one bet now pays more than the other. Does information still help?</p>
+            </div>
+
             <p style="margin-top: 1.5rem; text-align: center;">
                 <button class="btn btn-primary" onclick="switchTab('tab-case2')">Continue: asymmetric payoffs &rarr;</button>
             </p>
@@ -1202,6 +1212,10 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <p>So far the information has been perfect — you learn exactly what state you're in. But a lot of real-world information isn't like that. Evidence narrows things down without eliminating uncertainty. Does Good's result still hold when the information is only partial? Next case:</p>
             </div>
 
             <p style="margin-top: 1.5rem; text-align: center;">
@@ -1447,21 +1461,21 @@ Value of full info   = $2.50 − $1.50  = <span class="calculation-result">$1.00
                                 </p>
                                 <p class="math-wt-verbal" style="margin-top: 0.75rem;">Since we're allowing for cases with many actions, states, and evidence outcomes, we can't write the probability-weighted averages as lists the way we did before. In list form, the with-information side would look like:</p>
                                 <p class="math-wt-formula" style="margin-top: 0.5rem; line-height: 2;">
-                                    P(e₁) · max over all actions a<sub>i</sub> of [ P(s₁|e₁)·EV(a<sub>i</sub>&amp;s₁) + P(s₂|e₁)·EV(a<sub>i</sub>&amp;s₂) + ··· + P(sₘ|e₁)·EV(a<sub>i</sub>&amp;sₘ) ]<br>
-                                    + P(e₂) · max over all actions a<sub>i</sub> of [ ··· ]<br>
+                                    P(e₁) · max over all actions a of [ P(s₁|e₁)·EV(a&amp;s₁) + P(s₂|e₁)·EV(a&amp;s₂) + ··· + P(sₘ|e₁)·EV(a&amp;sₘ) ]<br>
+                                    + P(e₂) · max over all actions a of [ ··· ]<br>
                                     + ···<br>
-                                    + P(eₖ) · max over all actions a<sub>i</sub> of [ ··· ]
+                                    + P(eₖ) · max over all actions a of [ ··· ]
                                 </p>
-                                <p class="math-wt-note" style="margin-top: 0.5rem;">This is getting unwieldy. We need a more compact way to write "add up P(sⱼ|eᵢ)·EV(aᵢ&amp;sⱼ) for every state sⱼ" and "add up across every evidence outcome eᵢ."</p>
+                                <p class="math-wt-note" style="margin-top: 0.5rem;">This is getting unwieldy. We need a more compact way to write "add up P(sⱼ|eᵢ)·EV(a&amp;sⱼ) for every state sⱼ" and "add up across every evidence outcome eᵢ."</p>
                             </div>
 
                             <!-- STEP 2: Introduce sigma notation -->
                             <div class="math-wt-step" data-mstep="2" style="display:none;">
                                 <p class="math-wt-verbal">The standard way to write "add these up for each value of the variable" is <strong>sigma notation</strong>, using the Greek letter Σ (capital sigma). It works like this:</p>
                                 <p class="math-wt-formula" style="margin-top: 0.5rem;">
-                                    <span class="math-sub" data-subterm="t3g-sigma" data-def="Σ means 'sum.' The subscript tells you which variable to range over.">Σ<sub>j</sub></span> P(s<sub>j</sub>|e<sub>i</sub>)·EV(a<sub>i</sub>&amp;s<sub>j</sub>)
+                                    <span class="math-sub" data-subterm="t3g-sigma" data-def="Σ means 'sum.' The subscript tells you which variable to range over.">Σ<sub>j</sub></span> P(s<sub>j</sub>|e<sub>i</sub>)·EV(a&amp;s<sub>j</sub>)
                                 </p>
-                                <p class="math-wt-verbal" style="margin-top: 0.5rem;">This means: "for each state s<sub>j</sub> (s₁, s₂, …, sₘ), compute P(s<sub>j</sub>|e<sub>i</sub>)·EV(a<sub>i</sub>&amp;s<sub>j</sub>), then add them all up." The subscript <em>j</em> under the Σ tells you which variable is being ranged over.</p>
+                                <p class="math-wt-verbal" style="margin-top: 0.5rem;">This means: "for each state s<sub>j</sub> (s₁, s₂, …, sₘ), compute P(s<sub>j</sub>|e<sub>i</sub>)·EV(a&amp;s<sub>j</sub>), then add them all up." The subscript <em>j</em> under the Σ tells you which variable is being ranged over.</p>
                                 <p class="math-wt-verbal" style="margin-top: 0.5rem;">Similarly, <span class="math-sub" data-subterm="t3g-sigma" data-def="Σ means 'sum.' The subscript tells you which variable to range over.">Σ<sub>i</sub></span> means "add up for each evidence outcome e<sub>i</sub>," and <span class="math-sub" data-subterm="t3g-maxA" data-def="max with subscript a means: look at every possible action and take whichever gives the largest value.">max<sub>a</sub></span> means "try every possible action a and take whichever gives the largest value."</p>
                             </div>
 
@@ -1469,7 +1483,7 @@ Value of full info   = $2.50 − $1.50  = <span class="calculation-result">$1.00
                             <div class="math-wt-step" data-mstep="3" style="display:none;">
                                 <p class="math-wt-verbal">Using sigma notation, the formula for the expected value of the decision <strong>without</strong> information looks like this:</p>
                                 <p class="math-wt-formula" style="margin-top: 0.5rem; font-size: 1.05rem;">
-                                    <span class="math-hl" data-term="t3g-without"><span class="math-sub" data-subterm="t3g-maxA" data-def="Choose the single best action.">max<sub>a</sub></span> <span class="math-sub" data-subterm="t3g-sigma" data-def="Sum over all possible states.">Σ<sub>j</sub></span> <span class="math-sub" data-subterm="t3g-Psj" data-def="P(sⱼ) — the probability of state sⱼ (without any evidence to condition on).">P(s<sub>j</sub>)</span> · <span class="math-sub" data-subterm="t3g-EV" data-def="EV(aᵢ&amp;sⱼ) — the expected value of taking action aᵢ when the world is in state sⱼ.">EV(a<sub>i</sub>&amp;s<sub>j</sub>)</span></span>
+                                    <span class="math-hl" data-term="t3g-without"><span class="math-sub" data-subterm="t3g-maxA" data-def="Choose the single best action.">max<sub>a</sub></span> <span class="math-sub" data-subterm="t3g-sigma" data-def="Sum over all possible states.">Σ<sub>j</sub></span> <span class="math-sub" data-subterm="t3g-Psj" data-def="P(sⱼ) — the probability of state sⱼ (without any evidence to condition on).">P(s<sub>j</sub>)</span> · <span class="math-sub" data-subterm="t3g-EV" data-def="EV(a&amp;sⱼ) — the expected value of taking action a when the world is in state sⱼ.">EV(a&amp;s<sub>j</sub>)</span></span>
                                 </p>
                                 <p class="math-wt-verbal" style="margin-top: 0.75rem;">Reading from outside in: pick the action a that maximizes the sum, over all states s<sub>j</sub>, of the probability of that state times the payoff. This is exactly what we computed in every without-information walkthrough — choose one action, weight its payoffs by state probabilities, take the best.</p>
                             </div>
@@ -1478,7 +1492,7 @@ Value of full info   = $2.50 − $1.50  = <span class="calculation-result">$1.00
                             <div class="math-wt-step" data-mstep="4" style="display:none;">
                                 <p class="math-wt-verbal">The <strong>with</strong>-information side looks like this:</p>
                                 <p class="math-wt-formula" style="margin-top: 0.5rem; font-size: 1.05rem;">
-                                    <span class="math-hl" data-term="t3g-with"><span class="math-sub" data-subterm="t3g-sigma" data-def="Sum over all possible evidence outcomes.">Σ<sub>i</sub></span> <span class="math-sub" data-subterm="t3g-Pei" data-def="P(eᵢ) — the probability of receiving evidence outcome eᵢ.">P(e<sub>i</sub>)</span> · <span class="math-sub" data-subterm="t3g-maxA" data-def="For this particular evidence outcome, choose the best action.">max<sub>a</sub></span> <span class="math-sub" data-subterm="t3g-sigma" data-def="Sum over all possible states.">Σ<sub>j</sub></span> <span class="math-sub" data-subterm="t3g-Psje" data-def="P(sⱼ|eᵢ) — the probability of state sⱼ given that you received evidence eᵢ. This is the conditional probability.">P(s<sub>j</sub>|e<sub>i</sub>)</span> · <span class="math-sub" data-subterm="t3g-EV" data-def="EV(aᵢ&amp;sⱼ) — the expected value of taking action aᵢ when the world is in state sⱼ.">EV(a<sub>i</sub>&amp;s<sub>j</sub>)</span></span>
+                                    <span class="math-hl" data-term="t3g-with"><span class="math-sub" data-subterm="t3g-sigma" data-def="Sum over all possible evidence outcomes.">Σ<sub>i</sub></span> <span class="math-sub" data-subterm="t3g-Pei" data-def="P(eᵢ) — the probability of receiving evidence outcome eᵢ.">P(e<sub>i</sub>)</span> · <span class="math-sub" data-subterm="t3g-maxA" data-def="For this particular evidence outcome, choose the best action.">max<sub>a</sub></span> <span class="math-sub" data-subterm="t3g-sigma" data-def="Sum over all possible states.">Σ<sub>j</sub></span> <span class="math-sub" data-subterm="t3g-Psje" data-def="P(sⱼ|eᵢ) — the probability of state sⱼ given that you received evidence eᵢ. This is the conditional probability.">P(s<sub>j</sub>|e<sub>i</sub>)</span> · <span class="math-sub" data-subterm="t3g-EV" data-def="EV(a&amp;sⱼ) — the expected value of taking action a when the world is in state sⱼ.">EV(a&amp;s<sub>j</sub>)</span></span>
                                 </p>
                                 <p class="math-wt-verbal" style="margin-top: 0.75rem;">Reading from outside in: for each possible evidence outcome e<sub>i</sub>, weight by its probability, then <em>within</em> that evidence outcome, pick the best action — where "best" now means maximizing a sum weighted by <em>updated</em> probabilities P(s<sub>j</sub>|e<sub>i</sub>).</p>
                                 <p class="math-wt-verbal" style="margin-top: 0.5rem;">The key structural difference is the same one we've seen throughout: the <strong>max</strong> is now <em>inside</em> the sum over evidence outcomes, not outside it. You get to choose per evidence outcome, not once for all of them.</p>
@@ -1488,9 +1502,9 @@ Value of full info   = $2.50 − $1.50  = <span class="calculation-result">$1.00
                             <div class="math-wt-step" data-mstep="5" style="display:none;">
                                 <p class="math-wt-verbal">Putting them together:</p>
                                 <p class="math-wt-formula" style="margin-top: 0.5rem; font-size: 1.05rem; text-align: center;">
-                                    <span class="math-hl" data-term="t3g-with">Σ<sub>i</sub> P(e<sub>i</sub>) · max<sub>a</sub> Σ<sub>j</sub> P(s<sub>j</sub>|e<sub>i</sub>) · EV(a<sub>i</sub>&amp;s<sub>j</sub>)</span>
+                                    <span class="math-hl" data-term="t3g-with">Σ<sub>i</sub> P(e<sub>i</sub>) · max<sub>a</sub> Σ<sub>j</sub> P(s<sub>j</sub>|e<sub>i</sub>) · EV(a&amp;s<sub>j</sub>)</span>
                                     &nbsp;&nbsp;≥&nbsp;&nbsp;
-                                    <span class="math-hl" data-term="t3g-without">max<sub>a</sub> Σ<sub>j</sub> P(s<sub>j</sub>) · EV(a<sub>i</sub>&amp;s<sub>j</sub>)</span>
+                                    <span class="math-hl" data-term="t3g-without">max<sub>a</sub> Σ<sub>j</sub> P(s<sub>j</sub>) · EV(a&amp;s<sub>j</sub>)</span>
                                 </p>
                                 <p class="math-wt-verbal" style="margin-top: 0.75rem;">You can see that this is the generalization of the Case 3 inequality: replace the specific actions, states, and evidence outcomes with variables, and use sigma notation to sum over arbitrarily many of each. The structure is identical.</p>
                                 <p class="math-wt-verbal" style="margin-top: 0.5rem;">And the with-information EV must be greater than or equal to the without-information EV for the same reason it held in the three cases we worked through: the with-information side gets to choose a <em>different</em> action for each evidence outcome. The without-information side is forced to choose one action for all of them. The with-information side can always <em>at least</em> replicate the without-information strategy (by choosing the same action regardless of evidence), so it can never do worse — and it often does better.</p>
@@ -1503,22 +1517,22 @@ Value of full info   = $2.50 − $1.50  = <span class="calculation-result">$1.00
                                 <div style="margin-top: 1rem; padding: 1rem; background: #f0f0f8; border-radius: 6px;">
                                     <p style="margin-bottom: 0.5rem; font-weight: bold; font-size: 0.9rem;">What we built:</p>
                                     <p class="math-wt-formula" style="font-size: 1rem; text-align: center;">
-                                        <span class="math-hl" data-term="t3g-ours-with">Σ<sub>i</sub> <span class="math-sub" data-subterm="t3g-map-Pe" data-def="P(eᵢ) in our notation = P(eᵢ) in Good's notation. Same thing.">P(e<sub>i</sub>)</span> · max<sub>a</sub> Σ<sub>j</sub> <span class="math-sub" data-subterm="t3g-map-Pse" data-def="P(sⱼ|eᵢ) in our notation = P(sⱼ|eᵢ) in Good's notation. Same thing.">P(s<sub>j</sub>|e<sub>i</sub>)</span> · <span class="math-sub" data-subterm="t3g-map-EV" data-def="EV(aᵢ&amp;sⱼ) in our notation = U(a, sⱼ) in Good's notation. Both mean: the value of taking action a when the world is in state sⱼ.">EV(a<sub>i</sub>&amp;s<sub>j</sub>)</span></span>
+                                        <span class="math-hl" data-term="t3g-ours-with">Σ<sub>i</sub> <span class="math-sub" data-subterm="t3g-map-Pe" data-def="P(eᵢ) in our notation = P(eᵢ) in Good's notation. Same thing.">P(e<sub>i</sub>)</span> · max<sub>a</sub> Σ<sub>j</sub> <span class="math-sub" data-subterm="t3g-map-Pse" data-def="P(sⱼ|eᵢ) in our notation = P(sⱼ|eᵢ) in Good's notation. Same thing.">P(s<sub>j</sub>|e<sub>i</sub>)</span> · <span class="math-sub" data-subterm="t3g-map-EV" data-def="EV(a&amp;sⱼ) in our notation = U(a, sⱼ) in Good's notation. Both mean: the value of taking action a when the world is in state sⱼ.">EV(a&amp;s<sub>j</sub>)</span></span>
                                         &nbsp;≥&nbsp;
-                                        <span class="math-hl" data-term="t3g-ours-without">max<sub>a</sub> Σ<sub>j</sub> <span class="math-sub" data-subterm="t3g-map-Ps" data-def="P(sⱼ) in our notation = P(sⱼ) in Good's notation. Same thing.">P(s<sub>j</sub>)</span> · <span class="math-sub" data-subterm="t3g-map-EV" data-def="EV(aᵢ&amp;sⱼ) in our notation = U(a, sⱼ) in Good's notation.">EV(a<sub>i</sub>&amp;s<sub>j</sub>)</span></span>
+                                        <span class="math-hl" data-term="t3g-ours-without">max<sub>a</sub> Σ<sub>j</sub> <span class="math-sub" data-subterm="t3g-map-Ps" data-def="P(sⱼ) in our notation = P(sⱼ) in Good's notation. Same thing.">P(s<sub>j</sub>)</span> · <span class="math-sub" data-subterm="t3g-map-EV" data-def="EV(a&amp;sⱼ) in our notation = U(a, sⱼ) in Good's notation.">EV(a&amp;s<sub>j</sub>)</span></span>
                                     </p>
                                 </div>
 
                                 <div style="margin-top: 1rem; padding: 1rem; background: #f8f0f0; border-radius: 6px;">
                                     <p style="margin-bottom: 0.5rem; font-weight: bold; font-size: 0.9rem;">Good's version:</p>
                                     <p class="math-wt-formula" style="font-size: 1rem; text-align: center;">
-                                        <span class="math-hl" data-term="t3g-good-with">Σ<sub>i</sub> <span class="math-sub" data-subterm="t3g-map-Pe" data-def="P(eᵢ) — the same probability of evidence outcome eᵢ in both versions.">P(e<sub>i</sub>)</span> · max<sub>a</sub> Σ<sub>j</sub> <span class="math-sub" data-subterm="t3g-map-Pse" data-def="P(sⱼ|eᵢ) — the same conditional probability in both versions.">P(s<sub>j</sub>|e<sub>i</sub>)</span> · <span class="math-sub" data-subterm="t3g-map-EV" data-def="U(a, sⱼ) in Good's notation = EV(aᵢ&amp;sⱼ) in ours. Both mean: the value of taking action a when the world is in state sⱼ.">U(a, s<sub>j</sub>)</span></span>
+                                        <span class="math-hl" data-term="t3g-good-with">Σ<sub>i</sub> <span class="math-sub" data-subterm="t3g-map-Pe" data-def="P(eᵢ) — the same probability of evidence outcome eᵢ in both versions.">P(e<sub>i</sub>)</span> · max<sub>a</sub> Σ<sub>j</sub> <span class="math-sub" data-subterm="t3g-map-Pse" data-def="P(sⱼ|eᵢ) — the same conditional probability in both versions.">P(s<sub>j</sub>|e<sub>i</sub>)</span> · <span class="math-sub" data-subterm="t3g-map-EV" data-def="U(a, sⱼ) in Good's notation = EV(a&amp;sⱼ) in ours. Both mean: the value of taking action a when the world is in state sⱼ.">U(a, s<sub>j</sub>)</span></span>
                                         &nbsp;≥&nbsp;
-                                        <span class="math-hl" data-term="t3g-good-without">max<sub>a</sub> Σ<sub>j</sub> <span class="math-sub" data-subterm="t3g-map-Ps" data-def="P(sⱼ) — the same unconditional probability in both versions.">P(s<sub>j</sub>)</span> · <span class="math-sub" data-subterm="t3g-map-EV" data-def="U(a, sⱼ) in Good's notation = EV(aᵢ&amp;sⱼ) in ours.">U(a, s<sub>j</sub>)</span></span>
+                                        <span class="math-hl" data-term="t3g-good-without">max<sub>a</sub> Σ<sub>j</sub> <span class="math-sub" data-subterm="t3g-map-Ps" data-def="P(sⱼ) — the same unconditional probability in both versions.">P(s<sub>j</sub>)</span> · <span class="math-sub" data-subterm="t3g-map-EV" data-def="U(a, sⱼ) in Good's notation = EV(a&amp;sⱼ) in ours.">U(a, s<sub>j</sub>)</span></span>
                                     </p>
                                 </div>
 
-                                <p class="math-wt-verbal" style="margin-top: 1rem;">These are the same inequality in slightly different notation. The only difference is that Good writes <strong>U(a, s<sub>j</sub>)</strong> where we write <strong>EV(a<sub>i</sub>&amp;s<sub>j</sub>)</strong> — both mean the value of taking action a when the world is in state s<sub>j</sub>. Good uses the traditional utility-function notation U(action, state); we've been writing the expected value of the action-and-state combination.</p>
+                                <p class="math-wt-verbal" style="margin-top: 1rem;">These are the same inequality in slightly different notation. The only difference is that Good writes <strong>U(a, s<sub>j</sub>)</strong> where we write <strong>EV(a&amp;s<sub>j</sub>)</strong> — both mean the value of taking action a when the world is in state s<sub>j</sub>. Good uses the traditional utility-function notation U(action, state); we've been writing the expected value of the action-and-state combination.</p>
                                 <p class="math-wt-verbal" style="margin-top: 0.5rem;">That's the result. The inequality that looked intimidating on the first page is exactly the general version of what you've been watching happen in the walkthroughs — written in compact notation.</p>
                             </div>
 
@@ -1538,6 +1552,10 @@ Value of full info   = $2.50 − $1.50  = <span class="calculation-result">$1.00
                     <p>Good's theorem says that inequality always holds. Getting information before deciding can never leave you worse off — and will usually leave you better off. It's not obvious! You might think extra information could make you second-guess yourself, or lead to worse decisions. But the math says no: if you use the information rationally, you can only benefit.</p>
 
                     <p style="margin-top: 1rem;">That conclusion rests on a specific assumption, though: <strong>that you care only about maximizing expected utility.</strong> If your preferences are more complex than that, the theorem might not apply. We'll come back to that.</p>
+
+                    <p style="margin-top: 1rem;">It also rests on the setup assumption we flagged at the start: <strong>that acquiring the information doesn't change the decision situation.</strong> The actions, payoffs, and probabilities have to be the same whether or not you got the evidence. If the act of getting the information can itself shift any of these — e.g., by changing which actions are available, altering payoffs, or shifting the probabilities of the states — the inequality no longer has to hold.</p>
+
+                    <p style="margin-top: 1rem;">And there's a related assumption baked into the whole setup: <strong>that your choice of action doesn't affect which state obtains.</strong> Betting on Heads doesn't make the coin more likely to come up Heads. The probabilities P(sⱼ) and P(sⱼ|eᵢ) are the same regardless of what you do. When that's not true — when what you do can shift the probabilities of the states themselves — the theorem as stated doesn't apply.</p>
                 </div>
             </div>
         </div>
