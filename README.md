@@ -34,6 +34,11 @@ All tools are standalone HTML files with no external dependencies. Open any `.ht
 - **[Journalists as Unwitting Propagandists Model](journalist-fairness-simulation.html)** — Explore how journalistic practices like "fair" balanced reporting can slow policymakers from reaching accurate beliefs. Based on O'Connor & Weatherall (2018).
   - [Student guide](guides/journalist-fairness-guide.docx)
 
+
+### Philosophy of Mind (Phil 329)
+
+- **[Exam 1 Practice](phil329-exam1-practice/)** — Deals a fresh set of short questions (true/false, multiple choice, fill-in) grouped by topic, from the same pool the real exam is drawn from; grades itself. The question pool is `phil329-exam1-practice/bank.json`.
+
 ## Student Guides
 
 The [guides/](guides/) folder contains `.docx` walkthrough documents for several of the tools. Each guide explains what the tool does, describes its key parameters, and includes a structured exploration activity (~20 minutes) with discussion questions. These are designed to be distributed to students alongside the tools.
