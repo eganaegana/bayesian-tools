@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dots and Weights</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+/* Layout: a lab bench. Data on the left, the network in the middle, one neuron's arithmetic on the right. */
+:root {
+  --bg: #f3f5f8; --panel: #ffffff; --ink: #1b2333; --muted: #5a6477; --rule: #d6dce6; --soft: #eef1f6;
+  --navy: #1f3864; --blue: #2c7bbf; --orange: #dd7426; --pos: #7a4cc8; --neg: #2f9459; --bad: #b3261e;
+  --display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f131a; --panel: #171d28; --ink: #e5e9f0; --muted: #9aa5b8; --rule: #2b3445; --soft: #1e2532;
+  --navy: #9db4e3; --blue: #5aa3e2; --orange: #f0954a; --pos: #a98aec; --neg: #57c084; --bad: #ff7b72; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f131a; --panel: #171d28; --ink: #e5e9f0; --muted: #9aa5b8; --rule: #2b3445; --soft: #1e2532;
+  --navy: #9db4e3; --blue: #5aa3e2; --orange: #f0954a; --pos: #a98aec; --neg: #57c084; --bad: #ff7b72; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 14px 28px; }
+button, select, input { font: inherit; color: inherit; }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 14px; }
+.brand h1 { font-family: var(--display); font-size: 1.65rem; line-height: 1.1; margin: 0; color: var(--navy); letter-spacing: 0.005em; }
+.brand p { margin: 2px 0 0; color: var(--muted); font-size: 0.86rem; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; }
+.pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  border: 1.5px solid var(--rule); background: var(--panel); color: var(--muted); }
+.pill i { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.pill.on { border-color: var(--pos); color: var(--pos); }
+.pill.on i { background: var(--pos); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .pill.on i { animation: none; } }
+.btn { border: 1.5px solid var(--rule); background: var(--panel); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-weight: 500; }
+.btn:hover:not(:disabled) { border-color: var(--navy); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: var(--navy); border-color: var(--navy); color: var(--panel); min-width: 7.5em; font-weight: 600; }
+.btn.small { padding: 3px 9px; font-size: 0.85rem; }
+:focus-visible { outline: 2.5px solid var(--navy); outline-offset: 2px; }
+select { border: 1.5px solid var(--rule); background: var(--panel); border-radius: 8px; padding: 5px 8px; }
+.count { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.grid { display: grid; grid-template-columns: minmax(290px, 390px) minmax(0, 1fr) minmax(270px, 330px); gap: 14px; align-items: start; }
+@media (max-width: 1180px) { .grid { grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); } .inspect { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px 14px; min-width: 0; }
+.card h2 { font-family: var(--display); font-size: 1.12rem; margin: 0 0 8px; color: var(--navy); }
+.label { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; }
+.row label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.9rem; }
+canvas { display: block; }
+#plot { width: 100%; aspect-ratio: 1; max-width: 100%; border-radius: 8px; cursor: crosshair; touch-action: manipulation; }
+.notice { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--soft); font-size: 0.88rem; }
+.scores { margin-top: 10px; display: grid; gap: 4px; font-size: 0.9rem; }
+.scores b { font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+#chart { width: 100%; height: 86px; margin-top: 6px; }
+.netwrap { position: relative; overflow-x: auto; }
+#net { position: relative; }
+#edges { position: absolute; inset: 0; pointer-events: none; }
+.colhead { position: absolute; top: 0; transform: translateX(-50%); text-align: center; white-space: nowrap; }
+.colhead .label { display: block; }
+.colhead .pm { display: inline-flex; gap: 4px; margin-top: 3px; }
+.node { position: absolute; transform: translate(-50%, -50%); border: 2px solid var(--rule); border-radius: 9px; background: var(--panel);
+  display: grid; place-items: center; cursor: pointer; padding: 0; overflow: hidden; font-family: var(--mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.node.sel { border-color: var(--navy); border-width: 3px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--navy) 18%, transparent); }
+.node canvas { width: 100%; height: 100%; }
+.node .num { position: relative; z-index: 1; font-weight: 600; }
+.tag { position: absolute; transform: translateY(-50%); font-size: 0.8rem; color: var(--muted); white-space: nowrap; line-height: 1.2; }
+.tag b { color: var(--ink); font-family: var(--mono); }
+.feats { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.calc { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 6px; }
+.calc td { padding: 4px 3px; vertical-align: middle; border-bottom: 1px solid var(--soft); }
+.calc .n { font-family: var(--mono); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.calc input[type=range] { width: 100%; min-width: 70px; accent-color: var(--navy); }
+.calc tr.total td { border-top: 2px solid var(--ink); border-bottom: none; font-weight: 600; }
+.result { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--soft); font-size: 0.9rem; }
+.result b { font-family: var(--mono); }
+#bigmap { width: 100%; max-width: 220px; aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--rule); margin-top: 6px; }
+details.legend { margin-top: 12px; font-size: 0.88rem; }
+details.legend summary { cursor: pointer; font-weight: 600; color: var(--navy); }
+details.legend ul { margin: 6px 0 0; padding-left: 1.1em; display: grid; gap: 5px; }
+.sw { display: inline-block; width: 0.9em; height: 0.9em; border-radius: 3px; vertical-align: -0.1em; }
+.codebox { display: flex; gap: 6px; flex-wrap: wrap; }
+.codebox input { flex: 1 1 140px; min-width: 0; border: 1.5px solid var(--rule); background: var(--panel); border-radius: 8px; padding: 5px 8px; font-family: var(--mono); font-size: 0.82rem; }
+.grp { display: inline-flex; align-items: center; gap: 6px; }
+.presetbox { display: inline-flex; align-items: center; gap: 6px; }
+.tour { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 15; background: var(--panel); border: 2px solid var(--navy); border-radius: 12px;
+  padding: 10px 14px 12px; margin-bottom: 14px; box-shadow: 0 6px 18px rgba(15, 25, 45, 0.12); max-height: 46vh; overflow-y: auto; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 16; background: var(--bg); }
+.tourhead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.tourhead #tourexit { margin-left: auto; }
+.tourtext, .tourdone { font-size: 1.02rem; max-width: 78ch; }
+.tourtext p, .tourdone p { margin: 6px 0; }
+.tourtext ol { margin: 6px 0; padding-left: 1.3em; }
+.tourtext details { margin: 4px 0; font-size: 0.94rem; } .tourtext summary { cursor: pointer; color: var(--navy); font-weight: 600; }
+.tourdone { margin-top: 8px; padding: 6px 12px; border-radius: 8px; background: color-mix(in srgb, var(--pos) 10%, var(--panel)); border-left: 4px solid var(--pos); }
+.tourdone::before { content: "Notice"; display: block; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--pos); margin-top: 4px; }
+.tournav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
+.linkbtn { background: none; border: none; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 2px; font-size: 0.85rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.focus { outline: 3px solid var(--navy) !important; outline-offset: 4px; border-radius: 8px; box-shadow: 0 0 0 9px color-mix(in srgb, var(--navy) 22%, transparent) !important; animation: glow 1.4s ease-in-out infinite; position: relative; z-index: 3; }
+tr.focus { outline-offset: 0; box-shadow: none !important; background: color-mix(in srgb, var(--navy) 9%, transparent); }
+@keyframes glow { 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--navy) 10%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .focus { animation: none; } }
+.card, .kept { transition: opacity 0.25s; }
+.dim { opacity: 0.38; }
+.dim:hover { opacity: 0.8; }
+#badge { position: absolute; z-index: 30; background: var(--navy); color: var(--panel); font-weight: 600; font-size: 0.84rem; padding: 5px 11px; border-radius: 7px; pointer-events: none; white-space: nowrap; box-shadow: 0 3px 10px rgba(10, 20, 40, 0.25); }
+#badge::after { content: ""; position: absolute; left: var(--ax, 50%); bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-bottom: none; border-top-color: var(--navy); }
+#badge.below::after { bottom: auto; top: -6px; border-top: none; border-bottom: 6px solid var(--navy); border-left-color: transparent; border-right-color: transparent; }
+.predbox { position: absolute; transform: translate(-50%, -50%); border: 2px dashed var(--muted); border-radius: 50%; display: grid; place-items: center; overflow: hidden; font-family: var(--mono); font-size: 0.8rem; font-weight: 600; }
+.predbox canvas { width: 100%; height: 100%; }
+.predbox .num { position: relative; z-index: 1; }
+.predtag { transform: translate(-50%, 0); text-align: center; }
+.uniform .sw.pos { background: var(--blue) !important; } .uniform .sw.neg { background: var(--orange) !important; }
+.kept { margin-top: 14px; }
+#keptlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; margin-top: 10px; }
+.keptitem { border: 1px solid var(--rule); border-radius: 10px; padding: 10px; min-width: 0; }
+.kepthead { display: grid; gap: 2px; margin-bottom: 6px; }
+.kepthead .hint { margin: 0; }
+.minicv { width: 100%; }
+.wtable { overflow-x: auto; max-height: 220px; overflow-y: auto; }
+.wtable .calc td { font-size: 0.78rem; white-space: nowrap; }
+#toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--panel);
+  padding: 8px 14px; border-radius: 8px; font-size: 0.9rem; max-width: min(92vw, 560px); opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 20; }
+#toast.show { opacity: 1; }
+.muted { color: var(--muted); }
+.hint { font-size: 0.85rem; color: var(--muted); margin: 6px 0 0; }
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Dots and Weights</h1>
+    <p>A small neural network learns to sort blue dots from orange ones. Nobody writes the rule.</p>
+  </div>
+  <div class="bar">
+    <button id="tourstart" class="btn" data-grp="never">Guided tour</button>
+    <span class="presetbox" data-grp="preset"><label class="label" for="preset">Start from</label> <select id="preset"></select></span>
+    <span id="state" class="pill" role="status" data-grp="train"><i></i><span>Weights frozen</span></span>
+    <button id="play" class="btn primary" data-grp="train">Train</button>
+    <button id="step" class="btn" data-grp="train" title="Every practice dot once, in small batches">Practice once</button>
+    <button id="reset" class="btn" data-grp="train" title="Throw away what it learned and start from new random weights">New random start</button>
+    <select id="speed" aria-label="Training speed" data-grp="train"><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option></select>
+    <span class="count" id="rounds" data-grp="train">0 rounds of practice</span>
+  </div>
+</header>
+<section id="tour" class="tour" hidden aria-labelledby="tourch">
+  <div class="tourhead">
+    <span class="label">Guided tour</span>
+    <select id="tourchap" aria-label="Chapter"></select>
+    <span class="count" id="tourn"></span>
+    <button id="tourexit" class="btn small">Leave the tour</button>
+  </div>
+  <h2 id="tourch" class="visually-hidden">Guided tour</h2>
+  <div id="tourtext" class="tourtext"></div>
+  <div id="tourdone" class="tourdone" hidden></div>
+  <div class="tournav">
+    <button id="tourback" class="btn">Back</button>
+    <button id="tournext" class="btn primary">Next</button>
+    <span id="tourwait" class="hint"></span>
+    <button id="tourskip" class="linkbtn">Skip this step</button>
+  </div>
+</section>
+
+<main class="grid">
+  <section class="card" aria-labelledby="h-data">
+    <h2 id="h-data">The dots</h2>
+    <canvas id="plot" aria-label="Dots plot. Click anywhere to pick a spot."></canvas>
+    <p class="hint">Click any spot to send it through the network. × marks a dot the network currently gets wrong.</p>
+    <div class="row" data-grp="data">
+      <label for="dataset">Pattern</label><select id="dataset"></select>
+      <button id="newdots" class="btn small">New dots</button>
+    </div>
+    <div class="row" data-grp="data">
+      <label for="noise">Messiness</label><input id="noise" type="range" min="0" max="50" step="5" value="0"><span class="count" id="noiseval">0%</span>
+    </div>
+    <div class="row" data-grp="data">
+      <label for="trainfrac">Dots used for practice</label>
+      <select id="trainfrac"><option value="0.1">10%</option><option value="0.2">20%</option><option value="0.3">30%</option><option value="0.5" selected>50%</option><option value="0.7">70%</option></select>
+      <label><input type="checkbox" id="showtest"> Show the held-back test dots</label>
+    </div>
+    <div class="row" data-grp="data">
+      <button id="delete" class="btn small">Delete the practice dots</button>
+    </div>
+    <div class="notice" id="deletednote" hidden>The practice dots are gone. The network still gives an answer for any spot you click: nothing about the dots was stored in it, only the weights. Training is off until you bring them back.</div>
+    <div class="scores" id="scorebox" aria-live="polite">
+      <div><span id="scorelbl">Practice dots</span>: <span data-grp="train">surprise <b id="trS">–</b> · </span><b id="trR">–</b> right</div>
+      <div id="teLine" hidden>Held-back test dots: surprise <b id="teS">–</b> · <b id="teR">–</b> right</div>
+    </div>
+    <canvas id="chart" data-grp="train" aria-label="Surprise over rounds of practice"></canvas>
+  </section>
+
+  <section class="card" aria-labelledby="h-net">
+    <h2 id="h-net">The network</h2>
+    <div class="row" style="margin-top:0">
+      <span class="grp" data-grp="arch"><span class="label">Hidden layers</span>
+      <button class="btn small" id="layminus" aria-label="Remove a hidden layer">−</button>
+      <span class="count" id="laycount">1</span>
+      <button class="btn small" id="layplus" aria-label="Add a hidden layer">+</button></span>
+      <span class="grp" data-grp="arch"><label for="act">Bend (hidden neurons)</label> <select id="act"></select></span>
+      <label data-grp="maps"><input type="checkbox" id="maps"> Show every spot</label>
+      <label data-grp="uniform"><input type="checkbox" id="uniform"> Blue/orange for every neuron</label>
+    </div>
+    <div class="netwrap"><div id="net"><canvas id="edges"></canvas></div></div>
+    <div class="notice" id="uniformnote" hidden>Blue/orange view: each neuron's positive activity is shown blue and negative activity orange, as if it were making its own prediction. That can help you ask "what pattern is this neuron picking out?" But careful: it doesn't mean the neuron "says blue". Its effect on the final prediction also depends on the sign of its outgoing weights: through a negative weight, "blue" activity pushes the prediction toward orange.</div>
+    <div class="row" data-grp="extras"><span class="label">Hand-made extra inputs</span></div>
+    <div class="feats" id="feats" data-grp="extras"></div>
+    <div class="row" data-grp="tools">
+      <button id="shuffle" class="btn small">Shuffle the hidden neurons</button>
+      <button id="copy" class="btn small">Copy network code</button>
+    </div>
+    <div class="row codebox" data-grp="tools">
+      <input id="codein" type="text" placeholder="Paste a network code" aria-label="Network code" autocomplete="off" spellcheck="false">
+      <button id="load" class="btn small">Load</button>
+    </div>
+  </section>
+
+  <section class="card inspect" aria-labelledby="h-neuron">
+    <h2 id="h-neuron">What sets a neuron’s activity</h2>
+    <div id="neuron"></div>
+    <div id="bigwrap" hidden>
+      <div class="label" style="margin-top:10px">This neuron’s activity at every spot</div>
+      <canvas id="bigmap"></canvas>
+    </div>
+    <details class="legend" id="legend" open>
+      <summary>How to read the screen</summary>
+      <ul>
+        <li><b>Boxes are neurons; their colour is activity:</b> <span class="sw pos" style="background:var(--pos)"></span> positive, <span class="sw neg" style="background:var(--neg)"></span> negative, pale near zero. Activity changes with every spot you pick.</li>
+        <li><b>Lines are connection weights.</b> Thicker means bigger. <span class="sw pos" style="background:var(--pos)"></span> solid lines are positive (the activity pushes the next neuron the same way); <span class="sw neg" style="background:var(--neg)"></span> dashed lines are negative (it pushes the opposite way). Weights change only while it trains, or when you set them by hand.</li>
+        <li><span class="sw" style="background:var(--blue)"></span> <span class="sw" style="background:var(--orange)"></span> Blue and orange mean a colour: the dots' true colours, and the <b>prediction</b>, which is the output neuron's activity read as a chance of blue.</li>
+        <li><b>Surprise</b> measures how surprised the network is by a dot's true colour. 0 means it was sure and right; 1.0 is a coin flip; big numbers mean confidently wrong. Training nudges every weight to lower the average surprise on the practice dots.</li>
+      </ul>
+    </details>
+  </section>
+</main>
+<section class="card kept" id="keptcard" data-grp="compare" aria-labelledby="h-kept">
+  <h2 id="h-kept">Kept networks</h2>
+  <p class="hint" style="margin-top:0">Compare networks side by side. Up to three are kept; the newest is first.</p>
+  <div class="row">
+    <button id="keepbtn" class="btn small">Keep a copy of this network</button>
+    <span class="codebox" style="flex:1 1 260px"><input id="keepcode" type="text" placeholder="Paste a network code to compare" aria-label="Network code to compare" autocomplete="off" spellcheck="false"> <button id="keepadd" class="btn small">Add</button></span>
+  </div>
+  <div id="keptlist"></div>
+</section>
+<div id="badge" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// ---- Dots and Weights: network engine (no DOM) ----
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gauss(r) { let u = 0; while (u === 0) u = r(); const v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// Dots live in the square -1..1 x -1..1. label 1 = blue, 0 = orange.
+const DATASETS = {
+  blobs: { name: 'Two clusters', n: 200, gen(n, noise, r) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const lab = i % 2, sg = lab ? 1 : -1, sx = 0.28 + noise * 0.6, sy = 0.12 + noise * 0.6;
+      pts.push({ x: clamp(sg * 0.3 + gauss(r) * sx, -0.98, 0.98), y: clamp(sg * 0.45 + gauss(r) * sy, -0.98, 0.98), label: lab });
+    }
+    return pts;
+  } },
+  circle: { name: 'Circle', n: 200, gen(n, noise, r) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const lab = i % 2; // 1 = blue outside ring, 0 = orange inside
+      const rad = lab ? 0.6 + r() * 0.32 : r() * 0.38, a = r() * 2 * Math.PI;
+      pts.push({ x: clamp(rad * Math.cos(a) + gauss(r) * noise * 0.35, -0.98, 0.98), y: clamp(rad * Math.sin(a) + gauss(r) * noise * 0.35, -0.98, 0.98), label: lab });
+    }
+    return pts;
+  } },
+  xor: { name: 'Four corners (XOR)', n: 200, gen(n, noise, r) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      let x = r() * 1.8 - 0.9, y = r() * 1.8 - 0.9;
+      x += x > 0 ? 0.06 : -0.06; y += y > 0 ? 0.06 : -0.06;
+      const lab = x * y > 0 ? 1 : 0;
+      pts.push({ x: clamp(x + gauss(r) * noise * 0.35, -0.98, 0.98), y: clamp(y + gauss(r) * noise * 0.35, -0.98, 0.98), label: lab });
+    }
+    return pts;
+  } },
+  spiral: { name: 'Spiral', n: 400, gen(n, noise, r) {
+    const pts = [], half = Math.floor(n / 2);
+    for (let i = 0; i < half; i++) {
+      for (const lab of [0, 1]) {
+        const rad = (i / half) * 0.92, t = (1.75 * i / half) * 2 * Math.PI + lab * Math.PI;
+        pts.push({ x: clamp(rad * Math.sin(t) + gauss(r) * noise * 0.25, -0.98, 0.98), y: clamp(rad * Math.cos(t) + gauss(r) * noise * 0.25, -0.98, 0.98), label: lab });
+      }
+    }
+    return pts;
+  } },
+  blobs2: { name: 'Two clusters, moved', n: 200, gen(n, noise, r) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const lab = i % 2, cx = lab ? -0.5 : 0.35, cy = lab ? 0.25 : -0.5, sd = 0.13 + noise * 0.6;
+      pts.push({ x: clamp(cx + gauss(r) * sd, -0.98, 0.98), y: clamp(cy + gauss(r) * sd, -0.98, 0.98), label: lab });
+    }
+    return pts;
+  } },
+  band: { name: 'Stripe', n: 200, gen(n, noise, r) {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const lab = i % 2; // 1 = blue stripe in the middle
+      const x = lab ? (r() * 2 - 1) * 0.28 : (r() < 0.5 ? -1 : 1) * (0.52 + r() * 0.43), y = r() * 1.8 - 0.9;
+      pts.push({ x: clamp(x + gauss(r) * noise * 0.35, -0.98, 0.98), y: clamp(y + gauss(r) * noise * 0.35, -0.98, 0.98), label: lab });
+    }
+    return pts;
+  } },
+};
+const DATASET_KEYS = Object.keys(DATASETS);
+
+function makeData(cfg) {
+  const r = mulberry32(cfg.dataSeed * 7919 + 13);
+  const pts = DATASETS[cfg.dataset].gen(DATASETS[cfg.dataset].n, cfg.noise, r);
+  // shuffle, then split into practice (training) and held-back (test) dots
+  for (let i = pts.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [pts[i], pts[j]] = [pts[j], pts[i]]; }
+  const nTrain = Math.round(pts.length * cfg.trainFrac);
+  pts.forEach((p, i) => { p.train = i < nTrain; });
+  return pts;
+}
+
+// Optional hand-made inputs. x and y are always available.
+const FEATURES = [
+  { k: 'x', label: 'x', desc: 'left–right', long: 'how far right the spot is (negative means left)', f: (x, y) => x },
+  { k: 'y', label: 'y', desc: 'up–down', long: 'how far up the spot is (negative means down)', f: (x, y) => y },
+  { k: 'xx', label: 'x²', desc: 'x times x', f: (x, y) => x * x },
+  { k: 'yy', label: 'y²', desc: 'y times y', f: (x, y) => y * y },
+  { k: 'xy', label: 'x·y', desc: 'x times y', f: (x, y) => x * y },
+  { k: 'sinx', label: 'sin(πx)', desc: 'wave, left–right', f: (x, y) => Math.sin(Math.PI * x) },
+  { k: 'siny', label: 'sin(πy)', desc: 'wave, up–down', f: (x, y) => Math.sin(Math.PI * y) },
+];
+function activeFeatures(cfg) { return FEATURES.filter(f => cfg.feats.includes(f.k)); }
+function featVec(feats, x, y) { return feats.map(f => f.f(x, y)); }
+
+const ACTS = {
+  relu: { name: 'ReLU (bend at zero)', f: z => (z > 0 ? z : 0), d: (z, a) => (z > 0 ? 1 : 0) },
+  tanh: { name: 'tanh (S-curve)', f: z => Math.tanh(z), d: (z, a) => 1 - a * a },
+  linear: { name: 'None (straight)', f: z => z, d: () => 1 },
+};
+const ACT_KEYS = Object.keys(ACTS);
+const sigmoid = z => 1 / (1 + Math.exp(-z));
+
+function makeNet(cfg) {
+  const feats = activeFeatures(cfg);
+  const sizes = [feats.length, ...cfg.hidden, 1];
+  const r = mulberry32(cfg.weightSeed * 104729 + 31);
+  const W = [], b = [];
+  for (let l = 1; l < sizes.length; l++) {
+    const fanIn = sizes[l - 1], isOut = l === sizes.length - 1;
+    const std = cfg.act === 'relu' && !isOut ? Math.sqrt(2 / fanIn) : Math.sqrt(1 / fanIn);
+    W.push(Array.from({ length: sizes[l] }, () => Array.from({ length: fanIn }, () => gauss(r) * std)));
+    b.push(Array.from({ length: sizes[l] }, () => (cfg.act === 'relu' && !isOut ? 0.1 : 0)));
+  }
+  return { sizes, W, b, act: cfg.act, feats, shuffleRng: mulberry32(cfg.weightSeed * 15485863 + 7) };
+}
+
+// Returns {a: activities per layer (a[0] = inputs), z: weighted sums per layer (z[0] unused)}
+function forward(net, x, y) {
+  const a = [featVec(net.feats, x, y)], z = [null];
+  const L = net.W.length, act = ACTS[net.act];
+  for (let l = 0; l < L; l++) {
+    const prev = a[l], Wl = net.W[l], bl = net.b[l], zl = [], al = [];
+    for (let j = 0; j < Wl.length; j++) {
+      let s = bl[j]; const row = Wl[j];
+      for (let i = 0; i < row.length; i++) s += row[i] * prev[i];
+      zl.push(s); al.push(l === L - 1 ? Math.tanh(s) : act.f(s));
+    }
+    z.push(zl); a.push(al);
+  }
+  return { a, z };
+}
+// The output neuron's activity (−1…1) is read as a chance of blue: (activity + 1) / 2.
+const readChance = a => (a + 1) / 2;
+const predict = (net, x, y) => readChance(forward(net, x, y).a[net.W.length][0]);
+const verdict = p => (Math.abs(p - 0.5) < 1e-9 ? null : p > 0.5 ? 1 : 0); // null = a toss-up
+
+// Surprise in bits at the true colour: -log2(chance given to the true colour)
+function surprise(p, label) { const q = label ? p : 1 - p; return -Math.log2(Math.max(q, 1e-9)); }
+function evaluate(net, pts) {
+  if (!pts.length) return { surprise: NaN, right: NaN };
+  let s = 0, right = 0;
+  for (const pt of pts) { const p = predict(net, pt.x, pt.y); s += surprise(p, pt.label); if (verdict(p) === pt.label) right++; }
+  return { surprise: s / pts.length, right: right / pts.length };
+}
+
+// One round of practice: every training dot once, in small batches; one nudge per batch.
+function trainRound(net, trainPts, lr, batch) {
+  const idx = trainPts.map((_, i) => i), r = net.shuffleRng;
+  for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  const L = net.W.length, act = ACTS[net.act];
+  for (let s0 = 0; s0 < idx.length; s0 += batch) {
+    const gW = net.W.map(Wl => Wl.map(row => row.map(() => 0)));
+    const gb = net.b.map(bl => bl.map(() => 0));
+    const end = Math.min(idx.length, s0 + batch), m = end - s0;
+    for (let k = s0; k < end; k++) {
+      const pt = trainPts[idx[k]], { a, z } = forward(net, pt.x, pt.y);
+      // chance = (tanh(z)+1)/2 = sigmoid(2z), so the gradient of natural-log surprise wrt z is 2(chance - label)
+      let delta = [2 * (readChance(a[L][0]) - pt.label)];
+      for (let l = L - 1; l >= 0; l--) {
+        const prev = a[l];
+        for (let j = 0; j < delta.length; j++) {
+          gb[l][j] += delta[j];
+          const row = gW[l][j];
+          for (let i = 0; i < prev.length; i++) row[i] += delta[j] * prev[i];
+        }
+        if (l > 0) {
+          const nd = new Array(prev.length).fill(0);
+          for (let i = 0; i < prev.length; i++) {
+            let s = 0; for (let j = 0; j < delta.length; j++) s += net.W[l][j][i] * delta[j];
+            nd[i] = s * act.d(z[l][i], a[l][i]);
+          }
+          delta = nd;
+        }
+      }
+    }
+    for (let l = 0; l < L; l++) for (let j = 0; j < net.W[l].length; j++) {
+      net.b[l][j] -= lr * gb[l][j] / m;
+      for (let i = 0; i < net.W[l][j].length; i++) net.W[l][j][i] -= lr * gW[l][j][i] / m;
+    }
+  }
+}
+
+// Permute the neurons inside every hidden layer. Behaviour is unchanged.
+function shuffleHidden(net, r) {
+  const L = net.W.length; const perms = [];
+  for (let l = 0; l < L - 1; l++) {
+    const n = net.W[l].length, p = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; }
+    if (n > 1 && p.every((v, i) => v === i)) { [p[0], p[1]] = [p[1], p[0]]; }
+    net.W[l] = p.map(i => net.W[l][i]); net.b[l] = p.map(i => net.b[l][i]);
+    net.W[l + 1] = net.W[l + 1].map(row => p.map(i => row[i]));
+    perms.push(p);
+  }
+  return perms;
+}
+
+// ---- compact codes: letters and digits only, so they survive any link ----
+function encodeState(cfg, net, rounds) {
+  const bytes = [1, 3]; // marker, version (3 = tanh output read as a chance)
+  const u16 = v => { v = clamp(Math.round(v), 0, 65535); bytes.push(v >> 8, v & 255); };
+  const i16 = v => { v = clamp(Math.round(v * 1000), -32767, 32767) + 32768; bytes.push(v >> 8, v & 255); };
+  bytes.push(DATASET_KEYS.indexOf(cfg.dataset), Math.round(cfg.noise * 100), Math.round(cfg.trainFrac * 100), ACT_KEYS.indexOf(cfg.act));
+  u16(cfg.dataSeed); u16(cfg.weightSeed); u16(Math.round(cfg.lr * 10000));
+  bytes.push(FEATURES.reduce((m, f, i) => m | (cfg.feats.includes(f.k) ? 1 << i : 0), 0));
+  bytes.push(cfg.hidden.length, ...cfg.hidden);
+  u16(Math.min(rounds, 65535));
+  bytes.push(net ? 1 : 0);
+  if (net) for (let l = 0; l < net.W.length; l++) for (let j = 0; j < net.W[l].length; j++) { net.W[l][j].forEach(i16); i16(net.b[l][j]); }
+  let big = 0n; for (const by of bytes) big = (big << 8n) | BigInt(by);
+  return big.toString(36);
+}
+function decodeState(code) {
+  code = String(code).trim().toLowerCase().replace(/^.*#/, '').replace(/^net-/, '');
+  if (!/^[0-9a-z]+$/.test(code)) throw new Error('bad code');
+  let big = 0n; for (const ch of code) big = big * 36n + BigInt(parseInt(ch, 36));
+  const bytes = []; while (big > 0n) { bytes.unshift(Number(big & 255n)); big >>= 8n; }
+  let k = 0; const nx = () => { if (k >= bytes.length) throw new Error('short code'); return bytes[k++]; };
+  const u16 = () => (nx() << 8) | nx(); const i16 = () => (u16() - 32768) / 1000;
+  if (nx() !== 1 || nx() !== 3) throw new Error('unknown code');
+  const cfg = {};
+  cfg.dataset = DATASET_KEYS[nx()]; cfg.noise = nx() / 100; cfg.trainFrac = nx() / 100; cfg.act = ACT_KEYS[nx()];
+  cfg.dataSeed = u16(); cfg.weightSeed = u16(); cfg.lr = u16() / 10000;
+  const mask = nx(); cfg.feats = FEATURES.filter((f, i) => mask & (1 << i)).map(f => f.k);
+  const nh = nx(); cfg.hidden = []; for (let i = 0; i < nh; i++) cfg.hidden.push(nx());
+  const rounds = u16(); const hasW = nx();
+  if (!cfg.dataset || !cfg.act) throw new Error('bad code');
+  let weights = null;
+  if (hasW) {
+    const sizes = [cfg.feats.length, ...cfg.hidden, 1]; weights = { W: [], b: [] };
+    for (let l = 1; l < sizes.length; l++) {
+      const Wl = [], bl = [];
+      for (let j = 0; j < sizes[l]; j++) { const row = []; for (let i = 0; i < sizes[l - 1]; i++) row.push(i16()); Wl.push(row); bl.push(i16()); }
+      weights.W.push(Wl); weights.b.push(bl);
+    }
+  }
+  return { cfg, rounds, weights };
+}
+
+
+</script>
+<script>
+// ---- Dots and Weights: the guided tour ----
+// Edit the wording freely. Each step has:
+//   t       what the student reads (HTML allowed)
+//   target  CSS selector(s) to highlight; the first one gets the badge
+//   badge   the badge's text (default "Here")
+//   show    which groups of controls are visible (train, arch, maps, data, extras, tools, preset, compare, uniform)
+//   setup   runs when the step opens (only chapter openers load a new setup)
+//   check   if present, Next unlocks once it returns true
+//   notice  shown once the check passes; can be a function of the current state
+const W1 = (l, j, i) => `.calc tr:has(#w-${l}-${j}-${i})`;
+const B1 = (l, j) => `.calc tr:has(#b-${l}-${j})`;
+const NODE = (l, j) => `#net .node[data-l="${l}"][data-j="${j}"]`;
+const LAYER = l => `#net .node[data-l="${l}"]`;
+const ALL = ['train', 'maps', 'arch', 'data', 'extras', 'tools', 'preset', 'compare', 'uniform'];
+
+const TOUR = [
+  { ch: 'Watch a network learn', steps: [
+    { setup: a => a.load({ dataset: 'spiral', hidden: [8, 8], feats: ['x', 'y', 'sinx', 'siny'] }, { maps: true }), show: ['train', 'maps'], target: '#play', badge: 'Press Train',
+      t: `<p>This is a small <b>neural network</b>. The dots on the board on the left come in two colours, arranged in two interlocking spirals. The network is going to learn to predict, for any spot on the board, whether a dot there would be blue or orange.</p>
+          <p>Nobody will tell it the rule. Instead it <b>practises</b>. It makes a guess about the colour of some of the practice dots (about 10 at a time), checks how far off it was, and nudges its internal settings so it would do a little better next time. Then it does that again, hundreds of times.</p>
+          <p>Press the <b>Train</b> button at the top of the page and watch.</p>`,
+      check: a => a.rounds >= 400 || (a.rounds >= 120 && a.right() >= 0.95),
+      notice: `<p>The shading on the board is now the network's prediction for every spot, and it traces the spirals. Nobody programmed that in. Press <b>Pause</b> (the same button) whenever you like, then <b>Next</b>.</p>` },
+    { show: ['train', 'maps'], target: LAYER(0), badge: 'Input neurons',
+      t: `<p><b>The parts, one at a time.</b> The column of boxes on the left of the network diagram are its <b>input neurons</b>. Their activity is set by the dot being fed into the network: by where it is on the board.</p>` },
+    { show: ['train', 'maps'], target: LAYER(1), badge: 'Hidden neurons',
+      t: `<p>The boxes in the middle are <b>hidden neurons</b>, and the single box after them is the <b>output neuron</b>.</p>
+          <p>Each box's picture is a map of the board: the colour at each spot shows how active that neuron would be if a dot at that spot were fed into the network. <b>Violet</b> means positive activity, <b>green</b> negative, pale near zero.</p>` },
+    { show: ['train', 'maps'], target: '#predbox', badge: 'The prediction',
+      t: `<p>The lines between the boxes are <b>connection weights</b>. Each one sets how strongly, and in which direction, one neuron's activity pushes the next neuron's activity up or down.</p>
+          <p>The round box on the far right is the <b>prediction</b>. It isn't a neuron: it reads the output neuron's activity as a guess about colour. Its map is the same as the shading on the board.</p>` },
+    { show: ['train', 'maps'],
+      t: `<p>Here's the plan for the rest of the tour:</p><ol><li>Start with the simplest possible network, and set its connection weights yourself.</li><li>Move to patterns that need more neurons, still set by hand.</li><li>Then hand the job to a procedure that sets the weights itself. That's what you just watched.</li></ol><p>By the end you'll know what every part of this screen means.</p>` },
+  ] },
+
+  { ch: 'Setting a network by hand', steps: [
+    { setup: a => a.load({ dataset: 'blobs', hidden: [] }, { weights: { W: [[[0, 0]]], b: [[0]] } }), show: [], target: '#plot', badge: 'The board',
+      t: `<p>Here are 200 dots on the board. Each has a <b>position</b> and a <b>colour</b>, and the two go together: the blue dots are up and to the right, the orange ones down and to the left.</p>
+          <p>You're going to set up a network that predicts a dot's colour from its position. This network is as small as possible: two <b>input neurons</b> connected straight to one <b>output neuron</b>. You'll set it by hand.</p>` },
+    { show: [], target: '#plot', badge: 'Click a dot',
+      t: `<p><b>Click any dot on the board</b> (on the left). The ring marks the spot you picked. Everything in the middle and on the right now shows what the network does with that one spot.</p>`,
+      check: a => a.clicks >= 1 },
+    { show: [], target: LAYER(0), badge: 'Input neurons',
+      t: `<p>These two boxes are the <b>input neurons</b>. Input neurons are neurons whose activity is set by the world rather than by other neurons. Here their activity is set by the dot's position: <b>x</b>'s activity by how far right the dot is (negative means left), and <b>y</b>'s by how far up it is (negative means down). Both run from −1 to 1.</p>
+          <p>This is a simple code, activity = coordinate, but it's a choice the network's designer made; the position could have been encoded other ways.</p>
+          <p>Click three or four dots in different places and watch these two numbers change.</p>`,
+      check: a => a.clicks >= 4 },
+    { show: [], target: [NODE(1, 0), '#predbox'], badge: 'Output neuron',
+      t: `<p>This box is the <b>output neuron</b>. Its activity is read off, in the round <b>prediction</b> box to its right, as the chance that a dot at this spot is blue.</p>
+          <p>Right now the prediction is 50% for every spot. The output neuron's activity doesn't depend on the input neurons at all: both connections have weight 0, so nothing about the dot's position reaches it. At exactly 50% it's a toss-up, so it gets no dots right; every dot has an ×.</p>` },
+    { show: [], target: '#neuron', badge: 'What sets its activity',
+      t: `<p>The panel on the right shows <b>what sets the output neuron's activity</b> for the spot you picked. Each input neuron <b>pushes</b> on the output neuron: how hard, and in which direction, is its activity times the <b>weight</b> of their connection. The <b>bias</b> is a constant extra push. The table adds up the pushes into a total.</p>
+          <p>The total can be any size, but in this network a neuron's activity is kept between −1 and 1. So the total goes through a <b>bend</b>: small totals pass through almost unchanged, and bigger ones get squeezed, closer and closer to 1 (or −1) but never past it. Beyond a total of about 2, extra push barely changes anything.</p>
+          <p>Then the prediction box reads the activity: −1 as 0% blue, 0 as 50%, +1 as 100%.</p>` },
+    { show: [], target: W1(1, 0, 0), badge: 'Weight on x',
+      t: `<p>In that panel, drag the slider for the <b>weight on x</b> up to about <b>2</b>.</p>`,
+      check: a => a.w(1, 0, 0) >= 1.5,
+      notice: `<p>Click a dot on the right side of the board, then one on the left. On the right, x's activity is positive, so through a positive weight it pushes the output neuron's activity up, and the prediction toward blue. On the left it pushes toward orange.</p><p>The <b>×</b> marks show the dots the network now gets wrong. There are far fewer than before, but not none.</p>` },
+    { show: ['maps'], target: 'label:has(#maps)', badge: 'Tick this',
+      t: `<p>So far you can see the prediction for one spot at a time, plus the × marks. Tick <b>Show every spot</b> (just above the network diagram).</p>`,
+      check: a => a.showMaps,
+      notice: `<p>Every box now shows a little map of the board: the colour at each spot is that neuron's activity for a dot at that spot. <b>Violet</b> means positive activity, <b>green</b> negative, pale near zero.</p>
+               <p>The shading on the board is the <b>prediction</b> box's map: the output neuron's activity, read as a prediction, at every spot. Bluer where it would predict blue, oranger where it would predict orange, white where it's 50/50. The white edge between them is a straight line.</p>` },
+    { show: ['maps'], target: W1(1, 0, 1), badge: 'Weight on y',
+      t: `<p>Now drag the <b>weight on y</b> up to about <b>2</b>.</p>`,
+      check: a => a.w(1, 0, 1) >= 1.5,
+      notice: a => `<p>The line turned. Now being higher up on the board (a larger y coordinate), as well as being further right (a larger x coordinate), pushes toward a more confident blue prediction.</p>` +
+        (a.right() >= 0.995 ? `<p>The × marks are gone: the network now gets right the dots it used to get wrong.</p>` : `<p>There are fewer × marks than before.</p>`) },
+    { show: ['maps'], target: [W1(1, 0, 0), W1(1, 0, 1)], badge: 'Both weights',
+      t: `<p>Try making <b>both weights bigger</b>, around 5 each. Then try the x weight at 5 and the y weight at 1.</p>`,
+      check: a => a.w(1, 0, 0) >= 4,
+      notice: `<p>Two things happen. The <b>ratio</b> between the two weights sets the line's <b>angle</b>. Their <b>size</b> sets how sharp the edge is: bigger weights mean bigger pushes, so the output neuron gets close to ±1 (a confident prediction) closer to the line.</p>` },
+    { show: ['maps'], target: B1(1, 0), badge: 'Bias',
+      t: `<p>Now the <b>bias</b>. The bias is a push the neuron gets regardless of its inputs, so it sets the neuron's <b>baseline</b> activity: its activity when every input neuron is at 0, which here means a dot at the very centre of the board.</p>
+          <p>Drag the bias to about <b>+3</b>, then to about <b>−3</b>, and watch the line.</p>`,
+      check: a => a.seenBias(),
+      notice: `<p>The bias slides the line without turning it. The line is where the total push is exactly zero, so changing the bias moves it parallel to itself. The bias decides which side of the line the centre of the board is on, and how far away the line is. Positive bias puts the centre on the blue side.</p>` },
+    { show: ['maps'], target: '#neuron', badge: 'Your turn',
+      t: `<p><b>Your turn.</b> Set the two weights and the bias so the network gets <b>every</b> dot right. The score under the board will say 100%.</p>`,
+      check: a => a.right() >= 0.995,
+      notice: `<p>Done. Everything this network can do is in that picture. <b>Any neuron whose only inputs are the neurons encoding the dot's x and y coordinates can only draw one straight line</b>: the weights set the line's angle and sharpness, and the bias slides it.</p>` },
+  ] },
+
+  { ch: 'Your turn, no help', steps: [
+    { setup: a => a.load({ dataset: 'blobs2', hidden: [] }, { weights: { W: [[[0, 0]]], b: [[0]] }, maps: true }), show: ['maps'], target: '#neuron', badge: 'Your turn',
+      t: `<p>A new arrangement, and no instructions this time. Set the two weights and the bias so the network gets every dot right.</p><details><summary>Hint 1</summary>Which direction does blue lie in? Should each weight be positive or negative?</details><details><summary>Hint 2</summary>The line doesn't go through the centre of the board. Which setting slides it?</details>`,
+      check: a => a.right() >= 0.995,
+      notice: `<p>Nicely done. Before you press Next, write down the three numbers you used. You'll compare them with a classmate's in class.</p>` },
+  ] },
+
+  { ch: 'A pattern no single line can separate', steps: [
+    { setup: a => a.load({ dataset: 'circle', hidden: [] }, { weights: { W: [[[0, 0]]], b: [[0]] }, maps: true }), show: ['maps'], target: '#neuron', badge: 'Try it',
+      t: `<p>Here's a harder pattern: an orange middle with blue all around it. Same network: two input neurons connected straight to one output neuron. Get as many dots right as you can, and keep an eye on the score under the board.</p>` },
+    { show: ['maps'],
+      t: `<p>The best anyone can do here is about 70%. This output neuron's only inputs encode the dot's x and y coordinates, so it can only draw one straight line, and no straight line separates a disc from the ring around it.</p><p>To do better, the network needs more neurons. Next you'll put some in between the input neurons and the output neuron.</p>` },
+  ] },
+
+  { ch: 'Two hidden neurons, set by hand', steps: [
+    { setup: a => a.load({ dataset: 'band', hidden: [2] }, { weights: { W: [[[0, 0], [0, 0]], [[0, 0]]], b: [[0, 0], [0]] }, maps: true }), show: ['maps'], target: LAYER(1), badge: 'Hidden layer',
+      t: `<p>A new pattern: a blue <b>stripe</b> down the middle, orange on both sides. One line can't do it, but two lines could.</p>
+          <p>So the network now has a <b>hidden layer</b>: two neurons sitting between the input neurons and the output neuron. Each hidden neuron is connected to the x and y input neurons in exactly the way the output neuron was before. Each connection has a weight. The input neurons' activities times those weights, plus the hidden neuron's bias, add up to a total push, and the bend turns that total into the hidden neuron's activity.</p>` },
+    { show: ['maps'], target: NODE(1, 0), badge: 'Click this neuron',
+      t: `<p><b>Click the first hidden neuron</b> (the top box in the middle column). The panel on the right now shows what sets its activity.</p>`,
+      check: a => a.selN.l === 1 && a.selN.j === 0 },
+    { show: ['maps'], target: [W1(1, 0, 0), B1(1, 0)], badge: 'x weight and bias',
+      t: `<p>Set its <b>x weight to about 6</b> and its <b>bias to about 2.4</b>. Leave y at 0.</p><p>Watch its map: it becomes violet (positive) on one side of a line and green on the other.</p>`,
+      check: a => a.act(1, 0, -0.7, 0) < -0.5 && a.act(1, 0, 0, 0) > 0.5,
+      notice: `<p>This neuron's activity is 0 for spots exactly at x = −0.4, negative to the left of that line, and positive to the right. With a weight as big as 6, it gets close to −1 or +1 within about 0.3 on either side. So it's in effect a detector for “right of x = −0.4”: the stripe's left edge.</p>` },
+    { show: ['maps'], target: NODE(1, 1), badge: 'Then this one',
+      t: `<p>Now click the <b>second hidden neuron</b> and give it <b>x weight 6</b> and <b>bias −2.4</b>.</p>`,
+      check: a => a.act(1, 1, 0, 0) < -0.5 && a.act(1, 1, 0.7, 0) > 0.5,
+      notice: `<p>This neuron's activity is 0 at x = +0.4, negative to the left, and positive to the right: a detector for “right of x = +0.4”, the stripe's right edge.</p>` },
+    { show: ['maps'], target: NODE(2, 0), badge: 'Output neuron',
+      t: `<p>Now click the <b>output neuron</b>. Inside the stripe, hidden neuron 1 is about +1 and hidden neuron 2 is about −1. Outside the stripe, on either side, the two agree.</p>
+          <p>First set the output's <b>weight from hidden neuron 1 (h1) to 3</b>.</p>`,
+      check: a => a.w(2, 0, 0) >= 2.5,
+      notice: `<p>Click a dot inside the stripe and one outside, and watch the pushes in the panel. Hidden neuron 1 now pushes the output up by about 3 to the right of x = −0.4, and down by about 3 to the left. So everything right of that line leans blue: that's hidden neuron 1's line.</p>` },
+    { show: ['maps'], target: W1(2, 0, 1), badge: 'Weight from h2',
+      t: `<p>Now set the <b>weight from hidden neuron 2 (h2) to −3</b>.</p>`,
+      check: a => a.w(2, 0, 1) <= -2.5,
+      notice: `<p>Inside the stripe both pushes are about +3 (hidden neuron 2 is about −1, and −1 × −3 = +3), so the total is about 6: strongly blue. To the left of the stripe the pushes are −3 and +3, and to the right +3 and −3. They cancel, so the total is about 0, and both sides turned white: 50/50.</p>` },
+    { show: ['maps'], target: B1(2, 0), badge: 'Bias',
+      t: `<p>Last, set the output neuron's <b>bias to −3</b>.</p>`,
+      check: a => a.b(2, 0) <= -2 && a.right() >= 0.97,
+      notice: `<p>The bias lowered the baseline everywhere. Inside the stripe the total is now about 6 − 3 = 3; outside, about 0 − 3 = −3. The bend turns +3 into an activity near +1 (almost certainly blue) and −3 into one near −1 (almost certainly orange).</p>
+               <p>Two things make the edges so sharp: the hidden neurons' big x weights flip them from −1 to +1 over a narrow band, and the bend squeezes big totals to nearly ±1.</p>
+               <p>Two lines made a stripe. Each hidden neuron detects one edge, and the output neuron combines them. That's what <b>layers</b> are for: later neurons build on what earlier neurons detect.</p>` },
+    { show: ['maps'],
+      t: `<p>That took setting <b>9 numbers</b> by hand. Hand-setting stops working, for two reasons.</p>
+          <ul><li><b>Too many numbers.</b> As the pattern gets more complicated you need more neurons, and every new neuron brings a whole set of new connection weights. The circle needs about 13 numbers. The spiral network from the start of the tour has 121. Llama 3.1 405B, one of the models in the Turing-test study, has about 405 billion.</li>
+          <li><b>Nobody knows the rule.</b> You could set this network only because you could see where the stripe's edges were. For recognizing a face, or predicting the next word of a sentence, nobody can write the rule down, so nobody could set the weights even with unlimited patience.</li></ul>
+          <p>Next: a procedure that sets the weights using nothing but examples.</p>` },
+  ] },
+
+  { ch: 'Letting a procedure set the numbers', steps: [
+    { setup: a => a.load({ dataset: 'band', hidden: [2], weightSeed: 4 }, { maps: true }), show: ['maps', 'train'], target: '#step', badge: 'Practice once',
+      t: `<p>Same stripe, same network shape, but now the connection weights start out <b>random</b>, so the predictions are a mess.</p>
+          <p>Press <b>Practice once</b> (top of the page). The procedure goes through the <b>practice dots</b> (half of all the dots; the rest are held back, and we'll come back to why), about 10 at a time. For each batch it works out, for every connection weight and bias, whether nudging it up or down would make the predictions a little less wrong, and nudges it a little in that direction.</p>`,
+      check: a => a.rounds >= 1 },
+    { show: ['maps', 'train'], target: ['#scorebox', '#step'], badge: 'The score',
+      t: `<p>How it measures “wrong”: the score now shows <b>surprise</b>. For each dot it asks how surprised the network is by the dot's true colour, then takes the average. 0 means it was sure and right, 1.0 is a coin flip, and big numbers mean confidently wrong. Training nudges the weights to lower that number.</p>
+          <p>Press <b>Practice once</b> a few more times and watch the surprise, the maps, and the lines. Early on, the % right can wobble up and down. That's normal: what training reduces is the average surprise, and it often crawls for a while before it drops.</p>`,
+      check: a => a.rounds >= 5 },
+    { show: ['maps', 'train'], target: '#play', badge: 'Press Train',
+      t: `<p>Now press <b>Train</b> (top of the page) to let it keep practising on its own.</p>`,
+      check: a => a.rounds >= 150,
+      notice: `<p>It found weights that work. Pause it, then click each hidden neuron and compare its map and weights with the ones you set by hand.</p><p>Did it find the same solution you did?</p>` },
+    { show: ['maps', 'train', 'compare'], target: '#reset', badge: 'New random start',
+      t: `<p>Press <b>New random start</b> (top of the page). That throws away everything it learned and starts from different random weights. The network you had is kept in the <b>Kept networks</b> panel at the bottom of the page. Then press <b>Train</b> again.</p>`,
+      check: a => a.resets >= 1 && a.rounds >= 150,
+      notice: `<p>Scroll down to <b>Kept networks</b> and compare the two side by side. Same behaviour: both get the stripe. But inside, the hidden neurons may have swapped places, flipped signs, or drawn their lines a little differently.</p><p>Two networks can behave identically while their weights look quite different. Keep that in mind; it comes back when we ask what's “in” a network.</p>` },
+  ] },
+
+  { ch: 'The circle, with training', steps: [
+    { setup: a => a.load({ dataset: 'circle', hidden: [] }, { maps: true }), show: ['maps', 'train', 'compare'], target: '#play', badge: 'Press Train',
+      t: `<p>Back to the circle, starting with no hidden layer, but this time the procedure sets the weights. Press <b>Train</b> and give it a few seconds.</p>`,
+      check: a => a.rounds >= 100,
+      notice: `<p>It gets stuck where you did. Training can only find settings the network is able to have, and an output neuron whose only inputs encode the x and y coordinates can only draw one straight line.</p>` },
+    { show: ['maps', 'train', 'arch', 'compare'], target: '#layplus', badge: 'Add a hidden layer',
+      t: `<p>Press <b>+</b> next to <b>Hidden layers</b> (just above the network diagram) to add a hidden layer of 4 neurons, then press <b>Train</b>.</p>
+          <p>Next to it is the <b>Bend</b> menu. It picks which bend (squishing function) the hidden neurons use. Leave it on S-curve; the others are for exploring later.</p>`,
+      check: a => a.cfg.hidden.length >= 1 && a.rounds >= 150 && a.right() >= 0.95,
+      notice: `<p>Now it works. Look at the hidden neurons' maps: each is a split along one line, at a different angle, and the output neuron combines them into a closed shape. It's the trick you did by hand for the stripe, except this time it was learned.</p>
+               <p>If one of your hidden neurons is solid one colour, training found it didn't need it: it's acting like a fixed push, not drawing a line.</p>` },
+    { show: ['maps', 'train', 'arch', 'compare'], target: '#reset', badge: 'New random start',
+      t: `<p>Press <b>New random start</b>, then <b>Train</b> again. Your previous circle network goes into <b>Kept networks</b> at the bottom of the page.</p>`,
+      check: a => a.resets >= 1 && a.rounds >= 150 && a.right() >= 0.95,
+      notice: `<p>Compare them in <b>Kept networks</b>. This time the difference is more than shuffling. The two networks usually draw <b>different lines</b>: different angles, different places, sometimes a different number of lines that matter. Same circle, genuinely different ways of getting it.</p>` },
+    { show: ['maps', 'train', 'arch', 'compare'], target: '#net .pm', badge: 'Fewer or more neurons',
+      t: `<p>Use the <b>−</b> and <b>+</b> above the hidden layer to change how many neurons it has. Each change starts over from random weights, so press <b>Train</b> again after each one.</p><p>What's the fewest hidden neurons that can still get the circle?</p>` },
+    { show: ALL,
+      t: `<p>That's the tour. You've now seen every part of this screen: input neurons, connection weights, biases, the bend, hidden layers, the prediction, the maps, surprise, and training.</p><p>Press <b>Leave the tour</b> to explore freely. The <b>Start from</b> menu has the setups we'll use in class.</p>` },
+  ] },
+];
+
+</script>
+<script>
+// ---- Dots and Weights: interface ----
+(function () {
+  const $ = s => document.querySelector(s);
+  const DEFAULT = { dataset: 'circle', noise: 0, trainFrac: 0.5, dataSeed: 1, hidden: [4], act: 'tanh', feats: ['x', 'y'], lr: 0.15, weightSeed: 1 };
+  const memo = { dataset: 'circle', noise: 0.5, trainFrac: 0.2 };
+  const PRESETS = [
+    { key: 'one-neuron', name: '1 · No hidden layer, set by hand', cfg: { dataset: 'blobs', hidden: [] }, weights: { W: [[[-1.2, 0.4]]], b: [[0.3]] } },
+    { key: 'watch-it-learn', name: '2 · Watch it learn', cfg: { dataset: 'circle', hidden: [4] } },
+    { key: 'circle-no-hidden', name: '3a · Circle, no hidden layer', cfg: { dataset: 'circle', hidden: [] } },
+    { key: 'circle-3', name: '3b · Circle, 3 hidden neurons', cfg: { dataset: 'circle', hidden: [3] } },
+    { key: 'circle-squares', name: '3c · Circle, hand-made x² and y²', cfg: { dataset: 'circle', hidden: [], feats: ['x', 'y', 'xx', 'yy'] } },
+    { key: 'no-bend', name: '3d · Two layers with no bend', cfg: { dataset: 'circle', hidden: [8, 8], act: 'linear' } },
+    { key: 'xor-4', name: '4 · Four corners, 4 hidden', cfg: { dataset: 'xor', hidden: [4] }, maps: true },
+    { key: 'spiral-4', name: '5a · Spiral, 4 hidden', cfg: { dataset: 'spiral', hidden: [4] } },
+    { key: 'spiral-waves', name: '5b · Spiral, 8 × 8 plus waves', cfg: { dataset: 'spiral', hidden: [8, 8], feats: ['x', 'y', 'sinx', 'siny'] }, maps: true },
+    { key: 'spiral-plain', name: '5c · Spiral, 8 × 8, no help', cfg: { dataset: 'spiral', hidden: [8, 8] }, maps: true },
+    { key: 'memorize-big', name: '6a · Messy circle, big network', cfg: { ...memo, hidden: [8, 8, 8] }, test: true, maps: true },
+    { key: 'memorize-small', name: '6b · Messy circle, 3 hidden', cfg: { ...memo, hidden: [3] }, test: true, maps: true },
+    { key: 'memorize-squares', name: '6c · Messy circle, x² and y² only', cfg: { ...memo, hidden: [], feats: ['x', 'y', 'xx', 'yy'] }, test: true, maps: true },
+  ];
+
+  let cfg, net, pts = [], rounds = 0, history = [], playing = false, showMaps = false, showTest = false, deleted = false, uniform = false;
+  let spot = { x: 0, y: 0, dot: null }, selN = { l: 1, j: 0 }, dirty = true, structKey = '', inspKey = '', handSet = false;
+  let speed = 'normal', lastSlow = 0;
+  let touring = false, tourCh = 0, tourStep = 0, tourPassed = false, tourKey = '', tourScroll = false, clicks = 0, resets = 0, biasHi = false, biasLo = false;
+  let kept = [], keptDirty = true, keptCount = 0;
+
+  // ---------- colours ----------
+  let C = {};
+  function hex(c) { c = c.trim(); if (c.startsWith('#')) { if (c.length === 4) c = '#' + [...c.slice(1)].map(h => h + h).join(''); return [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)); } const m = c.match(/\d+(\.\d+)?/g); return m ? m.slice(0, 3).map(Number) : [128, 128, 128]; }
+  function readColours() { const cs = getComputedStyle(document.documentElement); ['bg', 'panel', 'ink', 'muted', 'rule', 'soft', 'navy', 'blue', 'orange', 'pos', 'neg', 'bad'].forEach(k => { C[k] = hex(cs.getPropertyValue('--' + k)); }); dirty = true; structKey = ''; keptDirty = true; }
+  const mix = (a, b, t) => [0, 1, 2].map(i => Math.round(a[i] + (b[i] - a[i]) * t));
+  const css = (c, al = 1) => `rgba(${c[0]},${c[1]},${c[2]},${al})`;
+  const lum = c => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+  const POS = () => (uniform ? C.blue : C.pos), NEG = () => (uniform ? C.orange : C.neg);
+  const isBounded = (nt, l) => l === 0 || l === nt.sizes.length - 1 || nt.act === 'tanh';
+  function actStrength(v, l, nt = net) { return isBounded(nt, l) ? Math.min(1, Math.abs(v)) : 1 - Math.exp(-Math.abs(v)); }
+  function actColour(v, l, nt = net) { return mix(C.panel, v >= 0 ? POS() : NEG(), actStrength(v, l, nt) * 0.9); }
+  function predColour(p, k = 0.9, base = C.panel) { return p >= 0.5 ? mix(base, C.blue, (p - 0.5) * 2 * k) : mix(base, C.orange, (0.5 - p) * 2 * k); }
+
+  const fmt = (v, d = 2) => (v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
+  const pct = v => isNaN(v) ? '–' : Math.round(v * 100) + '%';
+  const predWord = p => { const v = verdict(p); return v === null ? 'toss-up' : v ? 'blue' : 'orange'; };
+  const outLayer = () => net.sizes.length - 1;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 3600); }
+
+  // ---------- setup ----------
+  function regenData() {
+    pts = makeData(cfg);
+    if (spot.dot) { const near = nearestDot(spot.x, spot.y, 0.03); spot.dot = near; if (near) { spot.x = near.x; spot.y = near.y; } }
+    dirty = true;
+  }
+  function rebuildNet(weights) {
+    net = makeNet(cfg);
+    if (weights) { net.W = weights.W.map(Wl => Wl.map(r => r.slice())); net.b = weights.b.map(bl => bl.slice()); }
+    rounds = 0; history = []; handSet = false;
+    if (selN.l > outLayer() || selN.j >= net.sizes[selN.l]) selN = { l: outLayer(), j: 0 };
+    record(); dirty = true; structKey = ''; inspKey = '';
+  }
+  function setPlaying(v) { playing = v && !deleted; dirty = true; inspKey = ''; }
+  function markCustom() { $('#preset').value = ''; }
+  function firstSpot() { const first = pts.find(q => q.train); spot = { x: first.x, y: first.y, dot: first }; }
+  function loadPreset(key) {
+    const p = PRESETS.find(q => q.key === key) || PRESETS[1];
+    cfg = { ...DEFAULT, ...p.cfg, hidden: (p.cfg.hidden || DEFAULT.hidden).slice(), feats: (p.cfg.feats || DEFAULT.feats).slice() };
+    showMaps = !!p.maps; showTest = !!p.test; deleted = false; setPlaying(false);
+    regenData(); selN = { l: 99, j: 0 }; rebuildNet(p.weights); firstSpot();
+    $('#preset').value = p.key; syncControls();
+  }
+  function applyState(c, r, weights) {
+    cfg = { ...DEFAULT, ...c, hidden: c.hidden.slice(), feats: c.feats.slice() }; deleted = false; setPlaying(false);
+    regenData(); selN = { l: 99, j: 0 }; rebuildNet(weights); rounds = r; history = []; record(); firstSpot();
+    markCustom(); syncControls();
+  }
+  function loadCode(text) { const { cfg: c, rounds: r, weights } = decodeState(text); applyState(c, r, weights); }
+
+  // ---------- training ----------
+  const trainPts = () => pts.filter(p => p.train), testPts = () => pts.filter(p => !p.train);
+  function record() {
+    const tr = evaluate(net, trainPts()), te = evaluate(net, testPts());
+    history.push({ r: rounds, tr: tr.surprise, te: te.surprise });
+    if (history.length > 3000) history = history.filter((_, i) => i % 2 === 0 || i === history.length - 1);
+  }
+  function doRound() { if (deleted) return; trainRound(net, trainPts(), cfg.lr, 10); rounds++; handSet = false; record(); dirty = true; }
+
+  // ---------- kept networks ----------
+  function snapshot(label) {
+    keptCount++;
+    const ev = evaluate(net, trainPts());
+    kept.unshift({ id: keptCount, label: label || `Network ${keptCount}`, cfg: JSON.parse(JSON.stringify(cfg)), W: net.W.map(Wl => Wl.map(r => r.slice())), b: net.b.map(bl => bl.slice()), rounds, right: ev.right, surprise: ev.surprise, hand: handSet });
+    if (kept.length > 3) kept.length = 3;
+    keptDirty = true; dirty = true;
+  }
+  function keptNet(k) { const nt = makeNet(k.cfg); nt.W = k.W; nt.b = k.b; return nt; }
+
+  // ---------- helpers ----------
+  function visibleDots() { return pts.filter(p => (p.train && !deleted) || (!p.train && showTest)); }
+  function nearestDot(x, y, maxD) { let best = null, bd = maxD; for (const p of visibleDots()) { const d = Math.hypot(p.x - x, p.y - y); if (d < bd) { bd = d; best = p; } } return best; }
+  function gridActs(G, nt = net) {
+    const L = nt.sizes.length, out = nt.sizes.map(n => Array.from({ length: n }, () => new Float32Array(G * G)));
+    for (let r = 0; r < G; r++) { const y = 1 - (r + 0.5) * 2 / G; for (let c = 0; c < G; c++) { const x = -1 + (c + 0.5) * 2 / G; const { a } = forward(nt, x, y); for (let l = 0; l < L; l++) for (let j = 0; j < a[l].length; j++) out[l][j][r * G + c] = a[l][j]; } }
+    return out;
+  }
+  // mode 'act' = activity colours; 'pred' = the activity read as a chance of blue
+  function mapImage(vals, G, l, nt, mode) {
+    const img = new ImageData(G, G);
+    let s = 1; if (mode === 'act' && !isBounded(nt, l)) { s = 1e-6; for (const v of vals) s = Math.max(s, Math.abs(v)); }
+    for (let k = 0; k < G * G; k++) {
+      const v = vals[k];
+      const c = mode === 'pred' ? predColour(readChance(v)) : mix(C.panel, v >= 0 ? POS() : NEG(), Math.min(1, Math.abs(v) / s) * 0.95);
+      img.data.set([c[0], c[1], c[2], 255], k * 4);
+    }
+    const off = document.createElement('canvas'); off.width = G; off.height = G; off.getContext('2d').putImageData(img, 0, 0);
+    return off;
+  }
+  function paintMap(canvas, vals, G, l, markSpot, mode = 'act', nt = net) {
+    const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
+    ctx.imageSmoothingEnabled = true; ctx.clearRect(0, 0, w, h); ctx.drawImage(mapImage(vals, G, l, nt, mode), 0, 0, w, h);
+    if (markSpot) { const px = (spot.x + 1) / 2 * w, py = (1 - spot.y) / 2 * h; ctx.strokeStyle = css(C.ink); ctx.lineWidth = Math.max(1.5, w / 40); ctx.beginPath(); ctx.arc(px, py, Math.max(3, w / 14), 0, 7); ctx.stroke(); }
+  }
+  function sizeCanvas(cv, wCss, hCss) { const d = window.devicePixelRatio || 1; const W = Math.round(wCss * d), H = Math.round(hCss * d); if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; } return d; }
+  function weightStroke(ctx, w, alphaBase = 0.22) {
+    const m = Math.min(Math.abs(w), 4);
+    ctx.setLineDash(w < 0 ? [6, 4] : []); ctx.lineWidth = 0.6 + m * 1.1;
+    ctx.strokeStyle = css(w >= 0 ? POS() : NEG(), alphaBase + 0.65 * Math.min(1, m / 3));
+  }
+
+  // ---------- the board ----------
+  function renderPlot() {
+    const cv = $('#plot'), S = cv.clientWidth; if (!S) return; const d = sizeCanvas(cv, S, S); const ctx = cv.getContext('2d');
+    ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, S, S);
+    ctx.fillStyle = css(C.soft); ctx.fillRect(0, 0, S, S);
+    if (showMaps) {
+      const G = 64, img = new ImageData(G, G);
+      for (let r = 0; r < G; r++) for (let c = 0; c < G; c++) { const p = predict(net, -1 + (c + 0.5) * 2 / G, 1 - (r + 0.5) * 2 / G); const col = predColour(p, 0.62, C.soft); img.data.set([col[0], col[1], col[2], 255], (r * G + c) * 4); }
+      const off = document.createElement('canvas'); off.width = G; off.height = G; off.getContext('2d').putImageData(img, 0, 0);
+      ctx.imageSmoothingEnabled = true; ctx.drawImage(off, 0, 0, S, S);
+    }
+    ctx.strokeStyle = css(C.rule); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(S / 2, 0); ctx.lineTo(S / 2, S); ctx.moveTo(0, S / 2); ctx.lineTo(S, S / 2); ctx.stroke();
+    ctx.fillStyle = css(C.muted); ctx.font = `12px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.textAlign = 'right'; ctx.fillText('x → right', S - 6, S / 2 - 6); ctx.textAlign = 'left'; ctx.fillText('y ↑ up', S / 2 + 6, 14);
+    const R = Math.max(3.2, S / 85);
+    for (const p of visibleDots()) {
+      const px = (p.x + 1) / 2 * S, py = (1 - p.y) / 2 * S, col = p.label ? C.blue : C.orange;
+      ctx.beginPath(); ctx.arc(px, py, R, 0, 7);
+      if (p.train) { ctx.fillStyle = css(col); ctx.fill(); ctx.strokeStyle = css(C.panel); ctx.lineWidth = 1.2; ctx.stroke(); }
+      else { ctx.fillStyle = css(C.panel); ctx.fill(); ctx.strokeStyle = css(col); ctx.lineWidth = 2.2; ctx.stroke(); }
+      if (verdict(predict(net, p.x, p.y)) !== p.label) { ctx.strokeStyle = css(C.ink); ctx.lineWidth = 1.6; const k = R * 0.95; ctx.beginPath(); ctx.moveTo(px - k, py - k); ctx.lineTo(px + k, py + k); ctx.moveTo(px + k, py - k); ctx.lineTo(px - k, py + k); ctx.stroke(); }
+    }
+    const sx = (spot.x + 1) / 2 * S, sy = (1 - spot.y) / 2 * S;
+    ctx.strokeStyle = css(C.navy); ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(sx, sy, R + 6, 0, 7); ctx.stroke();
+    ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx - R - 12, sy); ctx.lineTo(sx - R - 6, sy); ctx.moveTo(sx + R + 6, sy); ctx.lineTo(sx + R + 12, sy); ctx.moveTo(sx, sy - R - 12); ctx.lineTo(sx, sy - R - 6); ctx.moveTo(sx, sy + R + 6); ctx.lineTo(sx, sy + R + 12); ctx.stroke();
+  }
+
+  // ---------- the network diagram ----------
+  let layout = null;
+  function nodeName(l, j, nt = net) { if (l === 0) return nt.feats[j].label; if (l === nt.sizes.length - 1) return 'out'; return nt.sizes.length > 3 ? `h${l}.${j + 1}` : `h${j + 1}`; }
+  function buildNet() {
+    const el = $('#net'), wrapW = el.parentElement.clientWidth, W = Math.max(560, wrapW), sizes = net.sizes, ncol = sizes.length;
+    const NS = Math.round(Math.max(34, Math.min(showMaps ? 60 : 54, (W - 300) / (ncol * 1.55))));
+    const maxN = Math.max(...sizes), gap = NS + (maxN > 6 ? 10 : 18), top = 84, H = top + maxN * gap + 34;
+    const padL = 118, padR = NS + 112;
+    const xs = sizes.map((_, l) => padL + NS / 2 + l * (W - padL - padR - NS) / (ncol - 1));
+    const ys = sizes.map(n => Array.from({ length: n }, (_, j) => top + (maxN * gap) / 2 + (j - (n - 1) / 2) * gap));
+    const px = W - 22 - NS / 2;
+    layout = { W, H, NS, xs, ys, px };
+    el.style.height = H + 'px'; el.style.width = W + 'px';
+    el.querySelectorAll('.node,.colhead,.tag,.predbox').forEach(n => n.remove());
+    sizes.forEach((n, l) => {
+      const h = document.createElement('div'); h.className = 'colhead'; h.style.left = xs[l] + 'px';
+      const isOut = l === ncol - 1;
+      h.innerHTML = `<span class="label">${l === 0 ? 'Input<br>layer' : isOut ? 'Output<br>neuron' : 'Hidden<br>layer ' + l}</span>`;
+      if (l > 0 && !isOut) {
+        const pm = document.createElement('span'); pm.className = 'pm'; pm.dataset.grp = 'arch';
+        pm.innerHTML = `<button class="btn small" data-k="${l - 1}" data-d="-1" aria-label="Fewer neurons in hidden layer ${l}">−</button><button class="btn small" data-k="${l - 1}" data-d="1" aria-label="More neurons in hidden layer ${l}">+</button>`;
+        h.appendChild(pm);
+      }
+      el.appendChild(h);
+      for (let j = 0; j < n; j++) {
+        const b = document.createElement('button'); b.className = 'node'; b.dataset.l = l; b.dataset.j = j;
+        b.style.left = xs[l] + 'px'; b.style.top = ys[l][j] + 'px'; b.style.width = NS + 'px'; b.style.height = NS + 'px';
+        b.setAttribute('aria-label', l === 0 ? `Input neuron ${net.feats[j].label}` : isOut ? 'Output neuron' : `Hidden layer ${l}, neuron ${j + 1}`);
+        if (showMaps) { const cv = document.createElement('canvas'); cv.width = 56; cv.height = 56; b.appendChild(cv); }
+        const num = document.createElement('span'); num.className = 'num'; b.appendChild(num);
+        el.appendChild(b);
+        if (l === 0) { const t = document.createElement('div'); t.className = 'tag'; t.style.right = (W - xs[0] + NS / 2 + 8) + 'px'; t.style.top = ys[0][j] + 'px'; t.style.textAlign = 'right'; t.innerHTML = `<b>${net.feats[j].label}</b><br>${net.feats[j].desc}`; el.appendChild(t); }
+      }
+    });
+    const ph = document.createElement('div'); ph.className = 'colhead'; ph.style.left = px + 'px'; ph.innerHTML = '<span class="label">Prediction</span>'; el.appendChild(ph);
+    const pb = document.createElement('div'); pb.className = 'predbox'; pb.id = 'predbox';
+    pb.style.left = px + 'px'; pb.style.top = ys[ncol - 1][0] + 'px'; pb.style.width = NS + 'px'; pb.style.height = NS + 'px';
+    if (showMaps) { const cv = document.createElement('canvas'); cv.width = 56; cv.height = 56; pb.appendChild(cv); }
+    const num = document.createElement('span'); num.className = 'num'; pb.appendChild(num); el.appendChild(pb);
+    const pt = document.createElement('div'); pt.className = 'tag predtag'; pt.id = 'predtag'; pt.style.left = px + 'px'; pt.style.top = (ys[ncol - 1][0] + NS / 2 + 16) + 'px'; el.appendChild(pt);
+  }
+  function renderNet() {
+    const key = net.sizes.join(',') + '|' + showMaps + '|' + $('#net').parentElement.clientWidth + '|' + net.feats.map(f => f.k).join();
+    if (key !== structKey) { buildNet(); structKey = key; }
+    const { W, H, NS, xs, ys, px } = layout, { a } = forward(net, spot.x, spot.y), L = outLayer();
+    const cv = $('#edges'); cv.style.width = W + 'px'; cv.style.height = H + 'px'; const d = sizeCanvas(cv, W, H), ctx = cv.getContext('2d');
+    ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, W, H);
+    const labels = [];
+    for (let l = 1; l <= L; l++) for (let j = 0; j < net.sizes[l]; j++) for (let i = 0; i < net.sizes[l - 1]; i++) {
+      const w = net.W[l - 1][j][i], x1 = xs[l - 1] + NS / 2, y1 = ys[l - 1][i], x2 = xs[l] - NS / 2, y2 = ys[l][j];
+      const into = selN.l === l && selN.j === j;
+      if (into) { ctx.setLineDash([]); ctx.lineWidth = 0.6 + Math.min(Math.abs(w), 4) * 1.1 + 6; ctx.strokeStyle = css(C.navy, 0.22); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+      weightStroke(ctx, w, into ? 0.5 : 0.18);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      if (into) { const t = 0.3; labels.push([x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, fmt(w)]); }
+    }
+    // the reading step: not a weighted connection
+    const yo = ys[L][0], ax1 = xs[L] + NS / 2 + 6, ax2 = px - NS / 2 - 8;
+    ctx.setLineDash([2, 4]); ctx.lineWidth = 2; ctx.strokeStyle = css(C.muted, 0.9);
+    ctx.beginPath(); ctx.moveTo(ax1, yo); ctx.lineTo(ax2 - 4, yo); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = css(C.muted); ctx.beginPath(); ctx.moveTo(ax2, yo); ctx.lineTo(ax2 - 9, yo - 6); ctx.lineTo(ax2 - 9, yo + 6); ctx.closePath(); ctx.fill();
+    ctx.font = 'italic 11px "IBM Plex Sans", Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText('read as', (ax1 + ax2) / 2, yo - 16); ctx.fillText('a prediction', (ax1 + ax2) / 2, yo - 4);
+    ctx.font = '600 11px "IBM Plex Mono", ui-monospace, monospace'; ctx.textBaseline = 'middle';
+    for (const [x, y, s] of labels) { const tw = ctx.measureText(s).width + 8; ctx.fillStyle = css(C.panel, 0.95); ctx.strokeStyle = css(C.navy, 0.6); ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x - tw / 2, y - 8, tw, 16, 4) : ctx.rect(x - tw / 2, y - 8, tw, 16); ctx.fill(); ctx.stroke(); ctx.fillStyle = css(C.ink); ctx.fillText(s, x, y + 0.5); }
+    const grids = showMaps ? gridActs(28) : null;
+    document.querySelectorAll('#net .node').forEach(b => {
+      const l = +b.dataset.l, j = +b.dataset.j, v = a[l][j], col = actColour(v, l);
+      b.classList.toggle('sel', selN.l === l && selN.j === j);
+      const num = b.querySelector('.num');
+      if (showMaps) { paintMap(b.querySelector('canvas'), grids[l][j], 28, l, true); b.style.background = css(C.panel); num.textContent = ''; }
+      else { b.style.background = css(col); num.textContent = fmt(v); num.style.color = css(lum(col) < 0.5 ? [255, 255, 255] : C.ink); }
+    });
+    const p = readChance(a[L][0]), pb = $('#predbox'), pcol = predColour(p), pn = pb.querySelector('.num');
+    if (showMaps) { paintMap(pb.querySelector('canvas'), grids[L][0], 28, L, true, 'pred'); pb.style.background = css(C.panel); pn.textContent = ''; }
+    else { pb.style.background = css(pcol); pn.textContent = pct(p); pn.style.color = css(lum(pcol) < 0.5 ? [255, 255, 255] : C.ink); }
+    const v = verdict(p);
+    $('#predtag').innerHTML = v === null ? '<b>50%</b><br>toss-up' : `<b>${pct(p)}</b> blue<br>→ ${v ? 'blue' : 'orange'}`;
+  }
+
+  // ---------- what sets a neuron's activity ----------
+  function renderInspector() {
+    const box = $('#neuron'), { a, z } = forward(net, spot.x, spot.y), { l, j } = selN, isOut = l === outLayer();
+    const key = [net.sizes.join(), l, j, playing, net.act, net.feats.map(f => f.k).join()].join('|');
+    const spotTxt = `Spot: x = ${fmt(spot.x)}, y = ${fmt(spot.y)} · ` + (spot.dot ? `${spot.dot.label ? 'blue' : 'orange'} ${spot.dot.train ? 'practice' : 'test'} dot` : 'not one of the dots');
+    if (l === 0) {
+      const f = net.feats[j];
+      box.innerHTML = `<div class="label">Input neuron ${f.label}</div><p class="hint" id="spottxt">${spotTxt}</p>
+        <div class="result">Input neurons have no incoming connections: their activity is set by the world, not by other neurons. Neuron <b>${f.label}</b>'s activity encodes ${f.long || f.desc}. For this spot it is <b>${fmt(a[0][j])}</b>.</div>
+        <p class="hint">Click a hidden neuron or the output neuron to see what sets its activity.</p>`;
+      inspKey = key; return;
+    }
+    const title = isOut ? 'Output neuron' : `Hidden layer ${l} · neuron ${j + 1}`;
+    if (key !== inspKey) {
+      let rows = '';
+      for (let i = 0; i < net.sizes[l - 1]; i++) rows += `<tr><td>${nodeName(l - 1, i)}</td><td class="n" data-a="${i}"></td><td><input type="range" id="w-${l}-${j}-${i}" data-i="${i}" min="-8" max="8" step="0.05" aria-label="Weight from ${nodeName(l - 1, i)}" ${playing ? 'disabled' : ''}></td><td class="n" data-w="${i}"></td><td class="n" data-p="${i}"></td></tr>`;
+      rows += `<tr><td>bias</td><td></td><td><input type="range" id="b-${l}-${j}" data-i="b" min="-8" max="8" step="0.05" aria-label="Bias" ${playing ? 'disabled' : ''}></td><td class="n" data-w="b"></td><td class="n" data-p="b"></td></tr>`;
+      box.innerHTML = `<div class="label">${title}</div><p class="hint" id="spottxt"></p>
+        <p class="hint">Each neuron feeding into this one pushes on it: its activity × the weight of their connection. The bias is a constant extra push.</p>
+        <table class="calc"><thead><tr><td class="label">from</td><td class="label n">activity</td><td class="label" colspan="2">× weight</td><td class="label n">= push</td></tr></thead>
+        <tbody>${rows}<tr class="total"><td colspan="4">total push</td><td class="n" id="ztot"></td></tr></tbody></table>
+        <div class="result" id="actres"></div>
+        <p class="hint" id="slidehint">${playing ? 'Pause training to set these weights by hand.' : 'Drag a slider to set a weight by hand.'}</p>`;
+      box.querySelectorAll('input[type=range]').forEach(inp => inp.addEventListener('input', () => {
+        const v = parseFloat(inp.value), i = inp.dataset.i;
+        if (i === 'b') { net.b[l - 1][j] = v; if (v >= 2.5) biasHi = true; if (v <= -2.5) biasLo = true; } else net.W[l - 1][j][+i] = v;
+        handSet = true; markCustom(); dirty = true;
+      }));
+      inspKey = key;
+    }
+    $('#spottxt').textContent = spotTxt;
+    for (let i = 0; i < net.sizes[l - 1]; i++) {
+      const w = net.W[l - 1][j][i], av = a[l - 1][i];
+      box.querySelector(`[data-a="${i}"]`).textContent = fmt(av);
+      const inp = $(`#w-${l}-${j}-${i}`); if (document.activeElement !== inp) inp.value = w;
+      box.querySelector(`[data-w="${i}"]`).textContent = fmt(w);
+      box.querySelector(`[data-p="${i}"]`).textContent = fmt(av * w);
+    }
+    const bv = net.b[l - 1][j], binp = $(`#b-${l}-${j}`); if (document.activeElement !== binp) binp.value = bv;
+    box.querySelector('[data-w="b"]').textContent = fmt(bv); box.querySelector('[data-p="b"]').textContent = fmt(bv);
+    $('#ztot').textContent = fmt(z[l][j]);
+    const out = a[l][j];
+    let res;
+    if (isOut) {
+      const p = readChance(out), v = verdict(p);
+      res = `The bend squeezes the total push into the range −1 to 1: activity <b>${fmt(out)}</b>.<br>Read as a prediction: (activity + 1) ÷ 2 = <b>${pct(p)}</b> chance of blue → ` + (v === null ? '<b>a toss-up</b>, no lean either way.' : `<b>${v ? 'blue' : 'orange'}</b>.`);
+    } else if (net.act === 'tanh') res = `The bend squeezes the total push into the range −1 to 1: activity <b>${fmt(out)}</b>.`;
+    else if (net.act === 'relu') res = `The bend (a hinge): any negative total becomes 0. Activity <b>${fmt(out)}</b>.`;
+    else res = `No bend: the activity is just the total push, <b>${fmt(out)}</b>.`;
+    $('#actres').innerHTML = res;
+  }
+  function renderBigMap() {
+    const wrap = $('#bigwrap'); wrap.hidden = !showMaps; if (!showMaps) return;
+    const cv = $('#bigmap'); const S = cv.clientWidth || 200; sizeCanvas(cv, S, S);
+    const G = 48, g = gridActs(G); paintMap(cv, g[selN.l][selN.j], G, selN.l, true);
+  }
+
+  // ---------- scores and chart ----------
+  function renderScores() {
+    const tr = evaluate(net, trainPts()), te = evaluate(net, testPts());
+    $('#trS').textContent = isNaN(tr.surprise) ? '–' : tr.surprise.toFixed(2); $('#trR').textContent = pct(tr.right);
+    $('#teS').textContent = isNaN(te.surprise) ? '–' : te.surprise.toFixed(2); $('#teR').textContent = pct(te.right);
+    $('#teLine').hidden = !showTest; $('#scorelbl').textContent = touring && !tourVis().has('train') ? 'Dots' : 'Practice dots';
+    const cv = $('#chart'), W = cv.clientWidth, H = cv.clientHeight; if (!W) return; const d = sizeCanvas(cv, W, H), ctx = cv.getContext('2d');
+    ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, W, H);
+    const top = 6, bot = H - 14, maxY = Math.max(1.3, ...history.map(h => Math.min(4, Math.max(h.tr || 0, showTest ? h.te || 0 : 0))));
+    const n = history.length, X = i => 30 + (n <= 1 ? 0 : i / (n - 1) * (W - 36)), Y = v => bot - Math.min(v, maxY) / maxY * (bot - top);
+    ctx.font = '10px "IBM Plex Mono", ui-monospace, monospace'; ctx.fillStyle = css(C.muted); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = css(C.rule); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(30, bot); ctx.lineTo(W - 4, bot); ctx.stroke();
+    ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(30, Y(1)); ctx.lineTo(W - 4, Y(1)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillText('0', 26, bot); ctx.fillText('1.0', 26, Y(1)); ctx.textAlign = 'left'; ctx.fillText('coin flip', 34, Y(1) - 8);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.fillText(`${rounds} rounds`, W - 4, H - 2);
+    const line = (k, col, dash) => { if (n < 2) return; ctx.setLineDash(dash); ctx.strokeStyle = css(col); ctx.lineWidth = 2; ctx.beginPath(); history.forEach((h, i) => { const v = h[k]; if (isNaN(v)) return; i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v)); }); ctx.stroke(); ctx.setLineDash([]); };
+    line('tr', C.ink, []); if (showTest) line('te', C.muted, [5, 4]);
+  }
+
+  // ---------- kept networks panel ----------
+  function drawMini(canvas, nt) {
+    const Wd = canvas.clientWidth || 300, sizes = nt.sizes, ncol = sizes.length, maxN = Math.max(...sizes);
+    const NS = Math.max(16, Math.min(34, Math.floor((Wd - 40) / (ncol * 2.1)), Math.floor(200 / maxN) - 6)), gap = NS + 6, Hd = maxN * gap + 12;
+    const d = sizeCanvas(canvas, Wd, Hd); canvas.style.height = Hd + 'px'; const ctx = canvas.getContext('2d');
+    ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, Wd, Hd);
+    const xs = sizes.map((_, l) => 14 + NS / 2 + l * (Wd - 28 - NS) / (ncol - 1));
+    const ys = sizes.map(n => Array.from({ length: n }, (_, j) => Hd / 2 + (j - (n - 1) / 2) * gap));
+    for (let l = 1; l < ncol; l++) for (let j = 0; j < sizes[l]; j++) for (let i = 0; i < sizes[l - 1]; i++) {
+      weightStroke(ctx, nt.W[l - 1][j][i], 0.2); ctx.lineWidth = Math.max(0.5, ctx.lineWidth * 0.6);
+      ctx.beginPath(); ctx.moveTo(xs[l - 1] + NS / 2, ys[l - 1][i]); ctx.lineTo(xs[l] - NS / 2, ys[l][j]); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    const G = 20, g = gridActs(G, nt);
+    for (let l = 0; l < ncol; l++) for (let j = 0; j < sizes[l]; j++) {
+      ctx.imageSmoothingEnabled = true; ctx.drawImage(mapImage(g[l][j], G, l, nt, 'act'), xs[l] - NS / 2, ys[l][j] - NS / 2, NS, NS);
+      ctx.strokeStyle = css(C.rule); ctx.lineWidth = 1; ctx.strokeRect(xs[l] - NS / 2 + 0.5, ys[l][j] - NS / 2 + 0.5, NS - 1, NS - 1);
+    }
+  }
+  function renderKept() {
+    if (!keptDirty) return; keptDirty = false;
+    const list = $('#keptlist');
+    if (!kept.length) { list.innerHTML = '<p class="hint">Nothing kept yet. When you press <b>New random start</b>, the network you had is kept here automatically, so you can compare it with the next one. You can also keep a copy at any time, or add a classmate’s network by pasting its code.</p>'; return; }
+    list.innerHTML = kept.map(k => {
+      const nt = keptNet(k), shape = nt.sizes.join(' → ');
+      let rows = '';
+      for (let l = 1; l < nt.sizes.length; l++) for (let j = 0; j < nt.sizes[l]; j++) rows += `<tr><td>${nodeName(l, j, nt)}</td><td class="n">${nt.W[l - 1][j].map((w, i) => `${nodeName(l - 1, i, nt)} ${fmt(w)}`).join(', ')}</td><td class="n">bias ${fmt(nt.b[l - 1][j])}</td></tr>`;
+      return `<article class="keptitem" data-id="${k.id}">
+        <div class="kepthead"><b>${k.label}</b><span class="hint">${DATASETS[k.cfg.dataset].name} · ${shape} · ${k.hand ? 'set by hand' : k.rounds + ' rounds'} · ${pct(k.right)} right</span></div>
+        <canvas class="minicv"></canvas>
+        <details><summary>Weights and biases</summary><div class="wtable"><table class="calc"><tbody>${rows}</tbody></table></div></details>
+        <div class="row"><button class="btn small" data-act="load">Load this one</button><button class="btn small" data-act="remove">Remove</button></div>
+      </article>`;
+    }).join('');
+    list.querySelectorAll('.keptitem').forEach(el => { const k = kept.find(q => q.id === +el.dataset.id); drawMini(el.querySelector('.minicv'), keptNet(k)); });
+  }
+
+  // ---------- controls ----------
+  function syncControls() {
+    $('#dataset').value = cfg.dataset; $('#noise').value = Math.round(cfg.noise * 100); $('#noiseval').textContent = Math.round(cfg.noise * 100) + '%';
+    $('#trainfrac').value = String(cfg.trainFrac); $('#act').value = cfg.act; $('#maps').checked = showMaps; $('#showtest').checked = showTest;
+    $('#laycount').textContent = cfg.hidden.length; $('#uniform').checked = uniform;
+    document.querySelectorAll('#feats input').forEach(c => { c.checked = cfg.feats.includes(c.value); });
+    dirty = true;
+  }
+  function renderControls() {
+    const pb = $('#play'); pb.textContent = playing ? 'Pause' : 'Train'; pb.disabled = deleted; $('#step').disabled = deleted || playing;
+    const st = $('#state'); st.classList.toggle('on', playing); st.querySelector('span').textContent = playing ? 'Training · weights changing' : handSet ? 'Weights set by hand' : 'Weights frozen';
+    $('#rounds').textContent = `${rounds} round${rounds === 1 ? '' : 's'} of practice`;
+    $('#delete').textContent = deleted ? 'Bring the practice dots back' : 'Delete the practice dots'; $('#deletednote').hidden = !deleted;
+    $('#shuffle').disabled = !cfg.hidden.some(n => n > 1);
+    $('#layminus').disabled = cfg.hidden.length === 0; $('#layplus').disabled = cfg.hidden.length >= 4;
+    $('#uniformnote').hidden = !uniform; document.body.classList.toggle('uniform', uniform);
+  }
+  function render() { renderPlot(); renderNet(); renderInspector(); renderBigMap(); renderScores(); renderControls(); renderTour(); renderKept(); }
+
+  // ---------- guided tour ----------
+  const api = {
+    load(over, opt = {}) {
+      cfg = { ...DEFAULT, ...over, hidden: (over.hidden || DEFAULT.hidden).slice(), feats: (over.feats || DEFAULT.feats).slice() };
+      showMaps = !!opt.maps; showTest = !!opt.test; deleted = false; setPlaying(false);
+      regenData(); selN = { l: 99, j: 0 }; rebuildNet(opt.weights); firstSpot();
+      markCustom(); syncControls();
+    },
+    get cfg() { return cfg; }, get rounds() { return rounds; }, get showMaps() { return showMaps; }, get selN() { return selN; },
+    get clicks() { return clicks; }, get resets() { return resets; }, get kept() { return kept.length; },
+    w: (l, j, i) => net.W[l - 1][j][i], b: (l, j) => net.b[l - 1][j],
+    act: (l, j, x, y) => forward(net, x, y).a[l][j],
+    right: () => evaluate(net, trainPts()).right,
+    seenBias: () => biasHi && biasLo,
+  };
+  const curStep = () => TOUR[tourCh].steps[tourStep];
+  function tourVis() { return new Set(touring ? (curStep().show || []) : []); }
+  function enterStep(ch, st) {
+    tourCh = ch; tourStep = st; tourPassed = false; tourKey = ''; tourScroll = true; clicks = 0; resets = 0; biasHi = false; biasLo = false;
+    const s = curStep(); if (s.setup) s.setup(api);
+    if (!tourVis().has('train')) setPlaying(false);
+    dirty = true; inspKey = ''; structKey = '';
+  }
+  function startTour(ch = 0) { touring = true; $('#tour').hidden = false; $('#legend').open = false; enterStep(Math.max(0, Math.min(TOUR.length - 1, ch)), 0); }
+  function clearHighlight() { document.querySelectorAll('.focus').forEach(e => e.classList.remove('focus')); document.querySelectorAll('.dim').forEach(e => e.classList.remove('dim')); $('#badge').hidden = true; }
+  function leaveTour() { touring = false; $('#tour').hidden = true; $('#legend').open = true; clearHighlight(); dirty = true; structKey = ''; }
+  let badgeTarget = null;
+  function positionBadge() {
+    const bd = $('#badge'); if (!badgeTarget || !touring) { bd.hidden = true; return; }
+    const r = badgeTarget.getBoundingClientRect(); if (!r.width && !r.height) { bd.hidden = true; return; }
+    bd.hidden = false; const bw = bd.offsetWidth, bh = bd.offsetHeight, tb = $('#tour').getBoundingClientRect();
+    let left = r.left + r.width / 2 - bw / 2, top = r.top - bh - 10, below = false;
+    if (top < tb.bottom + 4) { top = r.bottom + 10; below = true; }
+    left = Math.max(8, Math.min(left, document.documentElement.clientWidth - bw - 8));
+    bd.style.left = (left + scrollX) + 'px'; bd.style.top = (top + scrollY) + 'px'; bd.classList.toggle('below', below);
+    bd.style.setProperty('--ax', (r.left + r.width / 2 - left) + 'px');
+  }
+  function renderTour() {
+    const vis = tourVis();
+    document.querySelectorAll('[data-grp]').forEach(el => { el.hidden = touring ? !vis.has(el.dataset.grp) : el.dataset.grp === 'never' ? false : false; });
+    clearHighlight(); badgeTarget = null;
+    if (!touring) return;
+    const s = curStep(), key = tourCh + ':' + tourStep;
+    const noticeHTML = () => (typeof s.notice === 'function' ? s.notice(api) : s.notice || '');
+    if (key !== tourKey) {
+      tourKey = key;
+      $('#tourchap').value = String(tourCh);
+      $('#tourn').textContent = `step ${tourStep + 1} of ${TOUR[tourCh].steps.length}`;
+      $('#tourtext').innerHTML = s.t; $('#tourdone').hidden = true; $('#tourdone').innerHTML = '';
+      $('#tourback').disabled = tourCh === 0 && tourStep === 0;
+      const last = tourCh === TOUR.length - 1 && tourStep === TOUR[tourCh].steps.length - 1;
+      $('#tournext').textContent = last ? 'Finish' : tourStep === TOUR[tourCh].steps.length - 1 ? 'Next chapter' : 'Next';
+    }
+    if (!tourPassed && (!s.check || s.check(api))) tourPassed = true;
+    if (tourPassed && (s.notice)) { const h = noticeHTML(); if ($('#tourdone').innerHTML !== h) $('#tourdone').innerHTML = h; $('#tourdone').hidden = false; }
+    $('#tournext').disabled = !tourPassed;
+    $('#tourwait').textContent = tourPassed ? '' : 'Do the highlighted step to go on.';
+    $('#tourskip').hidden = tourPassed;
+    const targets = [].concat(s.target || []).flatMap(sel => [...document.querySelectorAll(sel)]).filter(e => !e.closest('[hidden]'));
+    targets.forEach(e => e.classList.add('focus'));
+    if (targets.length) {
+      document.querySelectorAll('main > .card, .kept').forEach(card => { if (!targets.some(t => card.contains(t))) card.classList.add('dim'); });
+      badgeTarget = targets[0]; $('#badge').textContent = s.badge || 'Here';
+    }
+    positionBadge();
+    if (tourScroll && targets.length) { tourScroll = false; const el = targets[0]; const r = el.getBoundingClientRect(), tb = $('#tour').getBoundingClientRect(); if (r.top < tb.bottom + 40 || r.bottom > innerHeight - 10) window.scrollBy({ top: r.top - tb.bottom - 60, behavior: 'smooth' }); }
+  }
+  function tourNext() {
+    if (tourStep < TOUR[tourCh].steps.length - 1) enterStep(tourCh, tourStep + 1);
+    else if (tourCh < TOUR.length - 1) enterStep(tourCh + 1, 0);
+    else leaveTour();
+  }
+  function tourBack() {
+    if (tourStep > 0) { tourStep--; tourPassed = true; tourKey = ''; tourScroll = true; dirty = true; }
+    else if (tourCh > 0) enterStep(tourCh - 1, 0);
+  }
+
+  function wire() {
+    $('#tourchap').innerHTML = TOUR.map((c, i) => `<option value="${i}">${i} · ${c.ch}</option>`).join('');
+    $('#tourchap').addEventListener('change', e => enterStep(+e.target.value, 0));
+    $('#tournext').addEventListener('click', tourNext);
+    $('#tourback').addEventListener('click', tourBack);
+    $('#tourskip').addEventListener('click', () => { tourPassed = true; dirty = true; });
+    $('#tourexit').addEventListener('click', leaveTour);
+    $('#tourstart').addEventListener('click', () => { startTour(0); window.scrollTo({ top: 0 }); });
+    const ps = $('#preset'); ps.innerHTML = '<option value="">Your own setup</option>' + PRESETS.map(p => `<option value="${p.key}">${p.name}</option>`).join('');
+    ps.addEventListener('change', () => { if (ps.value) { loadPreset(ps.value); try { if (location.hostname.endsWith('github.io')) window.history.replaceState(null, '', '#' + ps.value); else location.hash = ps.value; } catch (e) {} } });
+    $('#dataset').innerHTML = DATASET_KEYS.map(k => `<option value="${k}">${DATASETS[k].name}</option>`).join('');
+    $('#act').innerHTML = ['tanh', 'relu', 'linear'].map(k => `<option value="${k}">${{ tanh: 'S-curve (tanh)', relu: 'Hinge (ReLU)', linear: 'None (straight)' }[k]}</option>`).join('');
+    $('#feats').innerHTML = FEATURES.map(f => `<label><input type="checkbox" value="${f.k}" ${f.k === 'x' || f.k === 'y' ? 'disabled' : ''}> ${f.label}</label>`).join('');
+    $('#play').addEventListener('click', () => setPlaying(!playing));
+    $('#step').addEventListener('click', () => doRound());
+    $('#reset').addEventListener('click', () => {
+      resets++; if (rounds > 0 || handSet) snapshot();
+      cfg.weightSeed = 1 + Math.floor(Math.random() * 60000); setPlaying(false); rebuildNet(); markCustom();
+      toast('New random weights. The previous network is kept at the bottom of the page.');
+    });
+    $('#speed').addEventListener('change', e => { speed = e.target.value; });
+    $('#dataset').addEventListener('change', e => { cfg.dataset = e.target.value; regenData(); record(); markCustom(); });
+    $('#newdots').addEventListener('click', () => { cfg.dataSeed = 1 + Math.floor(Math.random() * 60000); regenData(); record(); markCustom(); });
+    $('#noise').addEventListener('input', e => { cfg.noise = +e.target.value / 100; $('#noiseval').textContent = e.target.value + '%'; regenData(); markCustom(); });
+    $('#trainfrac').addEventListener('change', e => { cfg.trainFrac = +e.target.value; regenData(); record(); markCustom(); });
+    $('#showtest').addEventListener('change', e => { showTest = e.target.checked; dirty = true; });
+    $('#delete').addEventListener('click', () => { deleted = !deleted; if (deleted) setPlaying(false); if (spot.dot && spot.dot.train && deleted) spot.dot = null; dirty = true; });
+    $('#maps').addEventListener('change', e => { showMaps = e.target.checked; dirty = true; });
+    $('#uniform').addEventListener('change', e => { uniform = e.target.checked; dirty = true; keptDirty = true; });
+    $('#act').addEventListener('change', e => { cfg.act = e.target.value; setPlaying(false); rebuildNet(); markCustom(); });
+    $('#layminus').addEventListener('click', () => { cfg.hidden.pop(); setPlaying(false); rebuildNet(); syncControls(); markCustom(); });
+    $('#layplus').addEventListener('click', () => { cfg.hidden.push(cfg.hidden.length ? cfg.hidden[cfg.hidden.length - 1] : 4); setPlaying(false); rebuildNet(); syncControls(); markCustom(); });
+    $('#feats').addEventListener('change', e => { const k = e.target.value; cfg.feats = FEATURES.map(f => f.k).filter(f => f === k ? e.target.checked : cfg.feats.includes(f)); setPlaying(false); rebuildNet(); markCustom(); });
+    $('#net').addEventListener('click', e => {
+      const pm = e.target.closest('.pm button'); if (pm) { const k = +pm.dataset.k, dd = +pm.dataset.d; cfg.hidden[k] = Math.max(1, Math.min(8, cfg.hidden[k] + dd)); setPlaying(false); rebuildNet(); markCustom(); return; }
+      const nd = e.target.closest('.node'); if (nd) { selN = { l: +nd.dataset.l, j: +nd.dataset.j }; inspKey = ''; dirty = true; }
+    });
+    $('#plot').addEventListener('click', e => {
+      const r = e.currentTarget.getBoundingClientRect(); const x = ((e.clientX - r.left) / r.width) * 2 - 1, y = 1 - ((e.clientY - r.top) / r.height) * 2;
+      const near = nearestDot(x, y, 14 / r.width * 2); spot = near ? { x: near.x, y: near.y, dot: near } : { x, y, dot: null }; clicks++; dirty = true;
+    });
+    $('#shuffle').addEventListener('click', () => { shuffleHidden(net, Math.random); handSet = false; dirty = true; inspKey = ''; markCustom(); toast('Hidden neurons shuffled, weights and all. Every prediction is exactly the same; the list of weights is not.'); });
+    const copyText = (text, ok) => { const fallback = () => { const ci = $('#codein'); ci.value = text; ci.focus(); ci.select(); toast('Copy the code from the box below.'); }; try { navigator.clipboard.writeText(text).then(() => toast(ok), fallback); } catch (e) { fallback(); } };
+    $('#copy').addEventListener('click', () => {
+      const code = 'net-' + encodeState(cfg, net, rounds); const onPages = location.hostname.endsWith('github.io');
+      const text = onPages ? location.href.split('#')[0] + '#' + code : code;
+      if (onPages) try { window.history.replaceState(null, '', '#' + code); } catch (e) {}
+      copyText(text, onPages ? 'Link to this exact network copied.' : 'Network code copied. Paste it into a Load box to get this exact network back.');
+    });
+    $('#load').addEventListener('click', () => { try { loadCode($('#codein').value); toast('Network loaded, weights and all.'); } catch (e) { toast("That code didn't load. Check that the whole code was pasted."); } });
+    $('#keepbtn').addEventListener('click', () => { snapshot(); toast('Kept a copy of this network.'); });
+    $('#keepadd').addEventListener('click', () => {
+      try {
+        const { cfg: c, rounds: r, weights } = decodeState($('#keepcode').value); const nc = { ...DEFAULT, ...c };
+        const nt = makeNet(nc); nt.W = weights.W; nt.b = weights.b; const ev = evaluate(nt, makeData(nc).filter(p => p.train));
+        keptCount++; kept.unshift({ id: keptCount, label: `Pasted network ${keptCount}`, cfg: nc, W: weights.W, b: weights.b, rounds: r, right: ev.right, surprise: ev.surprise, hand: false });
+        if (kept.length > 3) kept.length = 3; keptDirty = true; dirty = true; $('#keepcode').value = ''; toast('Added to the kept networks.');
+      } catch (e) { toast("That code didn't load. Check that the whole code was pasted."); }
+    });
+    $('#keptlist').addEventListener('click', e => {
+      const b = e.target.closest('button[data-act]'); if (!b) return; const id = +b.closest('.keptitem').dataset.id, k = kept.find(q => q.id === id);
+      if (b.dataset.act === 'remove') kept = kept.filter(q => q.id !== id);
+      else { applyState(k.cfg, k.rounds, { W: k.W, b: k.b }); toast(`${k.label} loaded.`); }
+      keptDirty = true; dirty = true;
+    });
+    new ResizeObserver(() => { structKey = ''; dirty = true; keptDirty = true; }).observe($('#net').parentElement);
+    new ResizeObserver(() => { dirty = true; }).observe($('#plot'));
+    window.addEventListener('scroll', positionBadge, { passive: true }); window.addEventListener('resize', positionBadge);
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColours);
+    new MutationObserver(readColours).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+  }
+
+  function frame(t) {
+    if (playing) {
+      if (speed === 'slow') { if (t - lastSlow > 280) { doRound(); lastSlow = t; } }
+      else { const k = speed === 'fast' ? 5 : 1; for (let i = 0; i < k; i++) doRound(); }
+    }
+    if (dirty) { dirty = false; render(); }
+    requestAnimationFrame(frame);
+  }
+
+  readColours(); wire();
+  const h = decodeURIComponent(location.hash.slice(1));
+  let loaded = false;
+  if (h.startsWith('net-')) { try { loadCode(h); loaded = true; } catch (e) {} }
+  if (!loaded && PRESETS.some(p => p.key === h)) { loadPreset(h); loaded = true; }
+  if (!loaded) { loadPreset('watch-it-learn'); const m = h.match(/^tour-?(\d+)?$/); startTour(m && m[1] ? +m[1] : 0); }
+  window.addEventListener('hashchange', () => { const k = location.hash.slice(1); if (PRESETS.some(p => p.key === k) && $('#preset').value !== k) loadPreset(k); });
+  document.fonts && document.fonts.ready.then(() => { dirty = true; keptDirty = true; });
+  requestAnimationFrame(frame);
+  window.__netlab = { get net() { return net; }, get rounds() { return rounds; }, loadPreset, doRound, api, tourNext, startTour, get tour() { return { touring, tourCh, tourStep, tourPassed }; } };
+})();
+
+</script>
+
+</body>
+</html>
