@@ -38,6 +38,7 @@ All tools are standalone HTML files with no external dependencies. Open any `.ht
 ### Philosophy of Mind (Phil 329)
 
 - **[Exam 1 Practice](phil329-exam1-practice/)** — Deals a fresh set of short questions (true/false, multiple choice, fill-in) grouped by topic, from the same pool the real exam is drawn from; grades itself. The question pool is `phil329-exam1-practice/bank.json`.
+- **[Dots and Weights](dots-and-weights/)** — A small neural network learns to sort blue dots from orange ones. Opens in a guided tour (one neuron set by hand → hidden layers → training); presets for class activities in the "Start from" menu.
 
 ## Student Guides
 

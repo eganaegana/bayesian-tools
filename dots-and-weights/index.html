@@ -48,6 +48,8 @@ button, select, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2.5px solid var(--navy); outline-offset: 2px; }
 select { border: 1.5px solid var(--rule); background: var(--panel); border-radius: 8px; padding: 5px 8px; }
 .count { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+#rounds { min-width: 13.5em; display: inline-block; }
+#state { min-width: 17.5em; justify-content: center; }
 .grid { display: grid; grid-template-columns: minmax(290px, 390px) minmax(0, 1fr) minmax(270px, 330px); gap: 14px; align-items: start; }
 @media (max-width: 1180px) { .grid { grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); } .inspect { grid-column: 1 / -1; } }
 @media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
@@ -62,7 +64,7 @@ canvas { display: block; }
 .scores { margin-top: 10px; display: grid; gap: 4px; font-size: 0.9rem; }
 .scores b { font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums; }
 #chart { width: 100%; height: 86px; margin-top: 6px; }
-.netwrap { position: relative; overflow-x: auto; }
+.netwrap { position: relative; overflow-x: auto; padding-block: 18px; }
 #net { position: relative; }
 #edges { position: absolute; inset: 0; pointer-events: none; }
 .colhead { position: absolute; top: 0; transform: translateX(-50%); text-align: center; white-space: nowrap; }
@@ -106,7 +108,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .tournav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
 .linkbtn { background: none; border: none; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 2px; font-size: 0.85rem; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.focus { outline: 3px solid var(--navy) !important; outline-offset: 4px; border-radius: 8px; box-shadow: 0 0 0 9px color-mix(in srgb, var(--navy) 22%, transparent) !important; animation: glow 1.4s ease-in-out infinite; position: relative; z-index: 3; }
+.focus { outline: 3px solid var(--navy) !important; outline-offset: 4px; border-radius: 8px; box-shadow: 0 0 0 9px color-mix(in srgb, var(--navy) 22%, transparent) !important; animation: glow 1.4s ease-in-out infinite; z-index: 3; }
+.focus:not(.node):not(.predbox) { position: relative; }
 tr.focus { outline-offset: 0; box-shadow: none !important; background: color-mix(in srgb, var(--navy) 9%, transparent); }
 @keyframes glow { 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--navy) 10%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .focus { animation: none; } }
@@ -116,7 +119,7 @@ tr.focus { outline-offset: 0; box-shadow: none !important; background: color-mix
 #badge { position: absolute; z-index: 30; background: var(--navy); color: var(--panel); font-weight: 600; font-size: 0.84rem; padding: 5px 11px; border-radius: 7px; pointer-events: none; white-space: nowrap; box-shadow: 0 3px 10px rgba(10, 20, 40, 0.25); }
 #badge::after { content: ""; position: absolute; left: var(--ax, 50%); bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-bottom: none; border-top-color: var(--navy); }
 #badge.below::after { bottom: auto; top: -6px; border-top: none; border-bottom: 6px solid var(--navy); border-left-color: transparent; border-right-color: transparent; }
-.predbox { position: absolute; transform: translate(-50%, -50%); border: 2px dashed var(--muted); border-radius: 50%; display: grid; place-items: center; overflow: hidden; font-family: var(--mono); font-size: 0.8rem; font-weight: 600; }
+.predbox { position: absolute; transform: translate(-50%, -50%); border: 2px dashed var(--muted); border-radius: 4px; display: grid; place-items: center; overflow: hidden; font-family: var(--mono); font-size: 0.8rem; font-weight: 600; }
 .predbox canvas { width: 100%; height: 100%; }
 .predbox .num { position: relative; z-index: 1; }
 .predtag { transform: translate(-50%, 0); text-align: center; }
@@ -212,7 +215,7 @@ tr.focus { outline-offset: 0; box-shadow: none !important; background: color-mix
       <label data-grp="uniform"><input type="checkbox" id="uniform"> Blue/orange for every neuron</label>
     </div>
     <div class="netwrap"><div id="net"><canvas id="edges"></canvas></div></div>
-    <div class="notice" id="uniformnote" hidden>Blue/orange view: each neuron's positive activity is shown blue and negative activity orange, as if it were making its own prediction. That can help you ask "what pattern is this neuron picking out?" But careful: it doesn't mean the neuron "says blue". Its effect on the final prediction also depends on the sign of its outgoing weights: through a negative weight, "blue" activity pushes the prediction toward orange.</div>
+    <div class="notice" id="uniformnote" hidden>Blue/orange view: each neuron's positive activation is shown blue and negative activation orange, as if it were making its own prediction. That can help you ask "what pattern is this neuron picking out?" But careful: it doesn't mean the neuron "says blue". Its effect on the final prediction also depends on the sign of its outgoing weights: through a negative weight, "blue" activation pushes the prediction toward orange.</div>
     <div class="row" data-grp="extras"><span class="label">Hand-made extra inputs</span></div>
     <div class="feats" id="feats" data-grp="extras"></div>
     <div class="row" data-grp="tools">
@@ -226,28 +229,27 @@ tr.focus { outline-offset: 0; box-shadow: none !important; background: color-mix
   </section>
 
   <section class="card inspect" aria-labelledby="h-neuron">
-    <h2 id="h-neuron">What sets a neuron’s activity</h2>
+    <h2 id="h-neuron">What sets a neuron’s activation</h2>
     <div id="neuron"></div>
     <div id="bigwrap" hidden>
-      <div class="label" style="margin-top:10px">This neuron’s activity at every spot</div>
+      <div class="label" style="margin-top:10px">This neuron’s activation at every spot</div>
       <canvas id="bigmap"></canvas>
     </div>
     <details class="legend" id="legend" open>
       <summary>How to read the screen</summary>
       <ul>
-        <li><b>Boxes are neurons; their colour is activity:</b> <span class="sw pos" style="background:var(--pos)"></span> positive, <span class="sw neg" style="background:var(--neg)"></span> negative, pale near zero. Activity changes with every spot you pick.</li>
-        <li><b>Lines are connection weights.</b> Thicker means bigger. <span class="sw pos" style="background:var(--pos)"></span> solid lines are positive (the activity pushes the next neuron the same way); <span class="sw neg" style="background:var(--neg)"></span> dashed lines are negative (it pushes the opposite way). Weights change only while it trains, or when you set them by hand.</li>
-        <li><span class="sw" style="background:var(--blue)"></span> <span class="sw" style="background:var(--orange)"></span> Blue and orange mean a colour: the dots' true colours, and the <b>prediction</b>, which is the output neuron's activity read as a chance of blue.</li>
+        <li><b>Boxes are neurons; their colour is activation</b> (a number between −1 and 1): <span class="sw pos" style="background:var(--pos)"></span> positive, <span class="sw neg" style="background:var(--neg)"></span> negative, pale near zero. Activation changes with every spot you pick.</li>
+        <li><b>Lines are connection weights.</b> Thicker means bigger. <span class="sw pos" style="background:var(--pos)"></span> solid lines are positive (the activation pushes the next neuron the same way); <span class="sw neg" style="background:var(--neg)"></span> dashed lines are negative (it pushes the opposite way). Weights change only while it trains, or when you set them by hand.</li>
+        <li><span class="sw" style="background:var(--blue)"></span> <span class="sw" style="background:var(--orange)"></span> Blue and orange mean a colour: the dots' true colours, and the <b>prediction</b>, which is the output neuron's activation interpreted as a chance of blue.</li>
         <li><b>Surprise</b> measures how surprised the network is by a dot's true colour. 0 means it was sure and right; 1.0 is a coin flip; big numbers mean confidently wrong. Training nudges every weight to lower the average surprise on the practice dots.</li>
       </ul>
     </details>
   </section>
 </main>
 <section class="card kept" id="keptcard" data-grp="compare" aria-labelledby="h-kept">
-  <h2 id="h-kept">Kept networks</h2>
-  <p class="hint" style="margin-top:0">Compare networks side by side. Up to three are kept; the newest is first.</p>
+  <h2 id="h-kept">Preserved networks</h2>
+  <p class="hint" style="margin-top:0">The current network is always first, so you can compare it with up to three preserved ones (newest first).</p>
   <div class="row">
-    <button id="keepbtn" class="btn small">Keep a copy of this network</button>
     <span class="codebox" style="flex:1 1 260px"><input id="keepcode" type="text" placeholder="Paste a network code to compare" aria-label="Network code to compare" autocomplete="off" spellcheck="false"> <button id="keepadd" class="btn small">Add</button></span>
   </div>
   <div id="keptlist"></div>
@@ -506,28 +508,32 @@ function decodeState(code) {
 //   setup   runs when the step opens (only chapter openers load a new setup)
 //   check   if present, Next unlocks once it returns true
 //   notice  shown once the check passes; can be a function of the current state
+//   reserve for a notice that is a function: the longest version, used to reserve space so the page doesn't jump
 const W1 = (l, j, i) => `.calc tr:has(#w-${l}-${j}-${i})`;
 const B1 = (l, j) => `.calc tr:has(#b-${l}-${j})`;
 const NODE = (l, j) => `#net .node[data-l="${l}"][data-j="${j}"]`;
 const LAYER = l => `#net .node[data-l="${l}"]`;
 const ALL = ['train', 'maps', 'arch', 'data', 'extras', 'tools', 'preset', 'compare', 'uniform'];
 
+const Y_NOTICE_ALL = `<p>The line turned. Now being higher up on the board (a larger y coordinate), as well as being further right (a larger x coordinate), pushes toward a more confident blue prediction.</p><p>The × marks are gone: the network now gets right the dots it used to get wrong.</p>`;
+const Y_NOTICE_SOME = `<p>The line turned. Now being higher up on the board (a larger y coordinate), as well as being further right (a larger x coordinate), pushes toward a more confident blue prediction.</p><p>There are fewer × marks than before.</p>`;
+
 const TOUR = [
   { ch: 'Watch a network learn', steps: [
     { setup: a => a.load({ dataset: 'spiral', hidden: [8, 8], feats: ['x', 'y', 'sinx', 'siny'] }, { maps: true }), show: ['train', 'maps'], target: '#play', badge: 'Press Train',
       t: `<p>This is a small <b>neural network</b>. The dots on the board on the left come in two colours, arranged in two interlocking spirals. The network is going to learn to predict, for any spot on the board, whether a dot there would be blue or orange.</p>
-          <p>Nobody will tell it the rule. Instead it <b>practises</b>. It makes a guess about the colour of some of the practice dots (about 10 at a time), checks how far off it was, and nudges its internal settings so it would do a little better next time. Then it does that again, hundreds of times.</p>
+          <p>Nobody will tell it the rule. Instead it <b>practises</b>. It makes a guess about the colour of some of the practice dots (about 10 at a time), checks how far off it was, and nudges its internal settings so it would do a little better. Then it does that again, hundreds of times.</p>
           <p>Press the <b>Train</b> button at the top of the page and watch.</p>`,
       check: a => a.rounds >= 400 || (a.rounds >= 120 && a.right() >= 0.95),
-      notice: `<p>The shading on the board is now the network's prediction for every spot, and it traces the spirals. Nobody programmed that in. Press <b>Pause</b> (the same button) whenever you like, then <b>Next</b>.</p>` },
+      notice: `<p>The shading on the board is now the network's prediction for every spot, and it traces the spirals. Nobody programmed that in: the network found its way to internal settings that do a good job of predicting the pattern, by repeatedly guessing, checking, and nudging. Press <b>Pause</b> (the same button) whenever you like, then <b>Next</b>.</p>` },
     { show: ['train', 'maps'], target: LAYER(0), badge: 'Input neurons',
-      t: `<p><b>The parts, one at a time.</b> The column of boxes on the left of the network diagram are its <b>input neurons</b>. Their activity is set by the dot being fed into the network: by where it is on the board.</p>` },
+      t: `<p><b>The parts, one at a time.</b> The column of boxes on the left of the network diagram are its <b>input neurons</b>. Each neuron has an <b>activation</b>: a number that can be positive or negative, and in this network always stays between −1 and 1. The input neurons' activations are set by the dot being fed into the network: by where it is on the board.</p>` },
     { show: ['train', 'maps'], target: LAYER(1), badge: 'Hidden neurons',
       t: `<p>The boxes in the middle are <b>hidden neurons</b>, and the single box after them is the <b>output neuron</b>.</p>
-          <p>Each box's picture is a map of the board: the colour at each spot shows how active that neuron would be if a dot at that spot were fed into the network. <b>Violet</b> means positive activity, <b>green</b> negative, pale near zero.</p>` },
+          <p>Each box's picture is a map of the board: the colour at each spot shows the neuron's activation if a dot at that spot were fed into the network. <b>Violet</b> means positive activation, <b>green</b> negative, pale near zero.</p>` },
     { show: ['train', 'maps'], target: '#predbox', badge: 'The prediction',
-      t: `<p>The lines between the boxes are <b>connection weights</b>. Each one sets how strongly, and in which direction, one neuron's activity pushes the next neuron's activity up or down.</p>
-          <p>The round box on the far right is the <b>prediction</b>. It isn't a neuron: it reads the output neuron's activity as a guess about colour. Its map is the same as the shading on the board.</p>` },
+      t: `<p>The lines between the boxes are <b>connection weights</b>. Each one sets how strongly, and in which direction, one neuron's activation pushes the next neuron's activation up or down. Thicker lines are bigger weights. Violet solid lines push the next neuron the same way as the activation; green dashed lines push it the opposite way.</p>
+          <p>The dashed box on the far right is the <b>prediction</b>. It isn't a neuron: it interprets the output neuron's activation as a guess about colour. Its map is the same as the shading on the board.</p>` },
     { show: ['train', 'maps'],
       t: `<p>Here's the plan for the rest of the tour:</p><ol><li>Start with the simplest possible network, and set its connection weights yourself.</li><li>Move to patterns that need more neurons, still set by hand.</li><li>Then hand the job to a procedure that sets the weights itself. That's what you just watched.</li></ol><p>By the end you'll know what every part of this screen means.</p>` },
   ] },
@@ -540,44 +546,43 @@ const TOUR = [
       t: `<p><b>Click any dot on the board</b> (on the left). The ring marks the spot you picked. Everything in the middle and on the right now shows what the network does with that one spot.</p>`,
       check: a => a.clicks >= 1 },
     { show: [], target: LAYER(0), badge: 'Input neurons',
-      t: `<p>These two boxes are the <b>input neurons</b>. Input neurons are neurons whose activity is set by the world rather than by other neurons. Here their activity is set by the dot's position: <b>x</b>'s activity by how far right the dot is (negative means left), and <b>y</b>'s by how far up it is (negative means down). Both run from −1 to 1.</p>
-          <p>This is a simple code, activity = coordinate, but it's a choice the network's designer made; the position could have been encoded other ways.</p>
+      t: `<p>These two boxes are the <b>input neurons</b>. Input neurons are neurons whose activation is set by the world rather than by other neurons. Here their activation is set by the dot's position: <b>x</b>'s activation by how far right the dot is, and <b>y</b>'s by how far up it is. Both run from −1 to 1, so an activation can be negative (left of centre, or below it) as well as positive.</p>
+          <p>This is a simple code, activation = coordinate, but it's a choice the network's designer made; the position could have been encoded other ways.</p>
           <p>Click three or four dots in different places and watch these two numbers change.</p>`,
       check: a => a.clicks >= 4 },
     { show: [], target: [NODE(1, 0), '#predbox'], badge: 'Output neuron',
-      t: `<p>This box is the <b>output neuron</b>. Its activity is read off, in the round <b>prediction</b> box to its right, as the chance that a dot at this spot is blue.</p>
-          <p>Right now the prediction is 50% for every spot. The output neuron's activity doesn't depend on the input neurons at all: both connections have weight 0, so nothing about the dot's position reaches it. At exactly 50% it's a toss-up, so it gets no dots right; every dot has an ×.</p>` },
-    { show: [], target: '#neuron', badge: 'What sets its activity',
-      t: `<p>The panel on the right shows <b>what sets the output neuron's activity</b> for the spot you picked. Each input neuron <b>pushes</b> on the output neuron: how hard, and in which direction, is its activity times the <b>weight</b> of their connection. The <b>bias</b> is a constant extra push. The table adds up the pushes into a total.</p>
-          <p>The total can be any size, but in this network a neuron's activity is kept between −1 and 1. So the total goes through a <b>bend</b>: small totals pass through almost unchanged, and bigger ones get squeezed, closer and closer to 1 (or −1) but never past it. Beyond a total of about 2, extra push barely changes anything.</p>
-          <p>Then the prediction box reads the activity: −1 as 0% blue, 0 as 50%, +1 as 100%.</p>` },
+      t: `<p>This box is the <b>output neuron</b>. Its activation, like every neuron's here, is a number between −1 and 1. It's interpreted, in the dashed <b>prediction</b> box to its right, as the chance that a dot at this spot is blue.</p>
+          <p>Right now the prediction is 50% for every spot. The output neuron's activation doesn't depend on the input neurons at all: both connections have weight 0, so no signal from either input neuron reaches it. At exactly 50% it's a toss-up, so it gets no dots right; every dot has an ×.</p>` },
+    { show: [], target: '#neuron', badge: 'What sets its activation',
+      t: `<p>The panel on the right shows <b>what sets the output neuron's activation</b> for the spot you picked. Each input neuron <b>pushes</b> on the output neuron's activation level, up or down: how hard, and in which direction, is the input neuron's activation times the <b>weight</b> of their connection. The <b>bias</b> is a constant extra push. The table adds up the pushes into a total.</p>
+          <p>The total push can be any size, but in this network a neuron's activation is kept between −1 and 1. So the total goes through a <b>bending function</b>: small totals pass through almost unchanged, and bigger ones get squeezed, closer and closer to 1 (or −1) but never past it. Beyond a total of about 2, extra push barely changes the final activation level.</p>
+          <p>Then the prediction box interprets the output neuron's activation level as a probabilistic prediction about the dot's colour: −1 means a 0% chance of blue, 0 means 50%, +1 means 100%.</p>` },
     { show: [], target: W1(1, 0, 0), badge: 'Weight on x',
       t: `<p>In that panel, drag the slider for the <b>weight on x</b> up to about <b>2</b>.</p>`,
       check: a => a.w(1, 0, 0) >= 1.5,
-      notice: `<p>Click a dot on the right side of the board, then one on the left. On the right, x's activity is positive, so through a positive weight it pushes the output neuron's activity up, and the prediction toward blue. On the left it pushes toward orange.</p><p>The <b>×</b> marks show the dots the network now gets wrong. There are far fewer than before, but not none.</p>` },
+      notice: `<p>Click a dot on the right side of the board, then one on the left. On the right, x's activation is positive, so through a positive weight it pushes the output neuron's activation up, and the prediction toward blue. On the left it pushes toward orange.</p><p>The <b>×</b> marks show the dots the network now gets wrong. There are far fewer than before, but not none.</p>` },
     { show: ['maps'], target: 'label:has(#maps)', badge: 'Tick this',
       t: `<p>So far you can see the prediction for one spot at a time, plus the × marks. Tick <b>Show every spot</b> (just above the network diagram).</p>`,
       check: a => a.showMaps,
-      notice: `<p>Every box now shows a little map of the board: the colour at each spot is that neuron's activity for a dot at that spot. <b>Violet</b> means positive activity, <b>green</b> negative, pale near zero.</p>
-               <p>The shading on the board is the <b>prediction</b> box's map: the output neuron's activity, read as a prediction, at every spot. Bluer where it would predict blue, oranger where it would predict orange, white where it's 50/50. The white edge between them is a straight line.</p>` },
+      notice: `<p>Every box now shows a little map of the board: the colour at each spot is that neuron's activation for a dot at that spot. <b>Violet</b> means positive activation, <b>green</b> negative, pale near zero.</p>
+               <p>The shading on the board is the <b>prediction</b> box's map: the output neuron's activation, interpreted as a prediction, at every spot. Bluer where it would predict blue, oranger where it would predict orange, white where it's 50/50. The white edge between them is a straight line.</p>` },
     { show: ['maps'], target: W1(1, 0, 1), badge: 'Weight on y',
       t: `<p>Now drag the <b>weight on y</b> up to about <b>2</b>.</p>`,
       check: a => a.w(1, 0, 1) >= 1.5,
-      notice: a => `<p>The line turned. Now being higher up on the board (a larger y coordinate), as well as being further right (a larger x coordinate), pushes toward a more confident blue prediction.</p>` +
-        (a.right() >= 0.995 ? `<p>The × marks are gone: the network now gets right the dots it used to get wrong.</p>` : `<p>There are fewer × marks than before.</p>`) },
+      notice: a => (a.right() >= 0.995 ? Y_NOTICE_ALL : Y_NOTICE_SOME), reserve: Y_NOTICE_ALL },
     { show: ['maps'], target: [W1(1, 0, 0), W1(1, 0, 1)], badge: 'Both weights',
       t: `<p>Try making <b>both weights bigger</b>, around 5 each. Then try the x weight at 5 and the y weight at 1.</p>`,
       check: a => a.w(1, 0, 0) >= 4,
-      notice: `<p>Two things happen. The <b>ratio</b> between the two weights sets the line's <b>angle</b>. Their <b>size</b> sets how sharp the edge is: bigger weights mean bigger pushes, so the output neuron gets close to ±1 (a confident prediction) closer to the line.</p>` },
+      notice: `<p>Two things happen. The <b>ratio</b> between the two weights sets the line's <b>angle</b>. Their <b>size</b> sets how sharp the edge is: bigger weights mean bigger pushes, so the output neuron's activation gets close to ±1 (a confident prediction) closer to the line.</p>` },
     { show: ['maps'], target: B1(1, 0), badge: 'Bias',
-      t: `<p>Now the <b>bias</b>. The bias is a push the neuron gets regardless of its inputs, so it sets the neuron's <b>baseline</b> activity: its activity when every input neuron is at 0, which here means a dot at the very centre of the board.</p>
+      t: `<p>Now the <b>bias</b>. The bias is a push the neuron gets regardless of its inputs, so it sets the neuron's <b>baseline</b> activation: its activation when every input neuron's activation is 0, which here means a dot at the very centre of the board.</p>
           <p>Drag the bias to about <b>+3</b>, then to about <b>−3</b>, and watch the line.</p>`,
       check: a => a.seenBias(),
       notice: `<p>The bias slides the line without turning it. The line is where the total push is exactly zero, so changing the bias moves it parallel to itself. The bias decides which side of the line the centre of the board is on, and how far away the line is. Positive bias puts the centre on the blue side.</p>` },
     { show: ['maps'], target: '#neuron', badge: 'Your turn',
       t: `<p><b>Your turn.</b> Set the two weights and the bias so the network gets <b>every</b> dot right. The score under the board will say 100%.</p>`,
       check: a => a.right() >= 0.995,
-      notice: `<p>Done. Everything this network can do is in that picture. <b>Any neuron whose only inputs are the neurons encoding the dot's x and y coordinates can only draw one straight line</b>: the weights set the line's angle and sharpness, and the bias slides it.</p>` },
+      notice: `<p>Done. Everything this network can do is in that picture. <b>Any neuron whose only inputs are the dot's x and y coordinates can only draw one straight line</b>: the weights set the line's angle and sharpness, and the bias slides it.</p>` },
   ] },
 
   { ch: 'Your turn, no help', steps: [
@@ -591,42 +596,44 @@ const TOUR = [
     { setup: a => a.load({ dataset: 'circle', hidden: [] }, { weights: { W: [[[0, 0]]], b: [[0]] }, maps: true }), show: ['maps'], target: '#neuron', badge: 'Try it',
       t: `<p>Here's a harder pattern: an orange middle with blue all around it. Same network: two input neurons connected straight to one output neuron. Get as many dots right as you can, and keep an eye on the score under the board.</p>` },
     { show: ['maps'],
-      t: `<p>The best anyone can do here is about 70%. This output neuron's only inputs encode the dot's x and y coordinates, so it can only draw one straight line, and no straight line separates a disc from the ring around it.</p><p>To do better, the network needs more neurons. Next you'll put some in between the input neurons and the output neuron.</p>` },
+      t: `<p>The best anyone can do here is about 70%. This output neuron's only inputs are the dot's x and y coordinates, so it can only draw one straight line, and no straight line separates a disc from the ring around it.</p><p>To do better, the network needs more neurons. Next you'll put some in between the input neurons and the output neuron.</p>` },
   ] },
 
   { ch: 'Two hidden neurons, set by hand', steps: [
     { setup: a => a.load({ dataset: 'band', hidden: [2] }, { weights: { W: [[[0, 0], [0, 0]], [[0, 0]]], b: [[0, 0], [0]] }, maps: true }), show: ['maps'], target: LAYER(1), badge: 'Hidden layer',
       t: `<p>A new pattern: a blue <b>stripe</b> down the middle, orange on both sides. One line can't do it, but two lines could.</p>
-          <p>So the network now has a <b>hidden layer</b>: two neurons sitting between the input neurons and the output neuron. Each hidden neuron is connected to the x and y input neurons in exactly the way the output neuron was before. Each connection has a weight. The input neurons' activities times those weights, plus the hidden neuron's bias, add up to a total push, and the bend turns that total into the hidden neuron's activity.</p>` },
+          <p>The network we want for this pattern has a <b>hidden layer</b>: two neurons sitting between the input neurons and the output neuron. Each hidden neuron is connected to the x and y input neurons in exactly the way the output neuron was before. Each connection has a weight. The input neurons' activations times those weights, plus the hidden neuron's bias, add up to a total push, and the bending function turns that total into the hidden neuron's activation.</p>` },
     { show: ['maps'], target: NODE(1, 0), badge: 'Click this neuron',
-      t: `<p><b>Click the first hidden neuron</b> (the top box in the middle column). The panel on the right now shows what sets its activity.</p>`,
+      t: `<p><b>Click the first hidden neuron</b> (the top box in the middle column).</p><p>In general, the panel on the right shows what sets the activation of whichever neuron is selected. Click any neuron to select it.</p>`,
       check: a => a.selN.l === 1 && a.selN.j === 0 },
     { show: ['maps'], target: [W1(1, 0, 0), B1(1, 0)], badge: 'x weight and bias',
-      t: `<p>Set its <b>x weight to about 6</b> and its <b>bias to about 2.4</b>. Leave y at 0.</p><p>Watch its map: it becomes violet (positive) on one side of a line and green on the other.</p>`,
+      t: `<p>Set its <b>x weight to about 6</b> and its <b>bias to about 2.4</b>. Leave y at 0.</p><p>Watch its map: it becomes violet (positive activation) on one side of a line and green (negative) on the other.</p>`,
       check: a => a.act(1, 0, -0.7, 0) < -0.5 && a.act(1, 0, 0, 0) > 0.5,
-      notice: `<p>This neuron's activity is 0 for spots exactly at x = −0.4, negative to the left of that line, and positive to the right. With a weight as big as 6, it gets close to −1 or +1 within about 0.3 on either side. So it's in effect a detector for “right of x = −0.4”: the stripe's left edge.</p>` },
+      notice: `<p>This neuron's activation is 0 for spots exactly at x = −0.4, negative to the left of that line, and positive to the right. With a weight as big as 6, it gets close to −1 or +1 within about 0.3 on either side. So it's in effect a detector for “right of x = −0.4”: the stripe's left edge.</p>` },
     { show: ['maps'], target: NODE(1, 1), badge: 'Then this one',
       t: `<p>Now click the <b>second hidden neuron</b> and give it <b>x weight 6</b> and <b>bias −2.4</b>.</p>`,
       check: a => a.act(1, 1, 0, 0) < -0.5 && a.act(1, 1, 0.7, 0) > 0.5,
-      notice: `<p>This neuron's activity is 0 at x = +0.4, negative to the left, and positive to the right: a detector for “right of x = +0.4”, the stripe's right edge.</p>` },
+      notice: `<p>This neuron's activation is 0 at x = +0.4, negative to the left, and positive to the right: a detector for “right of x = +0.4”, the stripe's right edge.</p>` },
     { show: ['maps'], target: NODE(2, 0), badge: 'Output neuron',
-      t: `<p>Now click the <b>output neuron</b>. Inside the stripe, hidden neuron 1 is about +1 and hidden neuron 2 is about −1. Outside the stripe, on either side, the two agree.</p>
+      t: `<p>Now click the <b>output neuron</b>. Look at the two hidden neurons' maps: both are green at the left edge of the board and both are violet at the right edge; only in the middle, the stripe, do they differ (h1 violet, h2 green).</p>
           <p>First set the output's <b>weight from hidden neuron 1 (h1) to 3</b>.</p>`,
       check: a => a.w(2, 0, 0) >= 2.5,
-      notice: `<p>Click a dot inside the stripe and one outside, and watch the pushes in the panel. Hidden neuron 1 now pushes the output up by about 3 to the right of x = −0.4, and down by about 3 to the left. So everything right of that line leans blue: that's hidden neuron 1's line.</p>` },
+      notice: `<p>Click a dot inside the stripe and one outside, and watch the pushes in the panel. Hidden neuron 1 now pushes the output up by about 3 to the right of x = −0.4, and down by about 3 to the left, so everything right of that line leans blue.</p><p>That gives us the line at the stripe's left edge. To get the stripe, we still need its right edge.</p>` },
     { show: ['maps'], target: W1(2, 0, 1), badge: 'Weight from h2',
       t: `<p>Now set the <b>weight from hidden neuron 2 (h2) to −3</b>.</p>`,
       check: a => a.w(2, 0, 1) <= -2.5,
-      notice: `<p>Inside the stripe both pushes are about +3 (hidden neuron 2 is about −1, and −1 × −3 = +3), so the total is about 6: strongly blue. To the left of the stripe the pushes are −3 and +3, and to the right +3 and −3. They cancel, so the total is about 0, and both sides turned white: 50/50.</p>` },
+      notice: `<p>Inside the stripe both pushes are about +3 (hidden neuron 2's activation is about −1, and −1 × −3 = +3), so the total is about 6: strongly blue. To the left of the stripe the pushes are −3 and +3, and to the right +3 and −3. They cancel, so the total is about 0, and both sides turned white: 50/50.</p>
+               <p>Now we have a stripe of confident blue predictions down the middle, but the network is 50/50 on the colour of dots outside the stripe, and we want it to predict they're orange.</p>` },
     { show: ['maps'], target: B1(2, 0), badge: 'Bias',
       t: `<p>Last, set the output neuron's <b>bias to −3</b>.</p>`,
       check: a => a.b(2, 0) <= -2 && a.right() >= 0.97,
-      notice: `<p>The bias lowered the baseline everywhere. Inside the stripe the total is now about 6 − 3 = 3; outside, about 0 − 3 = −3. The bend turns +3 into an activity near +1 (almost certainly blue) and −3 into one near −1 (almost certainly orange).</p>
-               <p>Two things make the edges so sharp: the hidden neurons' big x weights flip them from −1 to +1 over a narrow band, and the bend squeezes big totals to nearly ±1.</p>
+      notice: `<p>The bias is a constant push on the output neuron's activation, the same at every spot. With a bias of −3: outside the stripe, where the pushes from h1 and h2 cancel (total about 0), the bias drags the total down to about −3, so the activation is near −1: confidently orange. Inside the stripe, the two pushes add up to about +6, enough to beat the bias and leave about +3: activation near +1, confidently blue. That's the last piece: blue inside, orange outside.</p>
+               <p>Two things make the edges so sharp: the hidden neurons' big x weights flip their activations from −1 to +1 over a narrow band, and the bending function squeezes big totals to nearly ±1.</p>
                <p>Two lines made a stripe. Each hidden neuron detects one edge, and the output neuron combines them. That's what <b>layers</b> are for: later neurons build on what earlier neurons detect.</p>` },
     { show: ['maps'],
-      t: `<p>That took setting <b>9 numbers</b> by hand. Hand-setting stops working, for two reasons.</p>
-          <ul><li><b>Too many numbers.</b> As the pattern gets more complicated you need more neurons, and every new neuron brings a whole set of new connection weights. The circle needs about 13 numbers. The spiral network from the start of the tour has 121. Llama 3.1 405B, one of the models in the Turing-test study, has about 405 billion.</li>
+      t: `<p>That took setting <b>9 numbers</b> by hand, for a network with two input neurons, two hidden neurons, and one output neuron. As patterns get more complex, the networks needed to predict them well get larger, and the numbers pile up fast: a network for the circle needs about 13; the spiral network from the start of the tour has 121; Llama 3.1 405B, one of the models in the Turing-test study, has about 405 billion.</p>
+          <p>So hand-setting stops working, for two reasons:</p>
+          <ul><li><b>Too many numbers.</b> Every new neuron brings a whole set of new connection weights.</li>
           <li><b>Nobody knows the rule.</b> You could set this network only because you could see where the stripe's edges were. For recognizing a face, or predicting the next word of a sentence, nobody can write the rule down, so nobody could set the weights even with unlimited patience.</li></ul>
           <p>Next: a procedure that sets the weights using nothing but examples.</p>` },
   ] },
@@ -637,7 +644,7 @@ const TOUR = [
           <p>Press <b>Practice once</b> (top of the page). The procedure goes through the <b>practice dots</b> (half of all the dots; the rest are held back, and we'll come back to why), about 10 at a time. For each batch it works out, for every connection weight and bias, whether nudging it up or down would make the predictions a little less wrong, and nudges it a little in that direction.</p>`,
       check: a => a.rounds >= 1 },
     { show: ['maps', 'train'], target: ['#scorebox', '#step'], badge: 'The score',
-      t: `<p>How it measures “wrong”: the score now shows <b>surprise</b>. For each dot it asks how surprised the network is by the dot's true colour, then takes the average. 0 means it was sure and right, 1.0 is a coin flip, and big numbers mean confidently wrong. Training nudges the weights to lower that number.</p>
+      t: `<p>Here's how it measures “wrong”: the score now shows <b>surprise</b>. For each dot it asks how surprised the network is by the dot's true colour. 0 means it was sure and right, so not surprised at all: it got exactly the outcome it was expecting. A surprise of 1.0 is what you get for a dot when the prediction was 50/50 (each colour equally surprising). Big numbers mean confidently wrong. The score is the average over the practice dots, and training nudges the weights to lower it.</p>
           <p>Press <b>Practice once</b> a few more times and watch the surprise, the maps, and the lines. Early on, the % right can wobble up and down. That's normal: what training reduces is the average surprise, and it often crawls for a while before it drops.</p>`,
       check: a => a.rounds >= 5 },
     { show: ['maps', 'train'], target: '#play', badge: 'Press Train',
@@ -645,30 +652,43 @@ const TOUR = [
       check: a => a.rounds >= 150,
       notice: `<p>It found weights that work. Pause it, then click each hidden neuron and compare its map and weights with the ones you set by hand.</p><p>Did it find the same solution you did?</p>` },
     { show: ['maps', 'train', 'compare'], target: '#reset', badge: 'New random start',
-      t: `<p>Press <b>New random start</b> (top of the page). That throws away everything it learned and starts from different random weights. The network you had is kept in the <b>Kept networks</b> panel at the bottom of the page. Then press <b>Train</b> again.</p>`,
+      t: `<p>Press <b>New random start</b> (top of the page). That throws away everything it learned and starts from different random weights. The network you had is preserved in the <b>Preserved networks</b> panel at the bottom of the page, next to the current network. Then press <b>Train</b> again.</p>`,
       check: a => a.resets >= 1 && a.rounds >= 150,
-      notice: `<p>Scroll down to <b>Kept networks</b> and compare the two side by side. Same behaviour: both get the stripe. But inside, the hidden neurons may have swapped places, flipped signs, or drawn their lines a little differently.</p><p>Two networks can behave identically while their weights look quite different. Keep that in mind; it comes back when we ask what's “in” a network.</p>` },
+      notice: `<p>Scroll down to <b>Preserved networks</b> and compare the current network with the preserved one. Same behaviour: both get the stripe. But inside, the hidden neurons may have swapped places, flipped signs, or drawn their lines a little differently.</p><p>Two networks can behave identically while their weights look quite different. Keep that in mind; it comes back when we ask what's “in” a network.</p>` },
   ] },
 
   { ch: 'The circle, with training', steps: [
     { setup: a => a.load({ dataset: 'circle', hidden: [] }, { maps: true }), show: ['maps', 'train', 'compare'], target: '#play', badge: 'Press Train',
       t: `<p>Back to the circle, starting with no hidden layer, but this time the procedure sets the weights. Press <b>Train</b> and give it a few seconds.</p>`,
       check: a => a.rounds >= 100,
-      notice: `<p>It gets stuck where you did. Training can only find settings the network is able to have, and an output neuron whose only inputs encode the x and y coordinates can only draw one straight line.</p>` },
+      notice: `<p>It gets stuck where you did. Training can only find settings the network is able to have, and an output neuron whose only inputs are the dot's x and y coordinates can only draw one straight line.</p>` },
     { show: ['maps', 'train', 'arch', 'compare'], target: '#layplus', badge: 'Add a hidden layer',
       t: `<p>Press <b>+</b> next to <b>Hidden layers</b> (just above the network diagram) to add a hidden layer of 4 neurons, then press <b>Train</b>.</p>
-          <p>Next to it is the <b>Bend</b> menu. It picks which bend (squishing function) the hidden neurons use. Leave it on S-curve; the others are for exploring later.</p>`,
+          <p>(Next to it is the <b>Bend</b> menu. It picks which bending function the hidden neurons use. Leave it on S-curve; the others are for exploring later.)</p>`,
       check: a => a.cfg.hidden.length >= 1 && a.rounds >= 150 && a.right() >= 0.95,
       notice: `<p>Now it works. Look at the hidden neurons' maps: each is a split along one line, at a different angle, and the output neuron combines them into a closed shape. It's the trick you did by hand for the stripe, except this time it was learned.</p>
-               <p>If one of your hidden neurons is solid one colour, training found it didn't need it: it's acting like a fixed push, not drawing a line.</p>` },
+               <p>If one of your hidden neurons is solid one colour across the whole board, training has pushed its line off the edge of the board: it's no longer drawing a line, just acting as a fixed push. Then your network is drawing the circle with three lines (a rounded triangle) rather than four.</p>` },
     { show: ['maps', 'train', 'arch', 'compare'], target: '#reset', badge: 'New random start',
-      t: `<p>Press <b>New random start</b>, then <b>Train</b> again. Your previous circle network goes into <b>Kept networks</b> at the bottom of the page.</p>`,
+      t: `<p>Press <b>New random start</b>, then <b>Train</b> again. Your previous circle network goes into <b>Preserved networks</b> at the bottom of the page, next to the current one.</p>`,
       check: a => a.resets >= 1 && a.rounds >= 150 && a.right() >= 0.95,
-      notice: `<p>Compare them in <b>Kept networks</b>. This time the difference is more than shuffling. The two networks usually draw <b>different lines</b>: different angles, different places, sometimes a different number of lines that matter. Same circle, genuinely different ways of getting it.</p>` },
+      notice: `<p>Compare them in <b>Preserved networks</b>. In the stripe, every trained network ended up drawing the same two lines, at the stripe's edges; the only differences were which hidden neuron drew which line, and which side of its line was violet. Here the lines themselves differ: different angles and positions, and sometimes three lines doing the work instead of four. Same circle, genuinely different ways of getting it.</p>` },
     { show: ['maps', 'train', 'arch', 'compare'], target: '#net .pm', badge: 'Fewer or more neurons',
       t: `<p>Use the <b>−</b> and <b>+</b> above the hidden layer to change how many neurons it has. Each change starts over from random weights, so press <b>Train</b> again after each one.</p><p>What's the fewest hidden neurons that can still get the circle?</p>` },
+  ] },
+
+  { ch: 'What to take away', steps: [
+    { show: ['maps', 'train', 'arch', 'compare'],
+      t: `<p><b>What you've seen</b>, and where:</p>
+          <ol>
+          <li><b>Nobody programmed the rule.</b> The network's ability came from training: guess, check, nudge, repeated, to lower its surprise on practice examples. (The opening demo; chapter 5.)</li>
+          <li><b>Each neuron is simple.</b> Its activation is set by the pushes from the neurons feeding it, plus a bias, all passed through a bending function. Everything else comes from connecting many neurons together in the right kind of network. (Chapter 1.)</li>
+          <li><b>Layers let later neurons build on what earlier ones detect.</b> A neuron whose only inputs are the dot's coordinates draws one line; harder patterns need hidden layers, more neurons, and many more weights. (Chapters 3, 4 and 6.)</li>
+          <li><b>Same behaviour, different insides.</b> Networks trained from different random starts predict equally well with different weights, sometimes with genuinely different solutions. You can't read “the” solution off the behaviour. (Chapters 5 and 6.)</li>
+          <li><b>Activations are just numbers.</b> Reading them as a prediction about the world is a separate step, of interpreting or deploying the number in a particular way. (The prediction box.)</li>
+          </ol>` },
     { show: ALL,
-      t: `<p>That's the tour. You've now seen every part of this screen: input neurons, connection weights, biases, the bend, hidden layers, the prediction, the maps, surprise, and training.</p><p>Press <b>Leave the tour</b> to explore freely. The <b>Start from</b> menu has the setups we'll use in class.</p>` },
+      t: `<p><b>Something new, to carry forward.</b> The networks inside chatbots like ChatGPT and Claude are built from the same basic parts you've just used: neurons whose activations are set by weighted pushes, biases, and bending functions, arranged in layers, with the weights set by the same basic kind of training (guess, check, nudge, over and over, to lower surprise). What's different is the scale (billions of weights, not dozens), some extra machinery (most importantly something called <b>attention</b>, which lets each part of a text draw on the other parts), and the task: instead of predicting a dot's colour from its position, they predict the next piece of text from the text so far. We'll look at those differences next.</p>
+          <p>That's the tour. Press <b>Leave the tour</b> to explore freely. The <b>Start from</b> menu has the setups we'll use in class.</p>` },
   ] },
 ];
 
@@ -763,7 +783,7 @@ const TOUR = [
   function snapshot(label) {
     keptCount++;
     const ev = evaluate(net, trainPts());
-    kept.unshift({ id: keptCount, label: label || `Network ${keptCount}`, cfg: JSON.parse(JSON.stringify(cfg)), W: net.W.map(Wl => Wl.map(r => r.slice())), b: net.b.map(bl => bl.slice()), rounds, right: ev.right, surprise: ev.surprise, hand: handSet });
+    kept.unshift({ id: keptCount, label: label || `Preserved network ${keptCount}`, cfg: JSON.parse(JSON.stringify(cfg)), W: net.W.map(Wl => Wl.map(r => r.slice())), b: net.b.map(bl => bl.slice()), rounds, right: ev.right, surprise: ev.surprise, hand: handSet });
     if (kept.length > 3) kept.length = 3;
     keptDirty = true; dirty = true;
   }
@@ -777,7 +797,7 @@ const TOUR = [
     for (let r = 0; r < G; r++) { const y = 1 - (r + 0.5) * 2 / G; for (let c = 0; c < G; c++) { const x = -1 + (c + 0.5) * 2 / G; const { a } = forward(nt, x, y); for (let l = 0; l < L; l++) for (let j = 0; j < a[l].length; j++) out[l][j][r * G + c] = a[l][j]; } }
     return out;
   }
-  // mode 'act' = activity colours; 'pred' = the activity read as a chance of blue
+  // mode 'act' = activation colours; 'pred' = the activation interpreted as a chance of blue
   function mapImage(vals, G, l, nt, mode) {
     const img = new ImageData(G, G);
     let s = 1; if (mode === 'act' && !isBounded(nt, l)) { s = 1e-6; for (const v of vals) s = Math.max(s, Math.abs(v)); }
@@ -908,7 +928,7 @@ const TOUR = [
     $('#predtag').innerHTML = v === null ? '<b>50%</b><br>toss-up' : `<b>${pct(p)}</b> blue<br>→ ${v ? 'blue' : 'orange'}`;
   }
 
-  // ---------- what sets a neuron's activity ----------
+  // ---------- what sets a neuron's activation ----------
   function renderInspector() {
     const box = $('#neuron'), { a, z } = forward(net, spot.x, spot.y), { l, j } = selN, isOut = l === outLayer();
     const key = [net.sizes.join(), l, j, playing, net.act, net.feats.map(f => f.k).join()].join('|');
@@ -916,8 +936,8 @@ const TOUR = [
     if (l === 0) {
       const f = net.feats[j];
       box.innerHTML = `<div class="label">Input neuron ${f.label}</div><p class="hint" id="spottxt">${spotTxt}</p>
-        <div class="result">Input neurons have no incoming connections: their activity is set by the world, not by other neurons. Neuron <b>${f.label}</b>'s activity encodes ${f.long || f.desc}. For this spot it is <b>${fmt(a[0][j])}</b>.</div>
-        <p class="hint">Click a hidden neuron or the output neuron to see what sets its activity.</p>`;
+        <div class="result">Input neurons have no incoming connections: their activation is set by the world, not by other neurons. Neuron <b>${f.label}</b>'s activation encodes ${f.long || f.desc}. For this spot it is <b>${fmt(a[0][j])}</b>.</div>
+        <p class="hint">Click a hidden neuron or the output neuron to see what sets its activation.</p>`;
       inspKey = key; return;
     }
     const title = isOut ? 'Output neuron' : `Hidden layer ${l} · neuron ${j + 1}`;
@@ -926,8 +946,8 @@ const TOUR = [
       for (let i = 0; i < net.sizes[l - 1]; i++) rows += `<tr><td>${nodeName(l - 1, i)}</td><td class="n" data-a="${i}"></td><td><input type="range" id="w-${l}-${j}-${i}" data-i="${i}" min="-8" max="8" step="0.05" aria-label="Weight from ${nodeName(l - 1, i)}" ${playing ? 'disabled' : ''}></td><td class="n" data-w="${i}"></td><td class="n" data-p="${i}"></td></tr>`;
       rows += `<tr><td>bias</td><td></td><td><input type="range" id="b-${l}-${j}" data-i="b" min="-8" max="8" step="0.05" aria-label="Bias" ${playing ? 'disabled' : ''}></td><td class="n" data-w="b"></td><td class="n" data-p="b"></td></tr>`;
       box.innerHTML = `<div class="label">${title}</div><p class="hint" id="spottxt"></p>
-        <p class="hint">Each neuron feeding into this one pushes on it: its activity × the weight of their connection. The bias is a constant extra push.</p>
-        <table class="calc"><thead><tr><td class="label">from</td><td class="label n">activity</td><td class="label" colspan="2">× weight</td><td class="label n">= push</td></tr></thead>
+        <p class="hint">Each neuron feeding into this one pushes on its activation level, up or down: that neuron's activation × the weight of their connection. The bias is a constant extra push.</p>
+        <table class="calc"><thead><tr><td class="label">from</td><td class="label n">activation</td><td class="label" colspan="2">× weight</td><td class="label n">= push</td></tr></thead>
         <tbody>${rows}<tr class="total"><td colspan="4">total push</td><td class="n" id="ztot"></td></tr></tbody></table>
         <div class="result" id="actres"></div>
         <p class="hint" id="slidehint">${playing ? 'Pause training to set these weights by hand.' : 'Drag a slider to set a weight by hand.'}</p>`;
@@ -953,10 +973,10 @@ const TOUR = [
     let res;
     if (isOut) {
       const p = readChance(out), v = verdict(p);
-      res = `The bend squeezes the total push into the range −1 to 1: activity <b>${fmt(out)}</b>.<br>Read as a prediction: (activity + 1) ÷ 2 = <b>${pct(p)}</b> chance of blue → ` + (v === null ? '<b>a toss-up</b>, no lean either way.' : `<b>${v ? 'blue' : 'orange'}</b>.`);
-    } else if (net.act === 'tanh') res = `The bend squeezes the total push into the range −1 to 1: activity <b>${fmt(out)}</b>.`;
-    else if (net.act === 'relu') res = `The bend (a hinge): any negative total becomes 0. Activity <b>${fmt(out)}</b>.`;
-    else res = `No bend: the activity is just the total push, <b>${fmt(out)}</b>.`;
+      res = `The bending function squeezes the total push into the range −1 to 1: activation <b>${fmt(out)}</b>.<br>Interpreted as a prediction: (activation + 1) ÷ 2 = <b>${pct(p)}</b> chance of blue → ` + (v === null ? '<b>a toss-up</b>, no lean either way.' : `<b>${v ? 'blue' : 'orange'}</b>.`);
+    } else if (net.act === 'tanh') res = `The bending function squeezes the total push into the range −1 to 1: activation <b>${fmt(out)}</b>.`;
+    else if (net.act === 'relu') res = `The bending function (a hinge): any negative total becomes 0. Activation <b>${fmt(out)}</b>.`;
+    else res = `No bend: the activation is just the total push, <b>${fmt(out)}</b>.`;
     $('#actres').innerHTML = res;
   }
   function renderBigMap() {
@@ -1003,22 +1023,40 @@ const TOUR = [
       ctx.strokeStyle = css(C.rule); ctx.lineWidth = 1; ctx.strokeRect(xs[l] - NS / 2 + 0.5, ys[l][j] - NS / 2 + 0.5, NS - 1, NS - 1);
     }
   }
+  function weightRows(nt) {
+    let rows = '';
+    for (let l = 1; l < nt.sizes.length; l++) for (let j = 0; j < nt.sizes[l]; j++) rows += `<tr><td>${nodeName(l, j, nt)}</td><td class="n">${nt.W[l - 1][j].map((w, i) => `${nodeName(l - 1, i, nt)} ${fmt(w)}`).join(', ')}</td><td class="n">bias ${fmt(nt.b[l - 1][j])}</td></tr>`;
+    return rows;
+  }
+  let curDrawn = 0;
   function renderKept() {
-    if (!keptDirty) return; keptDirty = false;
-    const list = $('#keptlist');
-    if (!kept.length) { list.innerHTML = '<p class="hint">Nothing kept yet. When you press <b>New random start</b>, the network you had is kept here automatically, so you can compare it with the next one. You can also keep a copy at any time, or add a classmate’s network by pasting its code.</p>'; return; }
-    list.innerHTML = kept.map(k => {
-      const nt = keptNet(k), shape = nt.sizes.join(' → ');
-      let rows = '';
-      for (let l = 1; l < nt.sizes.length; l++) for (let j = 0; j < nt.sizes[l]; j++) rows += `<tr><td>${nodeName(l, j, nt)}</td><td class="n">${nt.W[l - 1][j].map((w, i) => `${nodeName(l - 1, i, nt)} ${fmt(w)}`).join(', ')}</td><td class="n">bias ${fmt(nt.b[l - 1][j])}</td></tr>`;
-      return `<article class="keptitem" data-id="${k.id}">
-        <div class="kepthead"><b>${k.label}</b><span class="hint">${DATASETS[k.cfg.dataset].name} · ${shape} · ${k.hand ? 'set by hand' : k.rounds + ' rounds'} · ${pct(k.right)} right</span></div>
-        <canvas class="minicv"></canvas>
-        <details><summary>Weights and biases</summary><div class="wtable"><table class="calc"><tbody>${rows}</tbody></table></div></details>
-        <div class="row"><button class="btn small" data-act="load">Load this one</button><button class="btn small" data-act="remove">Remove</button></div>
-      </article>`;
-    }).join('');
-    list.querySelectorAll('.keptitem').forEach(el => { const k = kept.find(q => q.id === +el.dataset.id); drawMini(el.querySelector('.minicv'), keptNet(k)); });
+    const list = $('#keptlist'); if ($('#keptcard').hidden) return;
+    if (keptDirty) {
+      keptDirty = false;
+      const cur = `<article class="keptitem current" id="curcard"><div class="kepthead"></div><canvas class="minicv"></canvas>
+        <details><summary>Weights and biases</summary><div class="wtable"><table class="calc"><tbody></tbody></table></div></details>
+        <div class="row"><button class="btn small" data-act="preserve">Preserve a copy of this network</button></div></article>`;
+      const empty = kept.length ? '' : '<p class="hint">Nothing preserved yet. When you press <b>New random start</b>, the network you had is preserved here automatically, next to the current one. You can also preserve a copy at any time, or add a classmate’s network by pasting its code above.</p>';
+      list.innerHTML = cur + kept.map(k => {
+        const nt = keptNet(k), shape = nt.sizes.join(' → ');
+        return `<article class="keptitem" data-id="${k.id}">
+          <div class="kepthead"><b>${k.label}</b><span class="hint">${DATASETS[k.cfg.dataset].name} · ${shape} · ${k.hand ? 'set by hand' : k.rounds + ' rounds'} · ${pct(k.right)} right</span></div>
+          <canvas class="minicv"></canvas>
+          <details><summary>Weights and biases</summary><div class="wtable"><table class="calc"><tbody>${weightRows(nt)}</tbody></table></div></details>
+          <div class="row"><button class="btn small" data-act="load">Load this one</button><button class="btn small" data-act="remove">Remove</button></div>
+        </article>`;
+      }).join('') + empty;
+      list.querySelectorAll('.keptitem[data-id]').forEach(el => { const k = kept.find(q => q.id === +el.dataset.id); drawMini(el.querySelector('.minicv'), keptNet(k)); });
+      $('#curcard details').addEventListener('toggle', () => { curDrawn = 0; dirty = true; });
+      curDrawn = 0;
+    }
+    const now = performance.now();
+    if (playing && now - curDrawn < 500) return;
+    curDrawn = now;
+    const el = $('#curcard'), ev = evaluate(net, trainPts());
+    el.querySelector('.kepthead').innerHTML = `<b>Current network</b><span class="hint">${DATASETS[cfg.dataset].name} · ${net.sizes.join(' → ')} · ${handSet ? 'set by hand' : rounds + ' rounds'} · ${pct(ev.right)} right</span>`;
+    drawMini(el.querySelector('.minicv'), net);
+    if (el.querySelector('details').open) el.querySelector('tbody').innerHTML = weightRows(net);
   }
 
   // ---------- controls ----------
@@ -1088,13 +1126,16 @@ const TOUR = [
       tourKey = key;
       $('#tourchap').value = String(tourCh);
       $('#tourn').textContent = `step ${tourStep + 1} of ${TOUR[tourCh].steps.length}`;
-      $('#tourtext').innerHTML = s.t; $('#tourdone').hidden = true; $('#tourdone').innerHTML = '';
+      $('#tourtext').innerHTML = s.t;
+      const td = $('#tourdone'); delete td.dataset.last;
+      if (s.notice) { td.innerHTML = typeof s.notice === 'function' ? (s.reserve || s.notice(api)) : s.notice; td.hidden = false; td.style.visibility = 'hidden'; }
+      else { td.innerHTML = ''; td.hidden = true; td.style.visibility = ''; }
       $('#tourback').disabled = tourCh === 0 && tourStep === 0;
       const last = tourCh === TOUR.length - 1 && tourStep === TOUR[tourCh].steps.length - 1;
       $('#tournext').textContent = last ? 'Finish' : tourStep === TOUR[tourCh].steps.length - 1 ? 'Next chapter' : 'Next';
     }
     if (!tourPassed && (!s.check || s.check(api))) tourPassed = true;
-    if (tourPassed && (s.notice)) { const h = noticeHTML(); if ($('#tourdone').innerHTML !== h) $('#tourdone').innerHTML = h; $('#tourdone').hidden = false; }
+    if (tourPassed && s.notice) { const td = $('#tourdone'), h = noticeHTML(); if (typeof s.notice === 'function' && td.dataset.last !== h) { td.innerHTML = h; td.dataset.last = h; } td.hidden = false; td.style.visibility = 'visible'; }
     $('#tournext').disabled = !tourPassed;
     $('#tourwait').textContent = tourPassed ? '' : 'Do the highlighted step to go on.';
     $('#tourskip').hidden = tourPassed;
@@ -1135,7 +1176,7 @@ const TOUR = [
     $('#reset').addEventListener('click', () => {
       resets++; if (rounds > 0 || handSet) snapshot();
       cfg.weightSeed = 1 + Math.floor(Math.random() * 60000); setPlaying(false); rebuildNet(); markCustom();
-      toast('New random weights. The previous network is kept at the bottom of the page.');
+      toast('New random weights. The previous network is preserved at the bottom of the page.');
     });
     $('#speed').addEventListener('change', e => { speed = e.target.value; });
     $('#dataset').addEventListener('change', e => { cfg.dataset = e.target.value; regenData(); record(); markCustom(); });
@@ -1167,17 +1208,18 @@ const TOUR = [
       copyText(text, onPages ? 'Link to this exact network copied.' : 'Network code copied. Paste it into a Load box to get this exact network back.');
     });
     $('#load').addEventListener('click', () => { try { loadCode($('#codein').value); toast('Network loaded, weights and all.'); } catch (e) { toast("That code didn't load. Check that the whole code was pasted."); } });
-    $('#keepbtn').addEventListener('click', () => { snapshot(); toast('Kept a copy of this network.'); });
     $('#keepadd').addEventListener('click', () => {
       try {
         const { cfg: c, rounds: r, weights } = decodeState($('#keepcode').value); const nc = { ...DEFAULT, ...c };
         const nt = makeNet(nc); nt.W = weights.W; nt.b = weights.b; const ev = evaluate(nt, makeData(nc).filter(p => p.train));
         keptCount++; kept.unshift({ id: keptCount, label: `Pasted network ${keptCount}`, cfg: nc, W: weights.W, b: weights.b, rounds: r, right: ev.right, surprise: ev.surprise, hand: false });
-        if (kept.length > 3) kept.length = 3; keptDirty = true; dirty = true; $('#keepcode').value = ''; toast('Added to the kept networks.');
+        if (kept.length > 3) kept.length = 3; keptDirty = true; dirty = true; $('#keepcode').value = ''; toast('Added to the preserved networks.');
       } catch (e) { toast("That code didn't load. Check that the whole code was pasted."); }
     });
     $('#keptlist').addEventListener('click', e => {
-      const b = e.target.closest('button[data-act]'); if (!b) return; const id = +b.closest('.keptitem').dataset.id, k = kept.find(q => q.id === id);
+      const b = e.target.closest('button[data-act]'); if (!b) return;
+      if (b.dataset.act === 'preserve') { snapshot(); toast('Preserved a copy of this network.'); return; }
+      const id = +b.closest('.keptitem').dataset.id, k = kept.find(q => q.id === id);
       if (b.dataset.act === 'remove') kept = kept.filter(q => q.id !== id);
       else { applyState(k.cfg, k.rounds, { W: k.W, b: k.b }); toast(`${k.label} loaded.`); }
       keptDirty = true; dirty = true;
